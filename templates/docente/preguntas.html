@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Banco de Preguntas - Módulo Docente{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+  <!-- Top Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        Banco Central de Ítems
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+        Banco de Preguntas Pedagógicas
+      </h1>
+      <p style="font-size: 0.88rem; color: var(--text-secondary);">
+        Administración de preguntas, alternativas estructuradas y justificaciones pedagógicas para la evaluación Saber TyT.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+      <a href="{% url 'docente_importaciones' %}" class="btn btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+        Importar Excel (.xlsx)
+      </a>
+      <a href="{% url 'docente_pregunta_nueva' %}" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nueva Pregunta
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body" style="padding: 1.15rem;">
+      <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; align-items: end;">
+        <div>
+          <label class="form-label" style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-tertiary);">Buscar en Enunciado</label>
+          <input type="text" id="tableSearchInput" name="q" value="{{ search_query|default:'' }}" class="form-control" placeholder="Términos clave...">
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-tertiary);">Competencia / Categoría</label>
+          <select name="categoria" class="form-select">
+            <option value="">-- Todas las Categorías --</option>
+            {% for cat in categorias %}
+              <option value="{{ cat.id }}" {% if selected_categoria == cat.id|stringformat:"i" %}selected{% endif %}>
+                {{ cat.nombre }} ({{ cat.preguntas.count }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-tertiary);">Tipo de Ítem</label>
+          <select name="tipo" class="form-select">
+            <option value="">-- Todos los Tipos --</option>
+            <option value="MULTIPLE" {% if selected_tipo == 'MULTIPLE' %}selected{% endif %}>Opción Múltiple (4 alternativas)</option>
+            <option value="VERDADERO_FALSO" {% if selected_tipo == 'VERDADERO_FALSO' %}selected{% endif %}>Verdadero / Falso (2 alternativas)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrar</button>
+          <a href="{% url 'docente_preguntas' %}" class="btn btn-secondary">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Questions List -->
+  <div style="display: flex; flex-direction: column; gap: 1.25rem;" id="filterableTable">
+    {% for p in preguntas %}
+    <div class="card card-hover" style="border-left: 3px solid var(--primary-600);">
+      <div class="card-header" style="background-color: var(--bg-subtle);">
+        <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+          <span class="badge badge-primary">{{ p.categoria.nombre }}</span>
+          {% if p.tipo == 'MULTIPLE' %}
+            <span class="badge badge-info">Opción Múltiple</span>
+          {% else %}
+            <span class="badge badge-warning">Verdadero / Falso</span>
+          {% endif %}
+          <span class="badge badge-neutral" style="font-family: var(--font-mono);">Base: {{ p.puntaje_base }} pts</span>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          {% if p.activo %}
+            <span class="badge badge-success"><span class="pulse-dot"></span> Activo</span>
+          {% else %}
+            <span class="badge badge-danger">Inactivo</span>
+          {% endif %}
+          <a href="{% url 'docente_pregunta_editar' p.id %}" class="btn btn-sm btn-secondary">Editar</a>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Reading Context / Texto Base -->
+        {% if p.texto_base %}
+        <div class="reading-context-wrapper">
+          <div class="reading-context-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            Contexto / Texto Base de Lectura
+          </div>
+          <p style="margin: 0; color: var(--text-secondary); font-size: 0.92rem;">{{ p.texto_base }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Enunciado -->
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.15rem;">
+          {{ p.enunciado }}
+        </h3>
+
+        <!-- Opciones de Respuesta -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.65rem; margin-bottom: 1.15rem;">
+          {% for opc in p.opciones.all %}
+          <div style="
+            display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-sm);
+            background-color: {% if opc.es_correcta %}var(--success-bg){% else %}var(--bg-subtle){% endif %};
+            border: 1px solid {% if opc.es_correcta %}var(--success-border){% else %}var(--border-subtle){% endif %};
+          ">
+            <span style="
+              width: 24px; height: 24px; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center;
+              font-weight: 800; font-size: 0.78rem; font-family: var(--font-mono);
+              background-color: {% if opc.es_correcta %}var(--success-solid){% else %}var(--bg-surface){% endif %};
+              color: {% if opc.es_correcta %}#ffffff{% else %}var(--text-primary){% endif %};
+            ">
+              {{ opc.letra }}
+            </span>
+            <div style="font-size: 0.85rem; flex: 1; color: var(--text-primary);">
+              {{ opc.texto }}
+            </div>
+            {% if opc.es_correcta %}
+              <span class="badge badge-success" style="font-size: 0.65rem;">Correcta</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Retroalimentación Pedagógica -->
+        {% if p.retroalimentacion %}
+        <div style="background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1.15rem; border: 1px solid var(--border-subtle);">
+          <strong style="color: var(--primary-600); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 2px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Justificación Pedagógica:
+          </strong>
+          <p style="margin: 0; font-size: 0.82rem; color: var(--text-secondary);">
+            {{ p.retroalimentacion }}
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="card" style="text-align: center; padding: 2.5rem;">
+      <p style="font-size: 1rem; color: var(--text-tertiary); margin-bottom: 1rem;">
+        No se encontraron preguntas con los filtros seleccionados.
+      </p>
+      <a href="{% url 'docente_pregunta_nueva' %}" class="btn btn-primary">
+        Crear la Primera Pregunta
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

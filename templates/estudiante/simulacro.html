@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Examen en Vivo: {{ cuestionario.nombre }}{% endblock %}
+
+{% block content %}
+<!-- Sticky Exam Control Topbar -->
+<div class="exam-sticky-header">
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <div>
+      <h2 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+        {{ cuestionario.nombre }}
+      </h2>
+      <div style="font-size: 0.75rem; color: var(--text-tertiary); display: flex; align-items: center; gap: 0.4rem; margin-top: 2px;">
+        <span>Estudiante: <strong style="color: var(--text-secondary);">{{ intento.nombre_estudiante }}</strong></span>
+        <span>•</span>
+        <span>Código: <code style="font-family: var(--font-mono); color: var(--primary-600); font-weight: 700;">{{ intento.codigo_estudiante }}</code></span>
+        <span>•</span>
+        <span>Intento #{{ intento.numero_intento }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 0.85rem;">
+    <!-- Live Countdown Timer -->
+    <div class="timer-pill-container" id="timerBox">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span id="examCountdown">45:00</span>
+    </div>
+
+    <!-- Finish Exam Button -->
+    <button type="button" class="btn btn-success btn-lg" id="finishExamBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 11 12 14 22 4"></polyline>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      Finalizar Prueba
+    </button>
+  </div>
+</div>
+
+<div class="container-wide" style="margin-top: 1.25rem;">
+  <!-- Top Slim Progress Bar -->
+  <div style="background: var(--border-subtle); height: 4px; border-radius: var(--radius-full); margin-bottom: 1.5rem; overflow: hidden;">
+    <div id="examProgressBar" style="background: linear-gradient(90deg, var(--primary-600), var(--primary-400)); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+  </div>
+
+  <form id="examForm" method="POST" action="{% url 'estudiante_entregar' intento.id %}">
+    {% csrf_token %}
+
+    <div class="exam-two-col-layout">
+      <!-- Main Question Work Area (Left Column) -->
+      <div>
+        {% for item in cp_list %}
+        <div class="question-block question-card-bespoke" data-question-index="{{ forloop.counter0 }}" style="{% if not forloop.first %}display: none;{% endif %}">
+          <!-- Question Meta Header -->
+          <div class="question-meta-bar">
+            <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+              <span class="badge badge-primary" style="font-size: 0.78rem; padding: 0.3rem 0.75rem;">
+                Pregunta {{ forloop.counter }} de {{ cp_list.count }}
+              </span>
+              <span class="badge badge-info">{{ item.pregunta.categoria.nombre }}</span>
+              <span class="badge badge-neutral" style="font-family: var(--font-mono);">Valor: {{ item.puntaje_ponderado }} pts</span>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-secondary flag-review-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                <line x1="4" y1="22" x2="4" y2="15"></line>
+              </svg>
+              Marcar para Revisión
+            </button>
+          </div>
+
+          <!-- Reading Context / Texto Base -->
+          {% if item.pregunta.texto_base %}
+          <div class="reading-context-wrapper">
+            <div class="reading-context-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+              Contexto / Texto Base de Lectura
+            </div>
+            <p style="margin: 0; color: var(--text-primary);">
+              {{ item.pregunta.texto_base }}
+            </p>
+          </div>
+          {% endif %}
+
+          <!-- Question Statement / Enunciado -->
+          <div class="question-prompt-text">
+            {{ item.pregunta.enunciado }}
+          </div>
+
+          <!-- Options Selector (A, B, C, D) -->
+          <div class="options-stack">
+            {% for opc in item.pregunta.opciones.all %}
+            <div class="option-choice-card" data-letter="{{ opc.letra }}">
+              <div class="option-key-badge">{{ opc.letra }}</div>
+              <div class="option-body-text">{{ opc.texto }}</div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Bottom Action Buttons for this question -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+            <button type="button" class="btn btn-sm btn-ghost clear-selection-btn" style="color: var(--danger-solid);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Dejar en Blanco (Omitir)
+            </button>
+
+            <div style="display: flex; gap: 0.55rem;">
+              <button type="button" class="btn btn-secondary" id="prevQuestionBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Anterior
+              </button>
+              <button type="button" class="btn btn-primary" id="nextQuestionBtn">
+                Siguiente Pregunta
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Navigation Palette & Summary (Right Column) -->
+      <div>
+        <div class="palette-sidebar-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong style="font-size: 0.9rem; color: var(--text-primary); font-family: var(--font-display);">Paleta de Navegación</strong>
+            <span style="font-size: 0.75rem; color: var(--text-tertiary); font-family: var(--font-mono);">
+              Ítem <strong id="currentQuestionNumber" style="color: var(--primary-600);">1</strong> / {{ cp_list.count }}
+            </span>
+          </div>
+
+          <!-- Grid of Question Numbers -->
+          <div class="palette-grid-items">
+            {% for item in cp_list %}
+            <button type="button" class="palette-item-btn empty {% if forloop.first %}current{% endif %}" data-index="{{ forloop.counter0 }}">
+              {{ forloop.counter }}
+            </button>
+            {% endfor %}
+          </div>
+
+          <!-- Live Summary Counters -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; text-align: center; margin-bottom: 1.15rem;">
+            <div style="background: var(--primary-50); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--primary-200);">
+              <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary-700); font-family: var(--font-mono);" id="answeredCount">0</span>
+              <div style="font-size: 0.68rem; color: var(--text-tertiary); font-weight: 600;">Respondidas</div>
+            </div>
+            <div style="background: var(--bg-subtle); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <span style="font-size: 1.1rem; font-weight: 800; color: var(--text-secondary); font-family: var(--font-mono);" id="emptyCount">{{ cp_list.count }}</span>
+              <div style="font-size: 0.68rem; color: var(--text-tertiary); font-weight: 600;">En Blanco</div>
+            </div>
+            <div style="background: var(--warning-bg); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--warning-border);">
+              <span style="font-size: 1.1rem; font-weight: 800; color: var(--warning-text); font-family: var(--font-mono);" id="flaggedCount">0</span>
+              <div style="font-size: 0.68rem; color: var(--warning-text); font-weight: 600;">En Revisión</div>
+            </div>
+          </div>
+
+          <!-- Status Legend -->
+          <div style="display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.75rem; color: var(--text-secondary); padding-top: 0.85rem; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--primary-600);"></span>
+              <span>Pregunta respondida</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--bg-subtle); border: 1px solid var(--border-subtle);"></span>
+              <span>Sin responder / En blanco</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--warning-solid);"></span>
+              <span>Marcada para revisión</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 10px; height: 10px; border-radius: 2px; border: 2px solid var(--primary-600);"></span>
+              <span>Pregunta actual</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal Confirmación de Entrega -->
+<div class="modal-backdrop" id="confirmFinishModal">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">¿Deseas finalizar y entregar la prueba?</h3>
+      <button class="btn-ghost" data-modal-close style="font-size: 1.2rem; cursor: pointer; border: none;">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">
+        Al confirmar, tu intento será liquidado inmediatamente y los resultados quedarán registrados de forma inmutable.
+      </p>
+
+      <div id="modalFinishSummary"></div>
+
+      <div style="background: var(--warning-bg); border: 1px solid var(--warning-border); padding: 0.75rem 0.95rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--warning-text); margin-top: 0.85rem;">
+        <strong>Información:</strong> Las preguntas no contestadas se registrarán formalmente como omitidas (0.00 pts).
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-modal-close>Seguir Revisando</button>
+      <button type="button" class="btn btn-success btn-lg" id="confirmSubmitExam">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Confirmar y Entregar
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/simulacro.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    new SimulacroEngine({
+      totalQuestions: {{ cp_list.count }},
+      timeLimitMinutes: {{ cuestionario.tiempo_limite_minutos }}
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Cuestionarios y Evaluaciones - Módulo Docente{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+  <!-- Top Bar -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Configuración de Evaluaciones
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+        Gestión de Cuestionarios y Pruebas
+      </h1>
+      <p style="font-size: 0.88rem; color: var(--text-secondary);">
+        Configuración de tiempos límite, ventanas de disponibilidad, reglas de calificación e ítems evaluados.
+      </p>
+    </div>
+
+    <div>
+      <a href="{% url 'docente_cuestionario_nuevo' %}" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nuevo Cuestionario
+      </a>
+    </div>
+  </div>
+
+  <!-- Cuestionarios Table -->
+  <div class="card">
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Nombre del Cuestionario</th>
+            <th>Ventana de Fechas</th>
+            <th>Tiempo Límite</th>
+            <th>Intentos</th>
+            <th>Calificación</th>
+            <th>Parámetros</th>
+            <th style="text-align: center;">Ítems Asignados</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cuestionarios %}
+          <tr>
+            <td>
+              <strong style="font-size: 0.9rem; color: var(--text-primary);">{{ c.nombre }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
+                {{ c.descripcion|truncatechars:60 }}
+              </div>
+            </td>
+            <td style="font-size: 0.78rem; color: var(--text-secondary); font-family: var(--font-mono);">
+              <div><span style="color: var(--text-tertiary);">Apertura:</span> {{ c.fecha_apertura|date:"d/m/Y H:i" }}</div>
+              <div><span style="color: var(--text-tertiary);">Cierre:</span> {{ c.fecha_cierre|date:"d/m/Y H:i" }}</div>
+            </td>
+            <td>
+              <span class="badge badge-info">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ c.tiempo_limite_minutos }} min
+              </span>
+            </td>
+            <td style="font-weight: 700; text-align: center; font-family: var(--font-mono); font-size: 0.85rem;">
+              {{ c.intentos_permitidos }}
+            </td>
+            <td>
+              <span style="font-weight: 700; color: var(--primary-600); font-family: var(--font-mono);">{{ c.calificacion_aprobacion }}</span>
+              <span style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono);">/ {{ c.calificacion_maxima }}</span>
+            </td>
+            <td style="font-size: 0.75rem; color: var(--text-secondary);">
+              {% if c.mezclar_preguntas %}
+                <span class="badge badge-neutral" style="margin-bottom: 2px;">Mezclar Preguntas</span><br>
+              {% endif %}
+              {% if c.permitir_revision %}
+                <span class="badge badge-neutral">Retroalimentación</span>
+              {% endif %}
+            </td>
+            <td style="text-align: center;">
+              <a href="{% url 'docente_cuestionario_preguntas' c.id %}" class="badge badge-primary" style="text-decoration: none;">
+                {{ c.cuestionario_preguntas.count }} preguntas →
+              </a>
+            </td>
+            <td>
+              {% if c.estado == 'Disponible' %}
+                <span class="badge badge-success"><span class="pulse-dot"></span> Disponible</span>
+              {% elif c.estado == 'Programado' %}
+                <span class="badge badge-warning">Programado</span>
+              {% elif c.estado == 'Cerrado' %}
+                <span class="badge badge-danger">Cerrado</span>
+              {% else %}
+                <span class="badge badge-neutral">Borrador</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                <a href="{% url 'docente_cuestionario_preguntas' c.id %}" class="btn btn-sm btn-secondary">
+                  Ítems
+                </a>
+                <a href="{% url 'docente_cuestionario_editar' c.id %}" class="btn btn-sm btn-secondary">
+                  Editar
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
+              No hay cuestionarios registrados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

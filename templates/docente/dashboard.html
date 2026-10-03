@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel de Control Docente - Plataforma Institucional{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+  <!-- Top Hero Header -->
+  <div class="page-hero">
+    <div class="hero-pill-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+      Módulo de Gestión y Evaluación Docente
+    </div>
+    <h1 class="hero-title-main">Panel de Control Académico</h1>
+    <p class="hero-description-text">
+      Administra el banco institucional de ítems, parametriza simulacros con control de tiempo y ponderaciones, realiza importaciones masivas de preguntas y audita los intentos evaluados de los estudiantes.
+    </p>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+      <a href="{% url 'docente_pregunta_nueva' %}" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nueva Pregunta
+      </a>
+      <a href="{% url 'docente_cuestionario_nuevo' %}" class="btn btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Parametrizar Cuestionario
+      </a>
+      <a href="{% url 'docente_importaciones' %}" class="btn btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+        Importar Excel (.xlsx)
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="stats-grid">
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper indigo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Preguntas Activas</span>
+        <span class="stat-meta-value">{{ total_preguntas }}</span>
+        <a href="{% url 'docente_preguntas' %}" style="font-size: 0.75rem; font-weight: 700; color: var(--primary-600); margin-top: 2px;">
+          Gestionar Banco →
+        </a>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper teal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Cuestionarios</span>
+        <span class="stat-meta-value">{{ total_cuestionarios }}</span>
+        <a href="{% url 'docente_cuestionarios' %}" style="font-size: 0.75rem; font-weight: 700; color: var(--cat-cuanti); margin-top: 2px;">
+          Configurar Pruebas →
+        </a>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Intentos Evaluados</span>
+        <span class="stat-meta-value">{{ total_intentos }}</span>
+        <a href="{% url 'docente_intentos' %}" style="font-size: 0.75rem; font-weight: 700; color: var(--cat-ingles); margin-top: 2px;">
+          Ver Calificaciones →
+        </a>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Cargas de Excel</span>
+        <span class="stat-meta-value">{{ total_importaciones }}</span>
+        <a href="{% url 'docente_importaciones' %}" style="font-size: 0.75rem; font-weight: 700; color: var(--warning-solid); margin-top: 2px;">
+          Historial y Logs →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 Column Layout: Competencias Breakdown & Recent Attempts -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2.25rem;">
+    <!-- Competencias Breakdown -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 1rem; color: var(--text-primary);">Distribución de Preguntas por Competencia</strong>
+        <a href="{% url 'docente_preguntas' %}" class="btn btn-sm btn-ghost">Ver Banco</a>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 1.15rem;">
+        {% for cat in categorias %}
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">
+            <span style="color: var(--text-primary);">{{ cat.nombre }}</span>
+            <span style="color: var(--primary-600); font-family: var(--font-mono); font-weight: 700;">{{ cat.preguntas.count }} ítems</span>
+          </div>
+          <div style="background: var(--bg-subtle); height: 6px; border-radius: var(--radius-full); overflow: hidden;">
+            <div style="
+              background: linear-gradient(90deg, var(--primary-600), var(--primary-400));
+              height: 100%;
+              width: {% if total_preguntas > 0 %}{% widthratio cat.preguntas.count total_preguntas 100 %}{% else %}0{% endif %}%;
+              border-radius: var(--radius-full);
+            "></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Intentos -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 1rem; color: var(--text-primary);">Últimos Intentos Presentados</strong>
+        <a href="{% url 'docente_intentos' %}" class="btn btn-sm btn-ghost">Ver Todos</a>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-responsive-wrapper" style="border: none; box-shadow: none;">
+          <table class="table-modern">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Cuestionario</th>
+                <th>Calificación</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in ultimos_intentos %}
+              <tr>
+                <td>
+                  <strong style="color: var(--text-primary); font-size: 0.85rem;">{{ it.nombre_estudiante }}</strong>
+                  <div style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono);">{{ it.codigo_estudiante }}</div>
+                </td>
+                <td style="font-size: 0.8rem; color: var(--text-secondary);">
+                  {{ it.cuestionario.nombre|truncatechars:26 }}
+                </td>
+                <td style="font-weight: 800; color: var(--primary-600); font-family: var(--font-mono);">
+                  {{ it.calificacion_final|default:"--" }}
+                </td>
+                <td>
+                  {% if it.estado == 'Finalizado' %}
+                    <span class="badge badge-success">Finalizado</span>
+                  {% else %}
+                    <span class="badge badge-warning">{{ it.estado }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 1.5rem; color: var(--text-tertiary);">
+                  No hay intentos registrados aún.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

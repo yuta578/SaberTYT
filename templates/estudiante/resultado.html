@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Resultados y Retroalimentación - {{ intento.cuestionario.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Top Breadcrumb -->
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{% url 'estudiante_catalogo' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Volver al Catálogo de Evaluaciones
+    </a>
+  </div>
+
+  <!-- Hero Score Certificate Panel -->
+  <div class="results-hero-panel">
+    <div class="hero-pill-badge" style="background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+      <span>Reporte Oficial de Evaluación Saber TyT</span>
+    </div>
+
+    <h1 style="font-size: 2rem; font-weight: 900; margin: 0.35rem 0 0.2rem; color: #ffffff;">
+      Resultados del Simulacro
+    </h1>
+    <p style="opacity: 0.8; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
+      {{ intento.cuestionario.nombre }} • <strong style="color: #ffffff;">{{ intento.nombre_estudiante }}</strong> (<code style="font-family: var(--font-mono); opacity: 0.9;">{{ intento.codigo_estudiante }}</code>)
+    </p>
+
+    <!-- Score Circle -->
+    <div class="score-circle-display">
+      <span class="score-digit-primary">{{ intento.calificacion_final|default:"0.00" }}</span>
+      <span class="score-digit-secondary">de {{ intento.cuestionario.calificacion_maxima }} pts</span>
+    </div>
+
+    <div>
+      {% if intento.calificacion_final >= intento.cuestionario.calificacion_aprobacion %}
+        <span class="badge badge-success" style="font-size: 0.95rem; padding: 0.45rem 1.35rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Examen Aprobado
+        </span>
+      {% else %}
+        <span class="badge badge-danger" style="font-size: 0.95rem; padding: 0.45rem 1.35rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Examen No Superado
+        </span>
+      {% endif %}
+    </div>
+
+    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 1rem; font-family: var(--font-mono);">
+      Umbral de aprobación: {{ intento.cuestionario.calificacion_aprobacion }} pts • Intento registrado #{{ intento.numero_intento }}
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper indigo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Total Evaluadas</span>
+        <span class="stat-meta-value">{{ respuestas.count }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper teal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Respuestas Correctas</span>
+        <span class="stat-meta-value" style="color: var(--success-solid);">{{ total_correctas }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Incorrectas</span>
+        <span class="stat-meta-value" style="color: var(--danger-solid);">{{ total_incorrectas }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Preguntas Omitidas</span>
+        <span class="stat-meta-value">{{ total_omitidas }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formula Callout Box -->
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem 1.45rem; margin-bottom: 2.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem; box-shadow: var(--shadow-xs);">
+    <div>
+      <strong style="color: var(--primary-600); font-size: 0.88rem; display: block; margin-bottom: 2px;">Fórmula de Liquidación Aplicada:</strong>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-mono);">
+        Calificación Final = (Sumatoria de Puntaje Asignado / Puntaje Total) × Calificación Máxima
+      </p>
+    </div>
+    <span class="badge badge-primary">Resultado Inmutable</span>
+  </div>
+
+  <!-- Question by Question Detailed Feedback -->
+  <div style="margin-bottom: 2.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">
+        Revisión y Retroalimentación Pedagógica
+      </h2>
+      <span class="badge badge-info">Revisión Oficial Habilitada</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      {% for r in respuestas %}
+      <div class="card" style="
+        border-left: 3px solid {% if r.es_correcta %}var(--success-solid){% elif r.opcion_seleccionada %}var(--danger-solid){% else %}var(--warning-solid){% endif %};
+      ">
+        <div class="card-body">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.45rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="badge badge-primary">Pregunta {{ forloop.counter }}</span>
+              <span class="badge badge-info">{{ r.pregunta.categoria.nombre }}</span>
+              <span class="badge badge-neutral" style="font-family: var(--font-mono);">Puntos: {{ r.puntaje_asignado }} pts</span>
+            </div>
+
+            <div>
+              {% if r.es_correcta %}
+                <span class="badge badge-success">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Respuesta Correcta (+{{ r.puntaje_asignado }} pts)
+                </span>
+              {% elif r.opcion_seleccionada %}
+                <span class="badge badge-danger">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  Respuesta Incorrecta (0.00 pts)
+                </span>
+              {% else %}
+                <span class="badge badge-warning">Omitida / En Blanco (0.00 pts)</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if r.pregunta.texto_base %}
+          <div class="reading-context-wrapper" style="margin-bottom: 1rem; padding: 0.85rem 1.15rem;">
+            <div class="reading-context-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+              Contexto de Lectura
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-primary);">{{ r.pregunta.texto_base }}</p>
+          </div>
+          {% endif %}
+
+          <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.15rem;">
+            {{ r.pregunta.enunciado }}
+          </h3>
+
+          <!-- Opciones y estado de selección -->
+          <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1.15rem;">
+            {% for opc in r.pregunta.opciones.all %}
+            <div style="
+              display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.88rem;
+              background-color: {% if opc.es_correcta %}var(--success-bg){% elif r.opcion_seleccionada_id == opc.id %}var(--danger-bg){% else %}var(--bg-subtle){% endif %};
+              border: 1px solid {% if opc.es_correcta %}var(--success-border){% elif r.opcion_seleccionada_id == opc.id %}var(--danger-border){% else %}var(--border-subtle){% endif %};
+            ">
+              <span style="
+                width: 24px; height: 24px; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; font-family: var(--font-mono);
+                background-color: {% if opc.es_correcta %}var(--success-solid){% elif r.opcion_seleccionada_id == opc.id %}var(--danger-solid){% else %}var(--bg-surface){% endif %};
+                color: {% if opc.es_correcta or r.opcion_seleccionada_id == opc.id %}#ffffff{% else %}var(--text-primary){% endif %};
+              ">
+                {{ opc.letra }}
+              </span>
+              <div style="flex: 1; color: var(--text-primary);">
+                {{ opc.texto }}
+              </div>
+              {% if opc.es_correcta %}
+                <span class="badge badge-success" style="font-size: 0.68rem;">Clave Correcta</span>
+              {% endif %}
+              {% if r.opcion_seleccionada_id == opc.id and not opc.es_correcta %}
+                <span class="badge badge-danger" style="font-size: 0.68rem;">Tu Elección</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Retroalimentación Docente -->
+          {% if r.pregunta.retroalimentacion %}
+          <div style="background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 0.95rem 1.15rem; border: 1px solid var(--border-subtle);">
+            <strong style="color: var(--primary-600); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 3px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              Justificación Pedagógica:
+            </strong>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55;">
+              {{ r.pregunta.retroalimentacion }}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Bottom CTA Actions -->
+  <div style="display: flex; justify-content: center; gap: 0.85rem; margin-bottom: 3.5rem; flex-wrap: wrap;">
+    <a href="{% url 'estudiante_catalogo' %}" class="btn btn-primary btn-lg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
+      Presentar Otra Evaluación
+    </a>
+    <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      Volver al Inicio
+    </a>
+  </div>
+</div>
+{% endblock %}

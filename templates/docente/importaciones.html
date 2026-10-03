@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Importación Masiva de Ítems - Módulo Docente{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Header -->
+  <div style="margin-bottom: 1.75rem;">
+    <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+      Módulo de Importación Masiva
+    </div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+      Carga Masiva de Ítems y Bitácora de Validación
+    </h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">
+      Procesa archivos estructurados (.xlsx / .csv) con validación fila por fila de campos obligatorios, coherencia de alternativas y clave de respuesta.
+    </p>
+  </div>
+
+  <!-- Upload Area and Template Download Card -->
+  <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; margin-bottom: 2.25rem; align-items: start;">
+    <!-- Upload Dropzone Form -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Cargar Archivo de Preguntas (.xlsx / .csv)</strong>
+        <span class="badge badge-primary">Validación Fila por Fila</span>
+      </div>
+      <form method="POST" enctype="multipart/form-data" class="card-body">
+        {% csrf_token %}
+        <div id="excelDropzone" style="
+          border: 2px dashed var(--border-medium);
+          border-radius: var(--radius-md);
+          padding: 2.25rem 1.5rem;
+          text-align: center;
+          background-color: var(--bg-subtle);
+          cursor: pointer;
+          transition: all 160ms var(--ease-smooth);
+        ">
+          <input type="file" id="excelFileInput" name="archivo_excel" accept=".xlsx, .xls, .csv" style="display: none;" required>
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--primary-50); color: var(--primary-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.85rem; border: 1px solid var(--primary-200);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
+            Arrastra tu plantilla Excel aquí o haz clic para examinar
+          </h3>
+          <p style="font-size: 0.78rem; color: var(--text-secondary);">
+            Formatos soportados: <strong>.xlsx</strong> y <strong>.csv</strong>
+          </p>
+
+          <button type="button" class="btn btn-sm btn-primary" style="margin-top: 0.85rem;" onclick="document.getElementById('excelFileInput').click();">
+            Seleccionar Archivo
+          </button>
+        </div>
+
+        <div id="uploadFileInfo" style="display: none; margin-top: 1rem; padding: 0.65rem 0.85rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.85rem;">
+          <span style="color: var(--text-tertiary);">Archivo seleccionado:</span> <strong id="uploadFileName" style="color: var(--text-primary);"></strong>
+        </div>
+
+        <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-success btn-lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Procesar e Importar al Banco
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Template Specification Guide -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.9rem; color: var(--text-primary);">Plantilla Oficial de Carga</strong>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+          Descargue la plantilla estandarizada con las cabeceras requeridas para la carga masiva.
+        </p>
+
+        <a href="{% url 'descargar_plantilla_excel' %}" class="btn btn-secondary" style="width: 100%; margin-bottom: 1.15rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Descargar Plantilla .csv
+        </a>
+
+        <div style="font-size: 0.75rem; color: var(--text-tertiary);">
+          <strong style="color: var(--text-secondary);">Columnas requeridas:</strong>
+          <ul style="padding-left: 1.15rem; margin-top: 0.35rem; display: flex; flex-direction: column; gap: 0.2rem; font-family: var(--font-mono); color: var(--text-secondary);">
+            <li>categoria</li>
+            <li>tipo (MULTIPLE / V-F)</li>
+            <li>enunciado</li>
+            <li>opcion_a, opcion_b...</li>
+            <li>clave_correcta</li>
+            <li>retroalimentacion</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial de Importaciones -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 style="font-size: 1.1rem; font-weight: 800;">Historial de Cargas Realizadas</h2>
+        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Registro de importaciones y bitácoras de validación</p>
+      </div>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre del Archivo</th>
+            <th>Fecha de Carga</th>
+            <th style="text-align: center;">Filas Totales</th>
+            <th style="text-align: center;">Válidas</th>
+            <th style="text-align: center;">Errores</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Bitácora</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for imp in importaciones %}
+          <tr>
+            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-tertiary); font-size: 0.8rem;">#{{ imp.id }}</td>
+            <td>
+              <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ imp.nombre_archivo }}</strong>
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+              {{ imp.fecha_carga|date:"d M Y, H:i" }}
+            </td>
+            <td style="text-align: center; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">
+              {{ imp.total_filas }}
+            </td>
+            <td style="text-align: center;">
+              <span class="badge badge-success">{{ imp.total_validas }}</span>
+            </td>
+            <td style="text-align: center;">
+              {% if imp.total_errores > 0 %}
+                <span class="badge badge-danger">{{ imp.total_errores }}</span>
+              {% else %}
+                <span class="badge badge-neutral">0</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if imp.total_errores == 0 %}
+                <span class="badge badge-success"><span class="pulse-dot"></span> Exitoso</span>
+              {% else %}
+                <span class="badge badge-warning">Con Advertencias</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <button class="btn btn-sm btn-secondary" data-modal-target="logModal_{{ imp.id }}">
+                Ver Log
+              </button>
+            </td>
+          </tr>
+
+          <!-- Log Modal for this import -->
+          <div class="modal-backdrop" id="logModal_{{ imp.id }}">
+            <div class="modal-dialog">
+              <div class="modal-header">
+                <div>
+                  <h3 class="modal-title">Bitácora de Validación</h3>
+                  <span style="font-size: 0.75rem; color: var(--text-tertiary); font-family: var(--font-mono);">{{ imp.nombre_archivo }}</span>
+                </div>
+                <button class="btn-ghost" data-modal-close style="font-size: 1.2rem; cursor: pointer; border: none;">✕</button>
+              </div>
+              <div class="modal-body">
+                <div style="display: flex; gap: 0.65rem; margin-bottom: 1rem;">
+                  <span class="badge badge-info">Evaluadas: {{ imp.total_filas }}</span>
+                  <span class="badge badge-success">Válidas: {{ imp.total_validas }}</span>
+                  <span class="badge badge-danger">Errores: {{ imp.total_errores }}</span>
+                </div>
+                <pre style="
+                  background: var(--primary-950);
+                  color: #6ee7b7;
+                  padding: 1.15rem;
+                  border-radius: var(--radius-sm);
+                  font-family: var(--font-mono);
+                  font-size: 0.78rem;
+                  line-height: 1.55;
+                  max-height: 300px;
+                  overflow-y: auto;
+                  white-space: pre-wrap;
+                ">{{ imp.detalle_log|default:"Procesamiento finalizado sin incidencias." }}</pre>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary" data-modal-close>Cerrar</button>
+              </div>
+            </div>
+          </div>
+
+          {% empty %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
+              Aún no se han realizado importaciones de preguntas.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

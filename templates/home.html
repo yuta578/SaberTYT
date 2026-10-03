@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Plataforma Institucional{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Command Hero Section -->
+  <div class="page-hero">
+    <div class="hero-pill-badge">
+      <span class="pulse-dot"></span> Entorno Institucional de Evaluación Estandarizada
+    </div>
+    <h1 class="hero-title-main">Simulador de Cuestionarios Saber TyT</h1>
+    <p class="hero-description-text">
+      Ambiente de preparación, diagnóstico y entrenamiento para pruebas estandarizadas Saber TyT. Gestiona bancos de ítems por competencias pedagógicas, administra pruebas cronometradas con límites de tiempo y emite informes de resultados con justificación pedagógica inmediata.
+    </p>
+
+    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+      <a href="{% url 'estudiante_catalogo' %}" class="btn btn-primary btn-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+        </svg>
+        Módulo del Estudiante
+      </a>
+      <a href="{% url 'docente_dashboard' %}" class="btn btn-secondary btn-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+        </svg>
+        Panel del Profesor (Docente)
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Tiles -->
+  <div class="stats-grid">
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper indigo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Banco de Preguntas</span>
+        <span class="stat-meta-value">{{ total_preguntas }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper teal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Evaluaciones Activas</span>
+        <span class="stat-meta-value">{{ total_cuestionarios }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Intentos Calificados</span>
+        <span class="stat-meta-value">{{ total_intentos }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 16 12 12 8 16"></polyline>
+          <line x1="12" y1="12" x2="12" y2="21"></line>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+          <polyline points="16 16 12 12 8 16"></polyline>
+        </svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Importaciones Excel</span>
+        <span class="stat-meta-value">{{ total_importaciones }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Navigation Feature Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2.25rem;">
+    <!-- Card Estudiante -->
+    <div class="card card-hover">
+      <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--success-solid); display: flex; align-items: center; justify-content: center; border: 1px solid var(--success-border);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 style="font-size: 1.1rem; font-weight: 800;">Módulo del Estudiante</h2>
+            <p style="font-size: 0.75rem; color: var(--text-tertiary);">Presentación de pruebas y retroalimentación</p>
+          </div>
+        </div>
+        <span class="badge badge-success">
+          <span class="pulse-dot"></span> Habilitado
+        </span>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.55;">
+          Identificación rápida mediante <strong>Nombre Completo y Código Institucional</strong>. Presentación interactiva de cuestionarios cronometrados con paleta de estado, soporte de omisión de ítems y liquidación inmediata de nota final.
+        </p>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Cronómetro en vivo con alerta de tiempo límite.
+          </li>
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Paleta de estado (Respondidas, En Blanco, Marcadas para Revisión).
+          </li>
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success-solid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Calificación automática con justificación pedagógica por pregunta.
+          </li>
+        </ul>
+
+        <a href="{% url 'estudiante_catalogo' %}" class="btn btn-primary" style="width: 100%;">
+          Ir al Catálogo de Evaluaciones
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card Docente -->
+    <div class="card card-hover">
+      <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--primary-50); color: var(--primary-600); display: flex; align-items: center; justify-content: center; border: 1px solid var(--primary-200);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 style="font-size: 1.1rem; font-weight: 800;">Módulo del Docente</h2>
+            <p style="font-size: 0.75rem; color: var(--text-tertiary);">Parametrización, Banco de ítems y Reportes</p>
+          </div>
+        </div>
+        <span class="badge badge-info">Gestión</span>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.55;">
+          Administración centralizada de categorías por competencias Saber TyT, configuración de ponderación de preguntas, importación masiva de archivos Excel y auditoría de sesiones evaluadas.
+        </p>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.85rem; margin-bottom: 1.5rem;">
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Banco de preguntas estructurado (opción múltiple y verdadero/falso).
+          </li>
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Importación masiva (.xlsx) con validación de filas y bitácora de auditoría.
+          </li>
+          <li style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Auditoría de intentos de estudiantes e inmutabilidad de resultados.
+          </li>
+        </ul>
+
+        <a href="{% url 'docente_dashboard' %}" class="btn btn-secondary" style="width: 100%;">
+          Acceder al Panel de Control
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Assessments Data Table -->
+  <div class="card" style="margin-bottom: 2.25rem;">
+    <div class="card-header">
+      <div>
+        <h2 style="font-size: 1.1rem; font-weight: 800;">Evaluaciones y Simulacros Disponibles</h2>
+        <p style="font-size: 0.78rem; color: var(--text-tertiary);">Pruebas programadas para el periodo académico actual</p>
+      </div>
+      <a href="{% url 'estudiante_catalogo' %}" class="btn btn-sm btn-secondary">Ver Catálogo Completo</a>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Evaluación / Simulacro</th>
+            <th>Tiempo Límite</th>
+            <th>Intentos</th>
+            <th>Escala & Aprobación</th>
+            <th>Cierre</th>
+            <th>Estado</th>
+            <th style="text-align: right;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cuestionarios %}
+          <tr>
+            <td>
+              <strong style="color: var(--text-primary);">{{ c.nombre }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary);">{{ c.descripcion|truncatechars:70 }}</div>
+            </td>
+            <td>
+              <span class="badge badge-info">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ c.tiempo_limite_minutos }} min
+              </span>
+            </td>
+            <td>
+              <span style="font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">{{ c.intentos_permitidos }} máx</span>
+            </td>
+            <td>
+              <span style="font-weight: 700; color: var(--primary-600); font-family: var(--font-mono);">{{ c.calificacion_aprobacion }}</span>
+              <span style="font-size: 0.75rem; color: var(--text-tertiary); font-family: var(--font-mono);">/ {{ c.calificacion_maxima }} pts</span>
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+              {{ c.fecha_cierre|date:"d M Y, H:i" }}
+            </td>
+            <td>
+              {% if c.estado == 'Disponible' %}
+                <span class="badge badge-success"><span class="pulse-dot"></span> Disponible</span>
+              {% elif c.estado == 'Programado' %}
+                <span class="badge badge-warning">Programado</span>
+              {% else %}
+                <span class="badge badge-neutral">{{ c.estado }}</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <a href="{% url 'estudiante_iniciar' c.id %}" class="btn btn-sm btn-primary">
+                Presentar Prueba
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-tertiary);">
+              No hay cuestionarios registrados actualmente.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Capabilities Matrix -->
+  <div class="card">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <h2 style="font-size: 1.1rem; font-weight: 800;">Capacidades de Evaluación Saber TyT</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.95rem;">
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--cat-lectura);">
+          <strong style="color: var(--cat-lectura); font-size: 0.85rem; display: block; margin-bottom: 3px;">Banco de Preguntas Pedagógicas</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Gestión y deshabilitación lógica de preguntas (opción múltiple y V/F) preservando la trazabilidad histórica de calificaciones.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--cat-cuanti);">
+          <strong style="color: var(--cat-cuanti); font-size: 0.85rem; display: block; margin-bottom: 3px;">Importación Masiva de Ítems</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Carga estructurada desde plantillas Excel con validación de campos obligatorios, coherencia de alternativas y bitácora de auditoría.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--cat-ingles);">
+          <strong style="color: var(--cat-ingles); font-size: 0.85rem; display: block; margin-bottom: 3px;">Parametrización de Evaluaciones</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Control de ventanas de apertura/cierre, cronómetro en minutos, límites de intentos y escalas de calificación institucionales.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--warning-solid);">
+          <strong style="color: var(--warning-text); font-size: 0.85rem; display: block; margin-bottom: 3px;">Control de Intentos y Cronómetro</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Identificación ágil mediante código institucional, validación de disponibilidad y control de tiempo por temporizador en vivo.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--info-solid);">
+          <strong style="color: var(--info-text); font-size: 0.85rem; display: block; margin-bottom: 3px;">Persistencia Atómica y Omisiones</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Registro formal e independiente de opciones marcadas, soporte de preguntas omitidas (NULL) y bandera de revisión para el alumno.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1.1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--success-solid);">
+          <strong style="color: var(--success-text); font-size: 0.85rem; display: block; margin-bottom: 3px;">Calificación Automatizada</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+            Cálculo proporcional inmediato de la nota final, reporte de desempeño y retroalimentación pedagógica detallada.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

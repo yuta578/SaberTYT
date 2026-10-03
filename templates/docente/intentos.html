@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Intentos y Calificaciones - Módulo Docente{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+  <!-- Top Bar -->
+  <div style="margin-bottom: 1.75rem;">
+    <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+      Monitoreo de Calificaciones
+    </div>
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+      Registro de Intentos de Estudiantes
+    </h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">
+      Auditoría en tiempo real de sesiones presentadas, inmutabilidad de resultados finales y desglose de respuestas.
+    </p>
+  </div>
+
+  <!-- Intentos Table Card -->
+  <div class="card">
+    <div class="card-header">
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">Historial de Evaluaciones Presentadas</strong>
+      <span class="badge badge-primary">{{ intentos.count }} Intentos Registrados</span>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Estudiante</th>
+            <th>Código</th>
+            <th>Cuestionario Presentado</th>
+            <th style="text-align: center;">Intento #</th>
+            <th>Fecha de Inicio</th>
+            <th style="text-align: center;">Calificación Final</th>
+            <th>Estado</th>
+            <th>Resultado</th>
+            <th style="text-align: right;">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in intentos %}
+          <tr>
+            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-tertiary); font-size: 0.8rem;">#{{ it.id }}</td>
+            <td>
+              <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ it.nombre_estudiante }}</strong>
+            </td>
+            <td>
+              <code style="background: var(--bg-subtle); padding: 0.2rem 0.45rem; border-radius: var(--radius-xs); font-weight: 600; font-family: var(--font-mono); color: var(--primary-600); font-size: 0.8rem;">{{ it.codigo_estudiante }}</code>
+            </td>
+            <td style="font-size: 0.82rem; color: var(--text-secondary);">
+              {{ it.cuestionario.nombre|truncatechars:40 }}
+            </td>
+            <td style="text-align: center; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">
+              {{ it.numero_intento }}
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+              {{ it.fecha_inicio|date:"d/m/Y H:i" }}
+            </td>
+            <td style="text-align: center;">
+              {% if it.calificacion_final %}
+                <span style="font-size: 1.05rem; font-weight: 800; color: var(--primary-600); font-family: var(--font-mono);">
+                  {{ it.calificacion_final }}
+                </span>
+                <span style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono);">/ {{ it.cuestionario.calificacion_maxima }}</span>
+              {% else %}
+                <span style="color: var(--text-tertiary);">--</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if it.estado == 'Finalizado' %}
+                <span class="badge badge-success">Finalizado</span>
+              {% elif it.estado == 'En Progreso' %}
+                <span class="badge badge-warning">En Progreso</span>
+              {% else %}
+                <span class="badge badge-danger">Anulado</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if it.calificacion_final %}
+                {% if it.calificacion_final >= it.cuestionario.calificacion_aprobacion %}
+                  <span class="badge badge-success">Aprobado</span>
+                {% else %}
+                  <span class="badge badge-danger">Reprobado</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-neutral">Pendiente</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <a href="{% url 'estudiante_resultado' it.id %}" class="btn btn-sm btn-secondary">
+                Ver Examen
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
+              Aún no se han registrado intentos de presentación.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

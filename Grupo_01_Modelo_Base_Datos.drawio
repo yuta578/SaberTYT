@@ -1,0 +1,245 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0">
+  <diagram id="mer_cuestionarios" name="MER - Cuestionarios">
+    <mxGraphModel dx="981" dy="560" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="tbl_categorias" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="categorias" vertex="1">
+          <mxGeometry height="110" width="220" x="80" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cat_id" parent="tbl_categorias" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="220" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cat_nombre" parent="tbl_categorias" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           nombre" vertex="1">
+          <mxGeometry height="26" width="220" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="cat_desc" parent="tbl_categorias" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="N          descripcion" vertex="1">
+          <mxGeometry height="28" width="220" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_preguntas" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="preguntas" vertex="1">
+          <mxGeometry height="240" width="230" x="380" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_id" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_cat_id" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK        categoria_id" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_tipo" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           tipo" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_texto_base" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="N          texto_base" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_enunciado" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           enunciado" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_retro" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="N          retroalimentacion" vertex="1">
+          <mxGeometry height="26" width="230" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_puntaje" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           puntaje_base" vertex="1">
+          <mxGeometry height="26" width="230" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="prg_activo" parent="tbl_preguntas" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           activo" vertex="1">
+          <mxGeometry height="28" width="230" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_opciones" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="opciones_respuesta" vertex="1">
+          <mxGeometry height="160" width="230" x="890" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="opc_id" parent="tbl_opciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="opc_prg_id" parent="tbl_opciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK        pregunta_id" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="opc_letra" parent="tbl_opciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           letra" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="opc_texto" parent="tbl_opciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           texto" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="opc_correcta" parent="tbl_opciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           es_correcta" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_cuestionarios" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="cuestionarios" vertex="1">
+          <mxGeometry height="290" width="230" x="80" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_id" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_nombre" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           nombre" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_desc" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="N          descripcion" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_f_apertura" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           fecha_apertura" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_f_cierre" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           fecha_cierre" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_tiempo" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           tiempo_limite" vertex="1">
+          <mxGeometry height="26" width="230" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_intentos" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           intentos" vertex="1">
+          <mxGeometry height="26" width="230" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_calif_max" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           calificacion_maxima" vertex="1">
+          <mxGeometry height="26" width="230" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_calif_aprob" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           calificacion_aprobatoria" vertex="1">
+          <mxGeometry height="26" width="230" y="238" as="geometry" />
+        </mxCell>
+        <mxCell id="cue_mezclar" parent="tbl_cuestionarios" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           mezclar_preguntas" vertex="1">
+          <mxGeometry height="26" width="230" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_cue_prg" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="cuestionario_preguntas" vertex="1">
+          <mxGeometry height="160" width="230" x="410" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="cp_id" parent="tbl_cue_prg" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cp_cue_id" parent="tbl_cue_prg" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK        cuestionario_id" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="cp_prg_id" parent="tbl_cue_prg" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK        pregunta_id" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="cp_orden" parent="tbl_cue_prg" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           orden" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="cp_puntaje" parent="tbl_cue_prg" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           puntaje_ponderado" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_importaciones" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="importaciones" vertex="1">
+          <mxGeometry height="186" width="230" x="1280" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_id" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_nom_arch" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           nombre_archivo" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_f_carga" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           fecha_carga" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_tot_filas" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           total_filas" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_tot_validas" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           total_validas" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="imp_tot_errores" parent="tbl_importaciones" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           total_errores" vertex="1">
+          <mxGeometry height="26" width="230" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_cat_prg" edge="1" parent="1" source="cat_id" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=default;strokeWidth=1.8;" target="prg_cat_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_prg_opc" edge="1" parent="1" source="tbl_preguntas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=default;strokeWidth=1.8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="opc_prg_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="65" />
+              <mxPoint x="670" y="119" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_cue_cp" edge="1" parent="1" source="tbl_cuestionarios" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=default;strokeWidth=1.8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="cp_cue_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="440" />
+              <mxPoint x="340" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_prg_cp" edge="1" parent="1" source="tbl_preguntas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeColor=default;strokeWidth=1.8;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="cp_prg_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="115" />
+              <mxPoint x="650" y="485" />
+            </Array>
+            <mxPoint x="650" y="490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-23" edge="1" parent="1" source="4KO8G61iWeVlQEXna4Ck-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;startArrow=ERmany;startFill=0;endArrow=ERone;endFill=0;curved=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;strokeWidth=1.8;" target="tbl_cuestionarios">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="672.5" />
+              <mxPoint x="580" y="670" />
+              <mxPoint x="360" y="670" />
+              <mxPoint x="360" y="462.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-1" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="intentos" vertex="1">
+          <mxGeometry height="290" width="230" x="620" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-2" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-3" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK        cuestionario_id" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-4" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="nombre_estudiante" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-5" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           codigo_estudiante" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-6" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           numero_intento" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-7" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           fecha_inicio" vertex="1">
+          <mxGeometry height="26" width="230" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-8" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           fecha_fin" vertex="1">
+          <mxGeometry height="26" width="230" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-9" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           puntaje_obtenido" vertex="1">
+          <mxGeometry height="26" width="230" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-10" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="calificacion_final" vertex="1">
+          <mxGeometry height="26" width="230" y="238" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-11" parent="4KO8G61iWeVlQEXna4Ck-1" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="estado" vertex="1">
+          <mxGeometry height="26" width="230" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-12" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontalStack=0;startSize=30;fillColor=#b0d5c1;strokeColor=default;fontColor=#2d4736;rounded=1;arcSize=8;collapsible=0;" value="respuesta_intento" vertex="1">
+          <mxGeometry height="186" width="230" x="1090" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-13" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="PK        id" vertex="1">
+          <mxGeometry height="26" width="230" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-14" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK intento_id" vertex="1">
+          <mxGeometry height="26" width="230" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-15" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="FK pregunta_id" vertex="1">
+          <mxGeometry height="26" width="230" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-16" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           FK opcion_seleccionada_id" vertex="1">
+          <mxGeometry height="26" width="230" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-17" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           es_correcta" vertex="1">
+          <mxGeometry height="26" width="230" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-18" parent="4KO8G61iWeVlQEXna4Ck-12" style="text;align=left;verticalAlign=middle;spacingLeft=12;fillColor=#c7e6d4;fontColor=#1b3323;strokeColor=default;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" value="           puntaje_asignado" vertex="1">
+          <mxGeometry height="26" width="230" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-24" edge="1" parent="1" source="4KO8G61iWeVlQEXna4Ck-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=ERone;endFill=0;startArrow=ERmany;startFill=0;strokeWidth=1.8;" target="4KO8G61iWeVlQEXna4Ck-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-25" edge="1" parent="1" source="4KO8G61iWeVlQEXna4Ck-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=1.8;endArrow=ERone;endFill=0;startArrow=ERmany;startFill=0;" target="prg_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="615" />
+              <mxPoint x="860" y="83" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4KO8G61iWeVlQEXna4Ck-26" edge="1" parent="1" source="4KO8G61iWeVlQEXna4Ck-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;strokeWidth=1.8;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;" target="tbl_opciones">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

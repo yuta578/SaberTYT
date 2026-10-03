@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignar Preguntas a {{ cuestionario.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+  <!-- Top Bar -->
+  <div style="margin-bottom: 1.75rem;">
+    <a href="{% url 'docente_cuestionarios' %}" class="btn btn-sm btn-ghost" style="padding-left: 0; margin-bottom: 0.5rem;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Volver a Cuestionarios
+    </a>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+          Preguntas Asignadas: {{ cuestionario.nombre }}
+        </h1>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">
+          Vinculación de ítems del banco central, definición de orden secuencial y asignación de puntaje ponderado.
+        </p>
+      </div>
+
+      <button class="btn btn-primary" data-modal-target="agregarPreguntasModal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Vincular Preguntas del Banco
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary of Assigned Questions -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+      <div>
+        <strong style="font-size: 1rem; color: var(--text-primary);">Lista de Ítems en esta Evaluación</strong>
+        <span style="font-size: 0.78rem; color: var(--text-tertiary); margin-left: 0.4rem;">
+          ({{ cp_list.count }} preguntas vinculadas)
+        </span>
+      </div>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="badge badge-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+          Ponderación Total: {{ total_ponderado }} pts / {{ cuestionario.calificacion_maxima }} max
+        </span>
+      </div>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th style="width: 70px; text-align: center;">Orden</th>
+            <th>Competencia</th>
+            <th>Tipo</th>
+            <th>Enunciado de la Pregunta</th>
+            <th>Puntaje Base</th>
+            <th>Puntaje Ponderado</th>
+            <th style="text-align: right;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in cp_list %}
+          <tr>
+            <td style="text-align: center; font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; color: var(--primary-600);">
+              #{{ item.orden }}
+            </td>
+            <td>
+              <span class="badge badge-info">{{ item.pregunta.categoria.nombre }}</span>
+            </td>
+            <td>
+              {% if item.pregunta.tipo == 'MULTIPLE' %}
+                <span class="badge badge-neutral">Opción Múltiple</span>
+              {% else %}
+                <span class="badge badge-neutral">V/F</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ item.pregunta.enunciado|truncatechars:90 }}</strong>
+            </td>
+            <td style="font-family: var(--font-mono); font-size: 0.85rem;">
+              {{ item.pregunta.puntaje_base }} pts
+            </td>
+            <td>
+              <span class="badge badge-success" style="font-family: var(--font-mono);">
+                {{ item.puntaje_ponderado }} pts
+              </span>
+            </td>
+            <td style="text-align: right;">
+              <form method="POST" action="{% url 'docente_cuestionario_desvincular_pregunta' cuestionario.id item.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger-solid);" onclick="return confirm('¿Desvincular esta pregunta del cuestionario?');">
+                  Desvincular
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
+              Este cuestionario aún no tiene preguntas vinculadas. Haz clic en "Vincular Preguntas del Banco".
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal to Add Questions from Item Bank -->
+  <div class="modal-backdrop" id="agregarPreguntasModal">
+    <div class="modal-dialog" style="max-width: 760px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Seleccionar Ítems del Banco de Preguntas</h3>
+        <button class="btn-ghost" data-modal-close style="font-size: 1.2rem; cursor: pointer; border: none;">✕</button>
+      </div>
+      <form method="POST" action="{% url 'docente_cuestionario_vincular_pregunta' cuestionario.id %}">
+        {% csrf_token %}
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            Marque las preguntas que desea incorporar al simulacro y defina su ponderación particular:
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+            {% for p in preguntas_disponibles %}
+            <div style="
+              border: 1px solid var(--border-subtle);
+              border-radius: var(--radius-sm);
+              padding: 0.75rem 0.95rem;
+              background: var(--bg-surface);
+              display: flex;
+              align-items: flex-start;
+              gap: 0.85rem;
+            ">
+              <input type="checkbox" name="preguntas_ids" value="{{ p.id }}" id="chk_p_{{ p.id }}" class="form-check-input" style="margin-top: 3px;">
+              <div style="flex: 1;">
+                <label for="chk_p_{{ p.id }}" style="font-weight: 700; color: var(--text-primary); cursor: pointer; display: block; margin-bottom: 3px; font-size: 0.88rem;">
+                  [{{ p.categoria.nombre }}] {{ p.enunciado }}
+                </label>
+                <div style="display: flex; gap: 0.65rem; font-size: 0.75rem; color: var(--text-tertiary);">
+                  <span>Tipo: {{ p.tipo }}</span>
+                  <span>•</span>
+                  <span>Puntaje Base: {{ p.puntaje_base }} pts</span>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 2rem; color: var(--text-tertiary);">
+              Todas las preguntas activas del banco ya están vinculadas a este cuestionario.
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Vincular Seleccionadas
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

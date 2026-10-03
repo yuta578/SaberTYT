@@ -1,0 +1,178 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Simulador de Cuestionarios Saber TyT{% endblock %} | Plataforma Institucional</title>
+  <meta name="description" content="Sistema Institucional de Evaluación y Simulación de Pruebas Saber TyT.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Navbar Header -->
+    <header class="navbar">
+      <div class="navbar-container">
+        <a href="{% url 'home' %}" class="navbar-brand">
+          <div class="brand-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <div class="brand-text-block">
+            <span class="brand-title-main">SABER TyT</span>
+            <span class="brand-subtitle-meta">Plataforma Institucional</span>
+          </div>
+        </a>
+
+        <!-- Dynamic Navigation Links by Role -->
+        <nav>
+          <!-- Nav Links for Estudiante -->
+          <ul class="nav-links-menu" id="navGroupEstudiante" style="{% if '/docente/' in request.path %}display: none;{% endif %}">
+            <li>
+              <a href="{% url 'home' %}" class="nav-link-btn {% if request.path == '/' %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Inicio
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn {% if '/estudiante/' in request.path %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+                Mis Evaluaciones
+              </a>
+            </li>
+          </ul>
+
+          <!-- Nav Links for Docente / Profesor -->
+          <ul class="nav-links-menu" id="navGroupDocente" style="{% if not '/docente/' in request.path %}display: none;{% endif %}">
+            <li>
+              <a href="{% url 'home' %}" class="nav-link-btn {% if request.path == '/' %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Inicio
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'docente_dashboard' %}" class="nav-link-btn {% if request.path == '/docente/' %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Panel Docente
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'docente_preguntas' %}" class="nav-link-btn {% if '/docente/preguntas/' in request.path %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Banco de Preguntas
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'docente_cuestionarios' %}" class="nav-link-btn {% if '/docente/cuestionarios/' in request.path %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Cuestionarios
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'docente_importaciones' %}" class="nav-link-btn {% if '/docente/importaciones/' in request.path %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 16 12 12 8 16"></polyline>
+                  <line x1="12" y1="12" x2="12" y2="21"></line>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                </svg>
+                Importar Excel
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'docente_intentos' %}" class="nav-link-btn {% if '/docente/intentos/' in request.path %}active{% endif %}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+                Registro de Intentos
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Header Actions: Role Switcher & Theme Toggle -->
+        <div class="nav-actions-group">
+          <!-- Role Switcher (Estudiante / Profesor) -->
+          <div class="role-selector-pill" id="roleSelectorPill">
+            <button type="button" class="role-btn {% if not '/docente/' in request.path %}active{% endif %}" id="btnRoleEstudiante" data-role="estudiante" title="Cambiar a vista de Estudiante">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+              Estudiante
+            </button>
+            <button type="button" class="role-btn {% if '/docente/' in request.path %}active{% endif %}" id="btnRoleDocente" data-role="docente" title="Cambiar a vista de Profesor">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              </svg>
+              Profesor
+            </button>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button class="theme-toggle-btn" title="Alternar Modo Oscuro / Claro" aria-label="Alternar Tema">
+            <svg class="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      {% block content %}
+      {% endblock %}
+    </main>
+
+    <!-- Institutional Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.9rem; font-family: var(--font-display);">
+            Plataforma Institucional de Evaluación Saber TyT
+          </strong>
+          <p style="margin-top: 3px; font-size: 0.78rem; color: var(--text-secondary);">
+            Sistema para la gestión pedagógica de bancos de ítems, simulacros cronometrados y retroalimentación formativa.
+          </p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1.25rem; font-size: 0.78rem; color: var(--text-tertiary);">
+          <span>© 2026 Sistema Institucional</span>
+          <span style="font-weight: 700; color: var(--primary-600);">Versión 1.0</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Main JavaScript -->
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

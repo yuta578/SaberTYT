@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if pregunta %}Editar Pregunta #{{ pregunta.id }}{% else %}Nueva Pregunta{% endif %} - Banco de Ítems{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div style="margin-bottom: 1.75rem;">
+    <a href="{% url 'docente_preguntas' %}" class="btn btn-sm btn-ghost" style="padding-left: 0; margin-bottom: 0.5rem;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Volver al Banco de Preguntas
+    </a>
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+      {% if pregunta %}Editar Pregunta #{{ pregunta.id }}{% else %}Crear Nueva Pregunta para el Banco{% endif %}
+    </h1>
+    <p style="font-size: 0.88rem; color: var(--text-secondary);">
+      Complete los parámetros pedagógicos, alternativas estructuradas y justificación para la retroalimentación.
+    </p>
+  </div>
+
+  <form method="POST" class="card">
+    {% csrf_token %}
+    <div class="card-body">
+      <!-- Metadatos de la Pregunta -->
+      <div class="form-row" style="margin-bottom: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label">Competencia / Categoría <span class="required">*</span></label>
+          <select name="categoria_id" class="form-select" required>
+            {% for cat in categorias %}
+              <option value="{{ cat.id }}" {% if pregunta.categoria_id == cat.id %}selected{% endif %}>
+                {{ cat.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de Pregunta <span class="required">*</span></label>
+          <select name="tipo" class="form-select" id="tipoPreguntaSelect" required>
+            <option value="MULTIPLE" {% if pregunta.tipo == 'MULTIPLE' %}selected{% endif %}>Opción Múltiple (A, B, C, D)</option>
+            <option value="VERDADERO_FALSO" {% if pregunta.tipo == 'VERDADERO_FALSO' %}selected{% endif %}>Verdadero / Falso (2 opciones)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Puntaje Base <span class="required">*</span></label>
+          <input type="number" step="0.25" min="0.25" max="10.00" name="puntaje_base" value="{{ pregunta.puntaje_base|default:'1.00' }}" class="form-control" required>
+        </div>
+      </div>
+
+      <!-- Texto Base / Contexto Opcional -->
+      <div class="form-group">
+        <label class="form-label">Texto Base / Contexto de Lectura (Opcional)</label>
+        <textarea name="texto_base" rows="3" class="form-control" placeholder="Fragmento de texto, situación contextual, gráfica descriptiva o lectura previa...">{{ pregunta.texto_base|default:'' }}</textarea>
+        <div class="form-text">Útil para preguntas de comprensión de lectura o análisis de casos situacionales.</div>
+      </div>
+
+      <!-- Enunciado Principal -->
+      <div class="form-group">
+        <label class="form-label">Enunciado de la Pregunta <span class="required">*</span></label>
+        <textarea name="enunciado" rows="3" class="form-control" placeholder="Escriba la pregunta formulada al estudiante..." required>{{ pregunta.enunciado|default:'' }}</textarea>
+      </div>
+
+      <!-- Opciones de Respuesta -->
+      <div style="background-color: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.35rem; border: 1px solid var(--border-subtle);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div>
+            <strong style="font-size: 0.95rem; color: var(--text-primary);">Alternativas de Respuesta</strong>
+            <p style="font-size: 0.78rem; color: var(--text-tertiary);">Marque con el botón circular cuál alternativa corresponde a la clave correcta.</p>
+          </div>
+          <span class="badge badge-primary">Clave Única Requerida</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Opción A -->
+          <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <input type="radio" name="correcta_letra" value="A" id="radio_A" class="form-check-input" {% if not pregunta or opc_a.es_correcta %}checked{% endif %} required>
+            <label for="radio_A" style="font-weight: 800; min-width: 26px; font-family: var(--font-mono); font-size: 0.9rem;">(A)</label>
+            <input type="text" name="opcion_A_texto" value="{{ opc_a.texto|default:'' }}" class="form-control" placeholder="Texto de la alternativa A..." required>
+          </div>
+
+          <!-- Opción B -->
+          <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <input type="radio" name="correcta_letra" value="B" id="radio_B" class="form-check-input" {% if opc_b.es_correcta %}checked{% endif %}>
+            <label for="radio_B" style="font-weight: 800; min-width: 26px; font-family: var(--font-mono); font-size: 0.9rem;">(B)</label>
+            <input type="text" name="opcion_B_texto" value="{{ opc_b.texto|default:'' }}" class="form-control" placeholder="Texto de la alternativa B..." required>
+          </div>
+
+          <!-- Opción C -->
+          <div id="opcion_C_wrapper" style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <input type="radio" name="correcta_letra" value="C" id="radio_C" class="form-check-input" {% if opc_c.es_correcta %}checked{% endif %}>
+            <label for="radio_C" style="font-weight: 800; min-width: 26px; font-family: var(--font-mono); font-size: 0.9rem;">(C)</label>
+            <input type="text" name="opcion_C_texto" value="{{ opc_c.texto|default:'' }}" class="form-control" placeholder="Texto de la alternativa C...">
+          </div>
+
+          <!-- Opción D -->
+          <div id="opcion_D_wrapper" style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-surface); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <input type="radio" name="correcta_letra" value="D" id="radio_D" class="form-check-input" {% if opc_d.es_correcta %}checked{% endif %}>
+            <label for="radio_D" style="font-weight: 800; min-width: 26px; font-family: var(--font-mono); font-size: 0.9rem;">(D)</label>
+            <input type="text" name="opcion_D_texto" value="{{ opc_d.texto|default:'' }}" class="form-control" placeholder="Texto de la alternativa D...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Retroalimentación Pedagógica -->
+      <div class="form-group">
+        <label class="form-label">Retroalimentación / Justificación Pedagógica</label>
+        <textarea name="retroalimentacion" rows="3" class="form-control" placeholder="Explique por qué la respuesta correcta es la elegida y los conceptos evaluados...">{{ pregunta.retroalimentacion|default:'' }}</textarea>
+        <div class="form-text">Esta explicación se desplegará en la pantalla de resultados del estudiante tras la entrega final.</div>
+      </div>
+
+      <div class="form-check" style="margin-top: 1rem;">
+        <input type="checkbox" name="activo" id="activoCheck" class="form-check-input" {% if not pregunta or pregunta.activo %}checked{% endif %}>
+        <label for="activoCheck" class="form-label" style="margin: 0; cursor: pointer;">
+          Pregunta Activa en el Banco (Deshabilitación lógica para preservar histórico)
+        </label>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <a href="{% url 'docente_preguntas' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Guardar Pregunta
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Hide C & D if Verdadero/Falso is selected
+  const tipoSelect = document.getElementById('tipoPreguntaSelect');
+  const optC = document.getElementById('opcion_C_wrapper');
+  const optD = document.getElementById('opcion_D_wrapper');
+
+  function adjustOptions() {
+    if (tipoSelect.value === 'VERDADERO_FALSO') {
+      optC.style.display = 'none';
+      optD.style.display = 'none';
+    } else {
+      optC.style.display = 'flex';
+      optD.style.display = 'flex';
+    }
+  }
+
+  tipoSelect.addEventListener('change', adjustOptions);
+  adjustOptions();
+</script>
+{% endblock %}
