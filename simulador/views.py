@@ -18,20 +18,85 @@ from .models import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-def home_view(request):
-    total_preguntas = Pregunta.objects.count()
-    total_cuestionarios = Cuestionario.objects.count()
-    total_intentos = Intento.objects.count()
-    total_importaciones = Importacion.objects.count()
-    cuestionarios = Cuestionario.objects.all().order_by('-fecha_apertura')[:6]
+def login_view(request):
+    if request.method == 'POST':
+        role = request.POST.get('role', 'estudiante')
+        profiles = {
+            'estudiante': {
+                'label': 'Estudiante',
+                'name': 'Alexandra López',
+                'email': 'alexandra.lopez@itp.edu.co',
+                'redirect': 'estudiante_catalogo',
+            },
+            'docente': {
+                'label': 'Docente Evaluador',
+                'name': 'Hernán Díaz',
+                'email': 'hernan.diaz@itp.edu.co',
+                'redirect': 'docente_dashboard',
+            },
+            'admin': {
+                'label': 'Administrador',
+                'name': 'Ing. Roberto Andrade',
+                'email': 'r.andrade@itp.edu.co',
+                'redirect': 'admin_dashboard',
+            },
+        }
+        profile = profiles.get(role, profiles['estudiante'])
+        request.session['demo_profile'] = profile
+        return redirect(profile['redirect'])
 
-    return render(request, 'home.html', {
-        'total_preguntas': total_preguntas,
-        'total_cuestionarios': total_cuestionarios,
-        'total_intentos': total_intentos,
-        'total_importaciones': total_importaciones,
-        'cuestionarios': cuestionarios,
+    return render(request, 'login.html', {
+        'selected_role': request.GET.get('role', 'estudiante'),
     })
+
+
+def logout_view(request):
+    request.session.pop('demo_profile', None)
+    return redirect('login')
+
+
+def home_view(request):
+    profile = request.session.get('demo_profile')
+    if not profile:
+        return redirect('login')
+
+    return redirect(profile['redirect'])
+
+
+def admin_dashboard_view(request):
+    return render(request, 'admin/dashboard.html', {
+        'total_usuarios': 1420,
+        'total_estudiantes': 1280,
+        'total_docentes': 125,
+        'total_admins': 15,
+        'pruebas_activas': 84,
+        'simulacros_ejecutados': 4892,
+    })
+
+
+def admin_users_view(request):
+    users = [
+        {'name': 'Laura Patricia Meneses', 'code': 'EST-202310023', 'email': 'l.meneses@itp.edu.co', 'role': 'Estudiante', 'active': True},
+        {'name': 'Prof. Hernán Díaz Mora', 'code': 'DOC-20180045', 'email': 'h.diaz@itp.edu.co', 'role': 'Docente', 'active': True},
+        {'name': 'Ing. Carlos R. Caicedo', 'code': 'ADM-20200012', 'email': 'c.caicedo@itp.edu.co', 'role': 'Administrador', 'active': True},
+        {'name': 'Julián Andrés Burbano', 'code': 'EST-202220412', 'email': 'j.burbano@itp.edu.co', 'role': 'Estudiante', 'active': False},
+    ]
+    return render(request, 'admin/users.html', {'users': users})
+
+
+def admin_permissions_view(request):
+    return render(request, 'admin/permissions.html')
+
+
+def admin_settings_view(request):
+    return render(request, 'admin/settings.html')
+
+
+def profile_view(request):
+    profile = request.session.get('demo_profile')
+    if not profile:
+        return redirect('login')
+    return render(request, 'profile.html', {'profile': profile})
 
 
 def docente_dashboard_view(request):
@@ -413,9 +478,25 @@ def docente_intentos_view(request):
 
 
 def estudiante_catalogo_view(request):
-    cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas').filter(estado='Disponible').order_by('-id')
+    cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas').exclude(estado='Borrador').order_by('-id')
+    total_cuestionarios = cuestionarios.count()
+    total_preguntas = CuestionarioPregunta.objects.filter(cuestionario__in=cuestionarios).count()
+    total_intentos = Intento.objects.count()
+    calificaciones = Intento.objects.filter(calificacion_final__isnull=False)
+    promedio_general = calificaciones.aggregate(promedio=Sum('calificacion_final'))['promedio'] or Decimal('0')
+    if calificaciones.count():
+        promedio_general = promedio_general / calificaciones.count()
+    ultimo_intento = Intento.objects.filter(
+        estado='Finalizado'
+    ).select_related('cuestionario').first()
+
     return render(request, 'estudiante/catalogo.html', {
         'cuestionarios': cuestionarios,
+        'total_cuestionarios': total_cuestionarios,
+        'total_preguntas': total_preguntas,
+        'total_intentos': total_intentos,
+        'promedio_general': promedio_general,
+        'ultimo_intento': ultimo_intento,
     })
 
 

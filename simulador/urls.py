@@ -4,6 +4,15 @@ from . import views
 urlpatterns = [
     # Portal Principal
     path('', views.home_view, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('perfil/', views.profile_view, name='profile'),
+
+    # Módulo Administrador
+    path('admin-panel/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('admin-panel/usuarios/', views.admin_users_view, name='admin_users'),
+    path('admin-panel/permisos/', views.admin_permissions_view, name='admin_permissions'),
+    path('admin-panel/configuracion/', views.admin_settings_view, name='admin_settings'),
 
     # Módulo Docente
     path('docente/', views.docente_dashboard_view, name='docente_dashboard'),

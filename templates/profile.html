@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Mi Perfil{% endblock %}
+{% block content %}
+<div class="profile-shell"><section class="profile-card profile-main"><div class="profile-avatar">{{ profile.name|first }}</div><h1>{{ profile.name }}</h1><p>{{ profile.label }}</p><span>● Cuenta demo institucional</span></section><section class="profile-card"><h2>▣ Datos Personales e Institucionales</h2><label>Nombre Completo<input value="{{ profile.name }}" readonly></label><label>Correo Institucional<input value="{{ profile.email }}" readonly></label><label>Rol del Sistema<input value="{{ profile.label }}" readonly></label></section><section class="profile-card"><h2>♧ Cambio de Contraseña</h2><p>Modo demostración: las credenciales no se validan todavía.</p><input type="password" value="demo1234" readonly></section><a class="admin-create" href="{% url 'home' %}">▣ Guardar Cambios</a></div>
+{% endblock %}

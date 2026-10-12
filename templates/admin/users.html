@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Usuarios - Administrador{% endblock %}
+{% block content %}
+<div class="admin-shell admin-list-page">
+  <div class="admin-page-title"><h1>♙ Gestión de Usuarios</h1><span>1,420 Registros</span></div>
+  <div class="admin-summary"><b>● 1,380 Activos</b><b>● 40 Inactivos</b><b>♧ 1,250 Estudiantes</b></div>
+  <input class="admin-search" placeholder="⌕  Buscar por nombre, código o correo...">
+  <div class="admin-filters"><button>▣ Rol: Todos⌄</button><button>◉ Estado: Todos⌄</button><button>♧ Programa⌄</button></div>
+  <a class="admin-create" href="#">♙ + Crear Usuario</a>
+  <h3>LISTADO INSTITUCIONAL <em>Orden: Recientes primero</em></h3>
+  <section class="admin-user-list">{% for user in users %}<article><div class="admin-user-avatar">{{ user.name|first }}</div><div><strong>{{ user.name }}</strong><p>▧ {{ user.code }}<br>⌾ {{ user.email }}</p></div><aside><b>{{ user.role }}</b><span class="{% if user.active %}active{% else %}inactive{% endif %}">● {% if user.active %}Activo{% else %}Inactivo{% endif %}</span></aside><footer>✎　🔑　⏸</footer></article>{% endfor %}</section>
+</div>
+{% endblock %}

@@ -4,68 +4,30 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
-  initRoleSwitcher();
+  initMobileNavigation();
   initModals();
   initDragAndDrop();
   initTablesSearch();
 });
 
-// Role Switcher (Estudiante / Profesor)
-function initRoleSwitcher() {
-  const btnEstudiante = document.getElementById('btnRoleEstudiante');
-  const btnDocente = document.getElementById('btnRoleDocente');
-  const navEstudiante = document.getElementById('navGroupEstudiante');
-  const navDocente = document.getElementById('navGroupDocente');
+function initMobileNavigation() {
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  const navigation = document.getElementById('main-navigation');
+  if (!toggle || !navigation) return;
 
-  if (!btnEstudiante || !btnDocente) return;
-
-  const currentPath = window.location.pathname;
-
-  // Determine initial role
-  let initialRole = 'estudiante';
-  if (currentPath.startsWith('/docente/')) {
-    initialRole = 'docente';
-    localStorage.setItem('tyt_role', 'docente');
-  } else if (currentPath.startsWith('/estudiante/')) {
-    initialRole = 'estudiante';
-    localStorage.setItem('tyt_role', 'estudiante');
-  } else {
-    initialRole = localStorage.getItem('tyt_role') || 'estudiante';
-  }
-
-  applyRole(initialRole, false);
-
-  btnEstudiante.addEventListener('click', () => {
-    applyRole('estudiante', true);
+  toggle.addEventListener('click', () => {
+    const isOpen = navigation.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Cerrar navegación' : 'Abrir navegación');
   });
 
-  btnDocente.addEventListener('click', () => {
-    applyRole('docente', true);
+  navigation.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navigation.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Abrir navegación');
+    });
   });
-
-  function applyRole(role, shouldNavigate) {
-    localStorage.setItem('tyt_role', role);
-
-    if (role === 'docente') {
-      btnDocente.classList.add('active');
-      btnEstudiante.classList.remove('active');
-      if (navDocente) navDocente.style.display = 'flex';
-      if (navEstudiante) navEstudiante.style.display = 'none';
-
-      if (shouldNavigate && !window.location.pathname.startsWith('/docente/')) {
-        window.location.href = '/docente/';
-      }
-    } else {
-      btnEstudiante.classList.add('active');
-      btnDocente.classList.remove('active');
-      if (navEstudiante) navEstudiante.style.display = 'flex';
-      if (navDocente) navDocente.style.display = 'none';
-
-      if (shouldNavigate && !window.location.pathname.startsWith('/estudiante/')) {
-        window.location.href = '/estudiante/';
-      }
-    }
-  }
 }
 
 // Theme Management (Light / Dark)

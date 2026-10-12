@@ -79,9 +79,9 @@
               {% endif %}
             </td>
             <td style="text-align: center;">
-              <a href="{% url 'docente_cuestionario_preguntas' c.id %}" class="badge badge-primary" style="text-decoration: none;">
-                {{ c.cuestionario_preguntas.count }} preguntas →
-              </a>
+              <span class="badge badge-primary">
+                {{ c.cuestionario_preguntas.count }} preguntas
+              </span>
             </td>
             <td>
               {% if c.estado == 'Disponible' %}

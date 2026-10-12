@@ -1,141 +1,87 @@
 {% extends 'base.html' %}
 
-{% block title %}Catálogo de Evaluaciones - Módulo Estudiante{% endblock %}
+{% block title %}Cuestionarios Disponibles - Estudiante{% endblock %}
 
 {% block content %}
-<div class="container">
-  <!-- Page Header -->
-  <div class="page-hero">
-    <div class="hero-pill-badge">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
-      Portal del Estudiante
+<div class="student-dashboard">
+  <section class="student-welcome-card">
+    <div>
+      <span class="student-eyebrow"><span class="pulse-dot"></span> Periodo de preparación y diagnóstico oficial</span>
+      <h1>¡Hola de nuevo, {{ request.session.demo_profile.name|default:"Estudiante Saber TyT" }}! 👋</h1>
+      <p>Tecnología en Gestión Contable <span>•</span> Sede Mocoa <strong>Ciclo Académico 2024-II</strong></p>
     </div>
-    <h1 class="hero-title-main">Evaluaciones y Simulacros Disponibles</h1>
-    <p class="hero-description-text">
-      Selecciona una prueba para iniciar tu simulación cronometrada. El sistema registrará de manera atómica cada una de tus respuestas y te permitirá revisar retroalimentación pedagógica detallada al finalizar.
-    </p>
+    <div class="student-status-card">
+      <span class="student-avatar-large">{{ request.session.demo_profile.name|default:"E"|first }}</span>
+      <div><strong>Registro institucional</strong><b>{{ request.session.demo_profile.email|default:"estudiante@itp.edu.co" }}</b><small>● Habilitada para pruebas</small></div>
+    </div>
+  </section>
+
+  <section class="student-kpi-grid">
+    <article class="student-kpi kpi-green"><span>☑</span><small>Cuestionarios activos</small><strong>{{ total_cuestionarios }}</strong><em>Disponibles para presentar</em><p>◷ Tiempo más próximo: 12h 45m restantes</p></article>
+    <article class="student-kpi kpi-blue"><span>↻</span><small>Intentos pendientes</small><strong>{{ total_intentos }}</strong><em>Intentos registrados</em><p>Cupo total consumido en el periodo</p></article>
+    <article class="student-kpi kpi-purple"><span>⌁</span><small>Promedio general TyT</small><strong>{{ promedio_general|floatformat:1 }}<i>/300 pts</i></strong><em>Rango: Nivel 4 (Avanzado)</em><p>Tu progreso académico acumulado</p></article>
+  </section>
+
+  <div class="student-filterbar">
+    <strong>Todos los Cuestionarios <b>{{ total_cuestionarios }}</b></strong>
+    <span>◉ Disponibles</span><span>◷ Programados</span><span>✓ Historial y Cerrados</span>
+    <input type="search" placeholder="⌕ Buscar por nombre o competencia...">
   </div>
 
-  <!-- Cuestionarios Cards Grid -->
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+  <section class="student-exam-grid">
     {% for c in cuestionarios %}
-    <div class="card card-hover" style="display: flex; flex-direction: column; justify-content: space-between;">
-      <div>
-        <div class="card-header">
-          <div style="display: flex; align-items: center; gap: 0.45rem;">
-            <span class="badge badge-primary">Saber TyT</span>
-            <span class="badge badge-info">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              {{ c.tiempo_limite_minutos }} min
-            </span>
-          </div>
-          {% if c.estado == 'Disponible' %}
-            <span class="badge badge-success"><span class="pulse-dot"></span> Disponible</span>
-          {% elif c.estado == 'Programado' %}
-            <span class="badge badge-warning">Programado</span>
-          {% else %}
-            <span class="badge badge-neutral">{{ c.estado }}</span>
-          {% endif %}
-        </div>
-
-        <div class="card-body">
-          <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem; line-height: 1.3;">
-            {{ c.nombre }}
-          </h2>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
-            {{ c.descripcion|default:"Simulacro oficial estructurado por competencias genéricas de la prueba Saber TyT." }}
-          </p>
-
-          <!-- Specifications Matrix -->
-          <div style="background-color: var(--bg-subtle); padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.45rem; border: 1px solid var(--border-subtle);">
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-tertiary);">Preguntas Evaluadas:</span>
-              <strong style="color: var(--text-primary); font-family: var(--font-mono);">{{ c.cuestionario_preguntas.count }} ítems</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-tertiary);">Intentos Permitidos:</span>
-              <strong style="color: var(--text-primary);">{{ c.intentos_permitidos }} intento(s)</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-tertiary);">Nota de Aprobación:</span>
-              <strong style="color: var(--success-solid); font-family: var(--font-mono);">{{ c.calificacion_aprobacion }} / {{ c.calificacion_maxima }} pts</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-tertiary);">Cierre de Prueba:</span>
-              <strong style="color: var(--text-secondary); font-family: var(--font-mono);">{{ c.fecha_cierre|date:"d M Y, H:i" }}</strong>
-            </div>
-          </div>
-        </div>
+    <article class="student-exam-card {% if c.estado != 'Disponible' %}is-muted{% endif %}">
+      <header>
+        {% if c.estado == 'Disponible' %}<span class="student-status available">● Disponible ahora</span>{% elif c.estado == 'Programado' %}<span class="student-status scheduled">◷ Programado</span>{% else %}<span class="student-status closed">✓ Cerrado / Calificado</span>{% endif %}
+        <span class="student-type">Módulo específico</span>
+      </header>
+      <h2>{{ c.nombre }}</h2>
+      <p>{{ c.descripcion|default:"Evaluación estandarizada Saber TyT por competencias genéricas y específicas."|truncatechars:145 }}</p>
+      <div class="student-exam-facts">
+        <span>▣ <b>{{ c.cuestionario_preguntas.count }}</b><small>Preguntas</small></span>
+        <span>⌛ <b>{{ c.tiempo_limite_minutos }} min</b><small>Duración</small></span>
+        <span>▣ <b>{{ c.intentos_permitidos }}</b><small>Intentos</small></span>
+        <span>◷ <b>{{ c.fecha_cierre|date:"d M" }}</b><small>Cierre</small></span>
       </div>
+      <div class="student-competencies"><small>COMPETENCIAS EVALUADAS:</small><span>Razonamiento Cuantitativo</span><span>Lectura Crítica</span><span>Inglés</span></div>
+      {% if c.estado == 'Disponible' %}
+      <button class="student-primary-action" data-modal-target="modalIdentificacion_{{ c.id }}">Iniciar simulacro →</button>
+      {% else %}
+      <button class="student-secondary-action" disabled>Ver detalle →</button>
+      {% endif %}
+    </article>
 
-      <div class="card-footer">
-        {% if c.estado == 'Disponible' %}
-          <button class="btn btn-primary" style="width: 100%;" data-modal-target="modalIdentificacion_{{ c.id }}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            Iniciar Simulacro
-          </button>
-        {% else %}
-          <button class="btn btn-secondary" style="width: 100%;" disabled>
-            No Disponible
-          </button>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Modal de Identificación del Estudiante para Cuestionario -->
     <div class="modal-backdrop" id="modalIdentificacion_{{ c.id }}">
       <div class="modal-dialog">
-        <div class="modal-header">
-          <div>
-            <h3 class="modal-title">Identificación del Estudiante</h3>
-            <span style="font-size: 0.75rem; color: var(--text-tertiary);">{{ c.nombre }}</span>
-          </div>
-          <button class="btn-ghost" data-modal-close style="font-size: 1.2rem; cursor: pointer; border: none;">✕</button>
-        </div>
+        <div class="modal-header"><div><h3 class="modal-title">Identificación del Estudiante</h3><span>{{ c.nombre }}</span></div><button class="btn-ghost" data-modal-close>✕</button></div>
         <form method="POST" action="{% url 'estudiante_iniciar' c.id %}">
           {% csrf_token %}
           <div class="modal-body">
-            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.15rem; line-height: 1.5;">
-              Para iniciar el intento, ingrese sus credenciales institucionales. El cronómetro comenzará a correr inmediatamente al pulsar <strong>"Comenzar Intento"</strong>.
-            </p>
-
-            <div class="form-group">
-              <label class="form-label">Nombre Completo del Estudiante <span class="required">*</span></label>
-              <input type="text" name="nombre_estudiante" class="form-control" placeholder="Ej: Alexander López" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Código Institucional <span class="required">*</span></label>
-              <input type="text" name="codigo_estudiante" class="form-control" placeholder="Ej: TYT-2026-0891" style="font-family: var(--font-mono);" required>
-            </div>
-
-            <!-- Rules checklist -->
-            <div style="background: var(--info-bg); border: 1px solid var(--info-border); padding: 0.95rem 1.15rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--info-text);">
-              <strong style="display: block; margin-bottom: 4px;">Instrucciones de la Evaluación:</strong>
-              <ul style="padding-left: 1.15rem; display: flex; flex-direction: column; gap: 3px;">
-                <li>Duración máxima de <strong>{{ c.tiempo_limite_minutos }} minutos</strong> cronometrados en tiempo real.</li>
-                <li>Puedes marcar preguntas para revisión y volver a ellas antes de enviar.</li>
-                <li>Las preguntas no contestadas se registrarán como omitidas (0.00 pts).</li>
-              </ul>
-            </div>
+            <div class="form-group"><label class="form-label">Nombre completo</label><input type="text" name="nombre_estudiante" class="form-control" value="{{ request.session.demo_profile.name|default:'' }}" required></div>
+            <div class="form-group"><label class="form-label">Código institucional</label><input type="text" name="codigo_estudiante" class="form-control" value="TYT-2026-0001" required></div>
+            <div class="login-demo-note"><strong>Antes de comenzar</strong><span>Duración máxima: {{ c.tiempo_limite_minutos }} minutos. Tus respuestas se guardarán durante el intento.</span></div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-modal-close>Cancelar</button>
-            <button type="submit" class="btn btn-success btn-lg">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline></svg>
-              Comenzar Intento
-            </button>
-          </div>
+          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-modal-close>Cancelar</button><button type="submit" class="btn btn-success">Comenzar intento →</button></div>
         </form>
       </div>
     </div>
     {% empty %}
-    <div class="card" style="text-align: center; padding: 2.5rem; grid-column: 1 / -1;">
-      <p style="color: var(--text-tertiary); font-size: 1rem;">
-        No hay cuestionarios disponibles en este momento.
-      </p>
-    </div>
+      <div class="student-empty-state">No hay cuestionarios publicados en este momento.</div>
     {% endfor %}
-  </div>
+  </section>
+
+  <section class="student-bottom-grid">
+    <article class="student-upcoming-card">
+      {% if ultimo_intento %}
+      <span>✓ Último simulacro presentado</span>
+      <h2>{{ ultimo_intento.cuestionario.nombre }}</h2>
+      <p>Revisa tu resultado y la retroalimentación pedagógica para continuar tu ruta de preparación.</p>
+      <a class="student-secondary-action" href="{% url 'estudiante_resultado' ultimo_intento.id %}">Ver resultado →</a>
+      {% else %}
+      <span>◷ Programado para 15 Nov</span><h2>Simulacro Nacional Clasificatorio 2024</h2><p>Simulación con ranking comparativo institucional para estudiantes próximos a presentar el examen de Estado Saber TyT oficial.</p><small>⚑ 60 preguntas　◷ 3 horas 30 min　▣ Certificado Digital</small>
+      {% endif %}
+    </article>
+    <article class="student-progress-card"><small>RUTA DE APRENDIZAJE</small><h2>Avance del Plan TyT</h2><p>Has completado el 60% de los simulacros diagnósticos recomendados.</p><strong>◯　Meta institucional: 200 pts</strong></article>
+  </section>
 </div>
 {% endblock %}

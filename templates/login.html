@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso institucional | SABER TyT</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-brand-panel">
+      <div class="login-brand-mark">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2 2 7l10 5 10-5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+      <span class="login-eyebrow">Instituto Tecnológico del Putumayo</span>
+      <h1>Saber TyT</h1>
+      <p>Una plataforma para preparar, evaluar y acompañar el aprendizaje en las pruebas de Estado.</p>
+      <div class="login-feature-list">
+        <span><b>✓</b> Simulacros cronometrados</span>
+        <span><b>✓</b> Retroalimentación pedagógica</span>
+        <span><b>✓</b> Gestión académica centralizada</span>
+      </div>
+    </section>
+
+    <section class="login-form-panel">
+      <div class="login-form-heading">
+        <span class="hero-pill-badge"><span class="pulse-dot"></span> Acceso institucional</span>
+        <h2>Bienvenido de nuevo</h2>
+        <p>Ingresa para continuar a tu espacio de trabajo.</p>
+      </div>
+
+      <form method="post" class="login-form">
+        {% csrf_token %}
+        <label class="form-label" for="institutional-email">Correo o usuario institucional</label>
+        <div class="login-input-wrap">
+          <span>@</span>
+          <input id="institutional-email" type="email" value="demo@itp.edu.co" autocomplete="username" aria-label="Correo institucional">
+        </div>
+
+        <label class="form-label" for="institutional-password">Contraseña</label>
+        <div class="login-input-wrap">
+          <span>●</span>
+          <input id="institutional-password" type="password" value="demo1234" autocomplete="current-password" aria-label="Contraseña">
+          <span>⌁</span>
+        </div>
+
+        <div class="login-demo-note">
+          <strong>Modo demostración</strong>
+          <span>No se validan credenciales reales. Elige el panel que quieres explorar.</span>
+        </div>
+
+        <fieldset class="role-choice-group">
+          <legend>Ingresar como</legend>
+          <label class="role-choice">
+            <input type="radio" name="role" value="estudiante" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
+            <span class="role-choice-icon">⌂</span>
+            <span><strong>Estudiante</strong><small>Evaluaciones y simulacros</small></span>
+          </label>
+          <label class="role-choice">
+            <input type="radio" name="role" value="docente" {% if selected_role == 'docente' %}checked{% endif %}>
+            <span class="role-choice-icon">♙</span>
+            <span><strong>Docente evaluador</strong><small>Banco, pruebas y reportes</small></span>
+          </label>
+          <label class="role-choice">
+            <input type="radio" name="role" value="admin" {% if selected_role == 'admin' %}checked{% endif %}>
+            <span class="role-choice-icon">⚙</span>
+            <span><strong>Administrador</strong><small>Usuarios, permisos y sistema</small></span>
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-lg login-submit">Continuar al panel <span>→</span></button>
+      </form>
+
+    </section>
+  </main>
+</body>
+</html>

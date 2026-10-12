@@ -1,0 +1,28 @@
+.admin-page, .profile-page {
+  background: #f8f6ff;
+  color: #10192e;
+}
+
+.admin-page .main-content, .profile-page .main-content { background: #f8f6ff; }
+.admin-page .navbar, .profile-page .navbar { background: #10253d; }
+.admin-shell { width:min(100% - 2rem,1080px); margin:0 auto; padding:1.2rem 0 2rem; }
+.admin-hero { padding:1.5rem; border-radius:16px; color:white; background:linear-gradient(120deg,#102d49,#0b3f4c); }
+.admin-hero h1 { margin:.25rem 0; }
+.admin-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin:1rem 0; }
+.admin-metrics article, .admin-actions a, .admin-activity, .admin-settings-card, .permission-card {
+  padding:1rem; border:1px solid #e5e4f0; border-radius:14px; background:white; box-shadow:0 4px 14px rgba(31,37,68,.06);
+}
+.admin-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:.7rem; }
+.admin-actions a { color:#102d49; text-decoration:none; font-weight:800; }
+.profile-shell { width:min(100% - 2rem,620px); margin:1.5rem auto; }
+.profile-card { margin-bottom:.8rem; padding:1.2rem; border:1px solid #e5e4f0; border-radius:16px; background:white; box-shadow:0 4px 14px rgba(31,37,68,.06); }
+.profile-main { text-align:center; }
+.profile-main .profile-avatar { display:grid; place-items:center; width:84px; height:84px; margin:0 auto .6rem; border-radius:50%; color:white; background:#007b55; font-size:2rem; font-weight:800; }
+.profile-card h1, .profile-card h2 { color:#102d49; }
+.profile-card h2 { font-size:1rem; }
+.profile-card label { display:block; margin-top:.7rem; color:#596075; font-size:.75rem; }
+.profile-card input { display:block; width:100%; box-sizing:border-box; margin-top:.25rem; padding:.7rem; border:1px solid #e5e4f0; border-radius:8px; background:#f8f6ff; }
+.admin-create { display:block; padding:.8rem; border-radius:9px; color:white; background:#007b55; text-align:center; text-decoration:none; font-weight:800; }
+@media (max-width:700px) {
+  .admin-metrics, .admin-actions { grid-template-columns:1fr 1fr; }
+}

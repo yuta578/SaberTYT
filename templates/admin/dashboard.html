@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Panel de Control General - Administrador{% endblock %}
+{% block content %}
+<div class="admin-shell">
+  <section class="admin-hero">
+    <span class="admin-pill">● UPUTUMAYO • CICLO ACTIVO 2024-II</span>
+    <h1>Panel de Control General</h1>
+    <p>Bienvenido, Ing. Roberto Andrade<br><small>(Administrador de Plataforma)</small></p>
+    <div class="admin-server"><span>●</span> Servidor Institucional UPUTUMAYO <b>En línea • 42ms</b></div>
+  </section>
+  <div class="section-heading"><h2>▥ Métricas Operativas</h2><small>Actualizado en tiempo real</small></div>
+  <section class="admin-metrics">
+    <article><span>Total Usuarios Activos</span><strong>{{ total_usuarios|floatformat:0 }}</strong><small>usuarios</small><b>↗ +8.4%</b><div class="admin-meter"></div><footer><i>Estudiantes<br><strong>{{ total_estudiantes }}</strong></i><i>Docentes<br><strong>{{ total_docentes }}</strong></i><i>Admins<br><strong>{{ total_admins }}</strong></i></footer></article>
+    <article><span>Pruebas Activas</span><strong>{{ pruebas_activas }}</strong><small>5 bancos Saber TyT</small></article>
+    <article><span>Simulacros Ejecutados</span><strong>{{ simulacros_ejecutados|floatformat:0 }}</strong><small>Tasa culminación alta</small></article>
+  </section>
+  <div class="section-heading"><h2>ϟ Accesos Directos</h2><small>Operación</small></div>
+  <section class="admin-actions">
+    <a href="{% url 'admin_users' %}"><b>♙</b><strong>Gestionar Usuarios</strong><span>Crear, editar roles y estados</span><em>Abrir catálogo →</em></a>
+    <a href="{% url 'admin_permissions' %}"><b>⬡</b><strong>Matriz Permisos</strong><span>Auditoría de accesos RBAC</span><em>Ver niveles →</em></a>
+    <a href="{% url 'docente_preguntas' %}"><b>▣</b><strong>Bancos Saber TyT</strong><span>Aprobación y publicación</span><em>5 pendientes →</em></a>
+    <a href="{% url 'admin_settings' %}"><b>☷</b><strong>Ajustes Sistema</strong><span>Parámetros e integraciones</span><em>Configurar →</em></a>
+  </section>
+  <div class="section-heading"><h2>◌ Actividad del Sistema</h2><small class="admin-live">En Vivo</small></div>
+  <section class="admin-activity">
+    <p>▣ <b>Simulacro Docente</b><span>Hace 12 min</span><br>Prof. Hernán Díaz publicó el simulacro <em>#05 - Razonamiento Cuantitativo.</em></p>
+    <p>♙ <b>Admisión Estudiantil</b><span>Hace 45 min</span><br>Se registraron 35 nuevos estudiantes del programa Tec. en Gestión Contable.</p>
+    <p class="alert">♧ <b>Alerta Seguridad</b><span>Hace 2 horas</span><br>Intento de acceso fallido recurrente para el usuario <em>j.burbano@itp.edu.co</em></p>
+    <p>☁ <b>Mantenimiento</b><span>Hoy, 04:00 AM</span><br>Actualización de copia de seguridad institucional completada.</p>
+  </section>
+  <a class="admin-audit" href="{% url 'admin_users' %}">▤ Ver registro completo de auditoría</a>
+</div>
+{% endblock %}
