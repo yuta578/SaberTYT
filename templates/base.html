@@ -26,15 +26,15 @@
             </svg>
           </div>
           <div class="brand-text-block">
-            {% if '/estudiante/' in request.path %}
-              <span class="brand-title-main">UPUTUMAYO <small>• Saber TyT Institucional</small></span>
-              <span class="brand-subtitle-meta">Plataforma oficial de evaluación</span>
-            {% elif '/admin-panel/' in request.path or request.path == '/perfil/' %}
-              <span class="brand-title-main">UPUTUMAYO <small>• Saber TyT</small></span>
+            {% if request.session.demo_profile.role == 'admin' or '/admin-panel/' in request.path %}
+              <span class="brand-title-main">UNIPUTUMAYO <small>• Saber TyT</small></span>
               <span class="brand-subtitle-meta">Administración institucional</span>
+            {% elif request.session.demo_profile.role == 'docente' or '/docente/' in request.path %}
+              <span class="brand-title-main">UNIPUTUMAYO <small>• Saber TyT</small></span>
+              <span class="brand-subtitle-meta">Saber TyT • Docente Evaluador</span>
             {% else %}
-              <span class="brand-title-main">UPUTUMAYO <small>• Saber TyT</small></span>
-              <span class="brand-subtitle-meta">Saber TyT • Evaluador</span>
+              <span class="brand-title-main">UNIPUTUMAYO <small>• Saber TyT Institucional</small></span>
+              <span class="brand-subtitle-meta">Plataforma oficial de evaluación</span>
             {% endif %}
           </div>
         </a>

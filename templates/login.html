@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso Institucional | Saber TyT UPUTUMAYO</title>
+  <title>Acceso Institucional | Saber TyT UNIPUTUMAYO</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   <style>
     .alert-banner {
@@ -89,7 +89,7 @@
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
         </svg>
       </div>
-      <span class="login-eyebrow">Instituto Tecnológico del Putumayo • UPUTUMAYO</span>
+      <span class="login-eyebrow">Instituto Tecnológico del Putumayo • UNIPUTUMAYO</span>
       <h1>Saber TyT</h1>
       <p>Sistema Oficial para la Evaluación, Simulación Cronometrada y Retroalimentación Pedagógica en las Pruebas de Estado.</p>
       
@@ -212,18 +212,18 @@
 
         <fieldset class="role-choice-group" style="margin-bottom: 1.5rem;">
           <legend>Perfil de Destino</legend>
-          <label class="role-choice">
-            <input type="radio" name="role" id="role_estudiante" value="estudiante" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
+          <label class="role-choice" for="role_estudiante" style="cursor: pointer;">
+            <input type="radio" name="role" id="role_estudiante" value="estudiante" onchange="handleRoleChange('estudiante')" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
             <span class="role-choice-icon">📖</span>
             <span><strong>Estudiante</strong><small>Mis evaluaciones, sala de espera y simulacro</small></span>
           </label>
-          <label class="role-choice">
-            <input type="radio" name="role" id="role_docente" value="docente" {% if selected_role == 'docente' %}checked{% endif %}>
+          <label class="role-choice" for="role_docente" style="cursor: pointer;">
+            <input type="radio" name="role" id="role_docente" value="docente" onchange="handleRoleChange('docente')" {% if selected_role == 'docente' %}checked{% endif %}>
             <span class="role-choice-icon">🎓</span>
             <span><strong>Docente Evaluador</strong><small>Banco de ítems, carga Excel y cuestionarios</small></span>
           </label>
-          <label class="role-choice">
-            <input type="radio" name="role" id="role_admin" value="admin" {% if selected_role == 'admin' %}checked{% endif %}>
+          <label class="role-choice" for="role_admin" style="cursor: pointer;">
+            <input type="radio" name="role" id="role_admin" value="admin" onchange="handleRoleChange('admin')" {% if selected_role == 'admin' %}checked{% endif %}>
             <span class="role-choice-icon">🛡️</span>
             <span><strong>Administrador</strong><small>Directorio, usuarios, permisos y reportes</small></span>
           </label>
@@ -237,11 +237,28 @@
   </main>
 
   <script>
+    const roleCredentials = {
+      'admin': { email: 'admin@itp.edu.co', pass: 'demo1234' },
+      'docente': { email: 'docente@itp.edu.co', pass: 'demo1234' },
+      'estudiante': { email: 'estudiante@itp.edu.co', pass: 'demo1234' }
+    };
+
+    function handleRoleChange(role) {
+      if (roleCredentials[role]) {
+        document.getElementById('institutional-email').value = roleCredentials[role].email;
+        document.getElementById('institutional-password').value = roleCredentials[role].pass;
+      }
+    }
+
     function fillCredentials(email, pass, role) {
       document.getElementById('institutional-email').value = email;
       document.getElementById('institutional-password').value = pass;
-      const radio = document.getElementById('role_' + role);
-      if (radio) radio.checked = true;
+      if (role) {
+        const radio = document.getElementById('role_' + role);
+        if (radio) {
+          radio.checked = true;
+        }
+      }
     }
 
     function clearCredentials() {
@@ -257,6 +274,17 @@
         input.type = 'password';
       }
     }
+
+    // Inicializar sincronización en DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('input[name="role"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+          if (this.checked) {
+            handleRoleChange(this.value);
+          }
+        });
+      });
+    });
   </script>
 </body>
 </html>

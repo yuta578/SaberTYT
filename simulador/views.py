@@ -56,30 +56,34 @@ def login_view(request):
             'admin@itp.edu.co': {
                 'role': 'admin',
                 'name': 'Ing. Roberto Andrade',
-                'label': 'Administrador de Plataforma',
+                'label': 'Administrador',
                 'redirect': 'admin_dashboard',
                 'code': 'ADM-20200012',
+                'email': 'admin@itp.edu.co',
             },
             'r.andrade@itp.edu.co': {
                 'role': 'admin',
                 'name': 'Ing. Roberto Andrade',
-                'label': 'Administrador de Plataforma',
+                'label': 'Administrador',
                 'redirect': 'admin_dashboard',
                 'code': 'ADM-20200012',
+                'email': 'r.andrade@itp.edu.co',
             },
             'docente@itp.edu.co': {
                 'role': 'docente',
                 'name': 'Prof. Hernán Díaz Mora',
-                'label': 'Docente Evaluador',
+                'label': 'Docente',
                 'redirect': 'docente_dashboard',
                 'code': 'DOC-20180045',
+                'email': 'docente@itp.edu.co',
             },
             'hernan.diaz@itp.edu.co': {
                 'role': 'docente',
                 'name': 'Prof. Hernán Díaz Mora',
-                'label': 'Docente Evaluador',
+                'label': 'Docente',
                 'redirect': 'docente_dashboard',
                 'code': 'DOC-20180045',
+                'email': 'hernan.diaz@itp.edu.co',
             },
             'estudiante@itp.edu.co': {
                 'role': 'estudiante',
@@ -87,6 +91,7 @@ def login_view(request):
                 'label': 'Estudiante',
                 'redirect': 'estudiante_catalogo',
                 'code': 'EST-202310023',
+                'email': 'estudiante@itp.edu.co',
             },
             'alexandra.lopez@itp.edu.co': {
                 'role': 'estudiante',
@@ -94,19 +99,39 @@ def login_view(request):
                 'label': 'Estudiante',
                 'redirect': 'estudiante_catalogo',
                 'code': 'EST-202310023',
+                'email': 'alexandra.lopez@itp.edu.co',
             },
         }
 
-        profile = credenciales_validas.get(email.lower())
+        role_defaults = {
+            'admin': credenciales_validas['admin@itp.edu.co'],
+            'docente': credenciales_validas['docente@itp.edu.co'],
+            'estudiante': credenciales_validas['estudiante@itp.edu.co'],
+        }
 
-        # Si el usuario seleccionó rol o uso atajo de demo
+        # Determinación de perfil:
+        # Si el usuario seleccionó una vía rápida de "Perfil de Destino", respetamos estrictamente su elección.
+        profile = None
+        if selected_role in role_defaults:
+            # Si el correo coincide con una de las cuentas demo estándar o difiere del rol seleccionado
+            if email.lower() in ['admin@itp.edu.co', 'docente@itp.edu.co', 'estudiante@itp.edu.co'] or not credenciales_validas.get(email.lower()):
+                profile = role_defaults[selected_role]
+            elif credenciales_validas.get(email.lower()):
+                matched = credenciales_validas[email.lower()]
+                if matched['role'] == selected_role:
+                    profile = matched
+                else:
+                    profile = role_defaults[selected_role]
+        else:
+            profile = credenciales_validas.get(email.lower())
+
         if not profile:
-            if 'admin' in email.lower() or selected_role == 'admin':
-                profile = credenciales_validas['admin@itp.edu.co']
-            elif 'docente' in email.lower() or selected_role == 'docente':
-                profile = credenciales_validas['docente@itp.edu.co']
-            elif 'estudiante' in email.lower() or selected_role == 'estudiante':
-                profile = credenciales_validas['estudiante@itp.edu.co']
+            if 'admin' in email.lower():
+                profile = role_defaults['admin']
+            elif 'docente' in email.lower():
+                profile = role_defaults['docente']
+            elif 'estudiante' in email.lower():
+                profile = role_defaults['estudiante']
             else:
                 messages.error(request, "Credenciales inválidas: El correo institucional ingresado no está registrado en el directorio activo.")
                 return render(request, 'login.html', {
@@ -123,18 +148,27 @@ def login_view(request):
                 'selected_role': selected_role,
             })
 
-        # Autenticación Exitosa
+        # Autenticación Exitosa: Limpiar sesión previa para evitar persistencia errónea de roles
+        request.session.flush()
         request.session['demo_profile'] = profile
-        messages.success(request, f"Acceso concedido. Bienvenido(a), {profile['name']}.")
+        request.session.modified = True
+        messages.success(request, f"Acceso concedido. Perfil activo: {profile['name']} ({profile['label']}).")
         return redirect(profile['redirect'])
 
+    selected_role = request.GET.get('role', 'estudiante')
+    default_emails = {
+        'admin': 'admin@itp.edu.co',
+        'docente': 'docente@itp.edu.co',
+        'estudiante': 'estudiante@itp.edu.co',
+    }
     return render(request, 'login.html', {
-        'selected_role': request.GET.get('role', 'estudiante'),
+        'selected_role': selected_role,
+        'email': default_emails.get(selected_role, 'estudiante@itp.edu.co'),
     })
 
 
 def logout_view(request):
-    request.session.pop('demo_profile', None)
+    request.session.flush()
     messages.info(request, "Sesión cerrada correctamente. Hasta pronto.")
     return redirect('login')
 
