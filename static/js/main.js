@@ -13,20 +13,58 @@ document.addEventListener('DOMContentLoaded', () => {
 function initMobileNavigation() {
   const toggle = document.querySelector('.mobile-menu-toggle');
   const navigation = document.getElementById('main-navigation');
+  const backdrop = document.getElementById('navBackdrop');
   if (!toggle || !navigation) return;
 
-  toggle.addEventListener('click', () => {
-    const isOpen = navigation.classList.toggle('is-open');
-    toggle.setAttribute('aria-expanded', String(isOpen));
-    toggle.setAttribute('aria-label', isOpen ? 'Cerrar navegación' : 'Abrir navegación');
+  function closeMenu() {
+    navigation.classList.remove('is-open');
+    toggle.classList.remove('is-active');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Abrir menú de navegación');
+    if (backdrop) backdrop.classList.remove('is-active');
+    document.body.style.overflow = '';
+  }
+
+  function openMenu() {
+    navigation.classList.add('is-open');
+    toggle.classList.add('is-active');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Cerrar menú de navegación');
+    if (backdrop) backdrop.classList.add('is-active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = navigation.classList.contains('is-open');
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
   });
 
+  if (backdrop) {
+    backdrop.addEventListener('click', closeMenu);
+  }
+
+  // Close when pressing Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navigation.classList.contains('is-open')) {
+      closeMenu();
+    }
+  });
+
+  // Close when clicking any navigation link
   navigation.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      navigation.classList.remove('is-open');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.setAttribute('aria-label', 'Abrir navegación');
-    });
+    link.addEventListener('click', closeMenu);
+  });
+
+  // Close on window resize to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1080 && navigation.classList.contains('is-open')) {
+      closeMenu();
+    }
   });
 }
 

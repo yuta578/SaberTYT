@@ -127,18 +127,24 @@
 </div>
 
 <script>
-  // Hide C & D if Verdadero/Falso is selected
+  // Hide C & D if Verdadero/Falso is selected & pre-populate options if empty
   const tipoSelect = document.getElementById('tipoPreguntaSelect');
   const optC = document.getElementById('opcion_C_wrapper');
   const optD = document.getElementById('opcion_D_wrapper');
+  const inputA = document.querySelector('input[name="opcion_A_texto"]');
+  const inputB = document.querySelector('input[name="opcion_B_texto"]');
 
   function adjustOptions() {
     if (tipoSelect.value === 'VERDADERO_FALSO') {
       optC.style.display = 'none';
       optD.style.display = 'none';
+      if (inputA && !inputA.value) inputA.value = 'Verdadero';
+      if (inputB && !inputB.value) inputB.value = 'Falso';
     } else {
       optC.style.display = 'flex';
       optD.style.display = 'flex';
+      if (inputA && inputA.value === 'Verdadero') inputA.value = '';
+      if (inputB && inputB.value === 'Falso') inputB.value = '';
     }
   }
 

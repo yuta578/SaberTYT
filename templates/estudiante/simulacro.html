@@ -55,7 +55,10 @@
       <!-- Main Question Work Area (Left Column) -->
       <div>
         {% for item in cp_list %}
-        <div class="question-block question-card-bespoke" data-question-index="{{ forloop.counter0 }}" style="{% if not forloop.first %}display: none;{% endif %}">
+        <div class="question-block question-card-bespoke" data-question-index="{{ forloop.counter0 }}" data-question-id="{{ item.pregunta.id }}" style="{% if not forloop.first %}display: none;{% endif %}">
+          <input type="hidden" name="pregunta_{{ item.pregunta.id }}" id="input_pregunta_{{ item.pregunta.id }}" class="hidden-answer-input" value="">
+          <input type="hidden" name="revision_{{ item.pregunta.id }}" id="input_revision_{{ item.pregunta.id }}" class="hidden-revision-input" value="false">
+
           <!-- Question Meta Header -->
           <div class="question-meta-bar">
             <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">

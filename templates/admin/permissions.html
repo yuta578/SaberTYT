@@ -1,5 +1,167 @@
 {% extends 'base.html' %}
-{% block title %}Matriz de Roles y Permisos{% endblock %}
+{% block title %}Matriz de Roles y Permisos - Administrador{% endblock %}
+
 {% block content %}
-<div class="admin-shell admin-list-page"><span class="admin-pill">♧ SEGURIDAD INSTITUCIONAL • RBAC</span><h1>Matriz de Roles y Permisos</h1><p>Configuración de privilegios de acceso para la plataforma Saber TyT.</p><span class="admin-role-count">● 3 Roles Configurados • 18 Acciones Mapeadas</span><input class="admin-search" placeholder="⌕ Buscar acción o privilegio..."><div class="permission-card"><h2>▣ Simulacros y Pruebas</h2><p><b>Crear / Editar Simulacros</b><span>✓　✓　×</span><small>Estructurar baterías de prueba</small></p><p><b>Presentar Simulacro en Vivo</b><span>✓　✓　✓</span><small>Sesiones sincrónicas activas</small></p><p><b>Calificar y Publicar Resultados</b><span>✓　✓　×</span><small>Cierre de cortes evaluativos</small></p><h2>▣ Banco de Preguntas Saber TyT</h2><p><b>Subir Reactivos y Preguntas</b><span>✓　✓　×</span><small>Módulos genéricos y específicos</small></p><p><b>Aprobar Preguntas Institucionales</b><span>✓　×　×</span><small>Revisión de pares y rigor ICES</small></p><h2>▣ Métricas y Reportes</h2><p><b>Ver Diagnóstico Individual</b><span>✓　✓　✓</span><small>Puntaje por competencia</small></p><p><b>Exportar Certificados e Informes</b><span>✓　✓　✓</span><small>Comprobantes y sábana de notas</small></p><h2>▣ Administración y Seguridad</h2><p><b>Gestionar Usuarios y Roles</b><span>✓　×　×</span><small>Asignar perfiles y altas masivas</small></p></div><div class="admin-security">▣ <strong>Protocolo de Seguridad Institucional</strong><br><small>Los cambios en permisos de Administrador requieren confirmación con código de seguridad 2FA.</small></div></div>
+<div class="admin-shell admin-list-page">
+  <!-- Cabecera M05 -->
+  <section class="admin-hero">
+    <span class="admin-pill">● [M05: Matriz de Roles y Permisos] • Control de Acceso Basado en Roles (RBAC)</span>
+    <h1>Matriz de Roles y Permisos Institucionales</h1>
+    <p>Auditoría y parametrización de privilegios para los perfiles Administrador, Docente Evaluador y Estudiante.</p>
+    <div class="admin-server">
+      <span>●</span> Política Activa: <b>Principio de Menor Privilegio (PoLP) • 3 Roles • 18 Acciones</b>
+    </div>
+  </section>
+
+  <!-- Barra de Filtro y Búsqueda -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin: 1.5rem 0 1rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <input 
+        type="search" 
+        id="permSearch" 
+        placeholder="⌕ Filtrar módulo, acción o privilegio..." 
+        class="form-control" 
+        style="min-width: 300px; padding: 0.6rem 1rem; border-radius: var(--radius-sm);"
+        oninput="filtrarPermisos(this.value)"
+      >
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <span class="badge badge-primary" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">🛡️ Administrador (Root)</span>
+      <span class="badge badge-info" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">🎓 Docente Evaluador</span>
+      <span class="badge badge-success" style="font-size: 0.82rem; padding: 0.4rem 0.85rem;">📖 Estudiante</span>
+    </div>
+  </div>
+
+  <!-- Matriz de Permisos RBAC -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="table-responsive-wrapper">
+      <table class="table-modern" id="matrizPermisosTable">
+        <thead>
+          <tr>
+            <th style="width: 28%;">Módulo / Funcionalidad</th>
+            <th style="width: 36%;">Acción & Descripción de Privilegio</th>
+            <th style="text-align: center; width: 12%;">Administrador</th>
+            <th style="text-align: center; width: 12%;">Docente</th>
+            <th style="text-align: center; width: 12%;">Estudiante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- M01: Acceso -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M01] Autenticación</strong></td>
+            <td>Ingreso al sistema con alertas y validación de estado</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
+          </tr>
+          <!-- M02: Paneles -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M02] Paneles Principales</strong></td>
+            <td>Visualización de dashboard según el rol institucional</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Admin</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Docente</span></td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Catálogo</span></td>
+          </tr>
+          <!-- M04: Usuarios -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M04] Directorio de Usuarios</strong></td>
+            <td>Alta, baja lógica, edición de roles y toggle de estado</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ CRUD Total</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M05: Permisos -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M05] Matriz de Privilegios</strong></td>
+            <td>Auditoría y reasignación de políticas RBAC</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Lectura/Edición</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M06: Configuración -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M06] Configuración Global</strong></td>
+            <td>Ajustes institucionales, ciclo académico y soporte</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Control Global</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M07: Competencias -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M07] Competencias Saber TyT</strong></td>
+            <td>Supervisión y consulta de áreas pedagógicas ICFES</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Gestión</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M08: Banco de Ítems -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M08] Banco de Reactivos</strong></td>
+            <td>Crear, editar ítems Opción Múltiple y Verdadero/Falso</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Autoría CRUD</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M09: Carga Excel -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M09] Carga Masiva Excel</strong></td>
+            <td>Asistente en 3 fases: selección, validación y confirmación</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Auditoría</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Carga 3 Fases</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M10: Cuestionarios -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M10] Cuestionarios y Pesos</strong></td>
+            <td>Programación de pruebas, fechas y ponderaciones</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Configuración</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
+          </tr>
+          <!-- M11: Sala de Espera y Simulacro -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M11] Presentación en Vivo</strong></td>
+            <td>Acceso a sala de espera, cronómetro y examen sincrónico</td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Simulación</span></td>
+            <td style="text-align: center;"><span class="badge badge-neutral">✕ Previsualización</span></td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Presentación Activa</span></td>
+          </tr>
+          <!-- M12: Reportes y Resultados -->
+          <tr class="perm-row">
+            <td><strong style="color: var(--text-primary);">[M12] Analítica y Reportes</strong></td>
+            <td>Reporte global institucional vs retroalimentación individual</td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Sábana Global</span></td>
+            <td style="text-align: center;"><span class="badge badge-info">✓ Métricas a Cargo</span></td>
+            <td style="text-align: center;"><span class="badge badge-success">✓ Informe Personal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tarjeta de Protocolo de Seguridad -->
+  <div class="card" style="border-left: 4px solid var(--primary-600); background: var(--bg-surface);">
+    <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong style="color: var(--text-primary); font-size: 0.95rem;">Protocolo de Gobernanza y Auditoría RBAC</strong>
+        <p style="margin: 0; font-size: 0.82rem; color: var(--text-secondary);">
+          Cualquier modificación en los roles administrativos y docentes queda firmada digitalmente en el log de auditoría del sistema.
+        </p>
+      </div>
+      <a href="{% url 'admin_reportes' %}" class="btn btn-secondary btn-sm">
+        Ver Log de Auditoría →
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function filtrarPermisos(query) {
+    const term = query.toLowerCase();
+    document.querySelectorAll('.perm-row').forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(term) ? '' : 'none';
+    });
+  }
+</script>
 {% endblock %}

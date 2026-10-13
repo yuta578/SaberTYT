@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Sala de Espera & Ficha Técnica - {{ cuestionario.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <!-- Breadcrumb -->
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{% url 'estudiante_catalogo' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Volver al Catálogo de Simulacros
+    </a>
+  </div>
+
+  <!-- Tarjeta Principal de Ficha Técnica -->
+  <div class="card" style="border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 1.75rem;">
+    <div style="background: linear-gradient(135deg, #102d49 0%, #0b3f4c 100%); color: white; padding: 2.25rem 2rem; position: relative;">
+      <span class="hero-pill-badge" style="background: rgba(16, 185, 129, 0.25); border: 1px solid rgba(16, 185, 129, 0.5); color: #6ee7b7; margin-bottom: 0.65rem;">
+        ● [M11: Sala de Espera / Ficha Técnica Oficial]
+      </span>
+      <h1 style="font-size: 1.85rem; font-weight: 800; color: white; margin: 0 0 0.5rem; letter-spacing: -0.02em;">
+        {{ cuestionario.nombre }}
+      </h1>
+      <p style="margin: 0; font-size: 0.92rem; color: rgba(255,255,255,0.85); line-height: 1.5; max-width: 680px;">
+        {{ cuestionario.descripcion|default:"Evaluación institucional estandarizada para la preparación diagnóstica en competencias Saber TyT." }}
+      </p>
+    </div>
+
+    <!-- Parámetros de la Ficha Técnica -->
+    <div class="card-body" style="padding: 1.75rem 2rem;">
+      <h2 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0 0 1rem;">
+        ▥ Especificaciones Técnicas de la Prueba
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+        <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.72rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Número de Ítems</span>
+          <div style="font-size: 1.5rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-mono); margin-top: 0.25rem;">
+            {{ cp_list.count }} preguntas
+          </div>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.72rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Tiempo Límite</span>
+          <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary-600); font-family: var(--font-mono); margin-top: 0.25rem;">
+            {{ cuestionario.tiempo_limite_minutos }} min
+          </div>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.72rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Aprobación Mínima</span>
+          <div style="font-size: 1.5rem; font-weight: 900; color: var(--success-text); font-family: var(--font-mono); margin-top: 0.25rem;">
+            {{ cuestionario.calificacion_aprobacion }} / {{ cuestionario.calificacion_maxima }} pts
+          </div>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.72rem; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase;">Intentos Permitidos</span>
+          <div style="font-size: 1.5rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-mono); margin-top: 0.25rem;">
+            {{ cuestionario.intentos_permitidos }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Competencias Evaluadas -->
+      <div style="margin-bottom: 1.75rem;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 0.45rem;">
+          Competencias Mapeadas en esta Batería:
+        </span>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          {% for cat in categorias_evaluadas %}
+          <span class="badge badge-primary" style="font-size: 0.82rem; padding: 0.35rem 0.85rem;">
+            {{ cat }}
+          </span>
+          {% empty %}
+          <span class="badge badge-info">Razonamiento Cuantitativo</span>
+          <span class="badge badge-info">Lectura Crítica</span>
+          <span class="badge badge-info">Competencias Ciudadanas</span>
+          <span class="badge badge-info">Inglés</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Reglas e Instrucciones Operativas -->
+      <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.75rem;">
+        <strong style="font-size: 0.88rem; color: var(--text-primary); display: block; margin-bottom: 0.5rem;">
+          📋 Instrucciones y Reglas de Presentación
+        </strong>
+        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 0.3rem;">
+          <li>El conteo regresivo iniciará inmediatamente al presionar <strong>"Comenzar Intento en Vivo"</strong>.</li>
+          <li>Dispones de un <strong>Panel Lateral de Reactivos</strong> para ver preguntas respondidas, pendientes y marcadas para revisión.</li>
+          <li>Puedes saltar a cualquier pregunta en cualquier momento sin perder tus respuestas anteriores.</li>
+          <li>Antes de finalizar se desplegará un <strong>Modal de Confirmación de Entrega</strong> con el balance de tus respuestas.</li>
+          <li>Al terminar o agotarse el tiempo, tus resultados serán liquidados y quedarán registrados de forma inmutable.</li>
+        </ul>
+      </div>
+
+      <!-- Formulario de Verificación de Identidad e Inicio -->
+      <form method="POST" action="{% url 'estudiante_iniciar' cuestionario.id %}" style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
+        {% csrf_token %}
+        <div class="form-row" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label class="form-label">Nombre del Estudiante</label>
+            <input type="text" name="nombre_estudiante" class="form-control" value="{{ profile.name|default:'Alexandra Patricia López' }}" required readonly style="background: var(--bg-subtle);">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Código Institucional</label>
+            <input type="text" name="codigo_estudiante" class="form-control" value="{{ profile.code|default:'EST-202310023' }}" required readonly style="background: var(--bg-subtle); font-family: var(--font-mono);">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <a href="{% url 'estudiante_catalogo' %}" class="btn btn-secondary">
+            Cancelar y Volver
+          </a>
+          <button type="submit" class="btn btn-success btn-lg">
+            Confirmar y Comenzar Prueba en Vivo <span>→</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

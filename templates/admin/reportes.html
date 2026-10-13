@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Reporte Global e Histórico de Resultados - Administrador{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+  <!-- Cabecera -->
+  <div class="admin-page-header">
+    <div class="admin-page-title">
+      <h1>
+        <span class="title-glyph">⌁</span>
+        [M12: Reporte Global e Histórico de Resultados]
+      </h1>
+      <span class="admin-count-badge">Consolidado Institucional Saber TyT</span>
+    </div>
+    <div style="display: flex; gap: 0.65rem;">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-sm">
+        ← Volver al Panel
+      </a>
+      <button type="button" class="admin-create" onclick="window.print()">
+        <span>⎙</span> Imprimir / Exportar Reporte
+      </button>
+    </div>
+  </div>
+
+  <!-- Métricas Globales Consolidadas -->
+  <section class="admin-metrics">
+    <article>
+      <span>Calificación Promedio Institucional</span>
+      <strong>{{ promedio_global|default:"0.00" }}</strong>
+      <small>Sobre 5.00 pts máximos</small>
+      <b>● Promedio Ponderado</b>
+      <div class="admin-meter"></div>
+      <footer>
+        <i>Tasa Aprobación<br><strong>{{ tasa_aprobacion }}%</strong></i>
+        <i>Total Intentos<br><strong>{{ total_intentos }}</strong></i>
+        <i>Aprobados<br><strong>{{ total_aprobados }}</strong></i>
+      </footer>
+    </article>
+
+    <article>
+      <span>Total de Intentos Registrados</span>
+      <strong>{{ total_intentos }}</strong>
+      <small>Sesiones culminadas en el ciclo</small>
+      <b>✓ Registro Inmutable</b>
+    </article>
+
+    <article>
+      <span>Tasa Global de Aprobación</span>
+      <strong>{{ tasa_aprobacion }}%</strong>
+      <small>Umbral: >= 3.00 pts</small>
+      <b>↗ Nivel Institucional Favorable</b>
+    </article>
+  </section>
+
+  <!-- Desglose por Cuestionarios Institucionales -->
+  <div class="section-heading">
+    <h2>▥ Rendimiento por Cuestionario a Cargo</h2>
+    <small>Monitoreo de Pruebas Activas</small>
+  </div>
+
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Evaluación / Simulacro</th>
+            <th>Intentos</th>
+            <th>Promedio General</th>
+            <th>Estudiantes Aprobados</th>
+            <th>Tasa Éxito</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in cuestionarios_metricas %}
+          <tr>
+            <td>
+              <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ m.cuestionario.nombre }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-tertiary);">
+                Límite: {{ m.cuestionario.tiempo_limite_minutos }} min • Máx: {{ m.cuestionario.calificacion_maxima }} pts
+              </div>
+            </td>
+            <td style="font-family: var(--font-mono); font-weight: 700;">{{ m.total_intentos }}</td>
+            <td style="font-family: var(--font-mono); font-weight: 800; color: var(--primary-600);">{{ m.promedio }} / {{ m.cuestionario.calificacion_maxima }}</td>
+            <td style="color: var(--success-text); font-weight: 700;">{{ m.aprobados }}</td>
+            <td>
+              {% if m.total_intentos > 0 %}
+                <span class="badge badge-success">{{ m.aprobados }} de {{ m.total_intentos }}</span>
+              {% else %}
+                <span class="badge badge-neutral">Sin intentos</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if m.cuestionario.estado == 'Disponible' %}badge-primary{% elif m.cuestionario.estado == 'Programado' %}badge-info{% else %}badge-neutral{% endif %}">
+                {{ m.cuestionario.estado }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align: center; color: var(--text-tertiary);">No hay cuestionarios registrados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tabla Histórica de Intentos y Sesiones Oficiales -->
+  <div class="section-heading">
+    <h2>ϟ Histórico de Intentos y Sesiones Individuales</h2>
+    <small>Auditoría Académica</small>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Código Institucional</th>
+            <th>Evaluación Presentada</th>
+            <th>Fecha y Hora</th>
+            <th>Puntaje Obtenido</th>
+            <th>Calificación</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for intento in intentos %}
+          <tr>
+            <td>
+              <strong style="color: var(--text-primary);">{{ intento.nombre_estudiante }}</strong>
+            </td>
+            <td>
+              <code style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-600);">{{ intento.codigo_estudiante }}</code>
+            </td>
+            <td>{{ intento.cuestionario.nombre }}</td>
+            <td style="font-size: 0.8rem; color: var(--text-secondary);">
+              {{ intento.fecha_inicio|date:"d M Y, H:i" }}
+            </td>
+            <td style="font-family: var(--font-mono);">{{ intento.puntaje_obtenido|default:"0.00" }} pts</td>
+            <td style="font-family: var(--font-mono); font-weight: 800; font-size: 1rem; color: var(--text-primary);">
+              {{ intento.calificacion_final|default:"0.00" }} / {{ intento.cuestionario.calificacion_maxima }}
+            </td>
+            <td>
+              {% if intento.calificacion_final and intento.calificacion_final >= intento.cuestionario.calificacion_aprobacion %}
+                <span class="badge badge-success">● Aprobado</span>
+              {% elif intento.calificacion_final %}
+                <span class="badge badge-danger">● No Superado</span>
+              {% else %}
+                <span class="badge badge-neutral">● En Proceso</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-tertiary);">No se registran intentos culminados aún.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

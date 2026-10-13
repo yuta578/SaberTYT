@@ -1,5 +1,309 @@
 {% extends 'base.html' %}
-{% block title %}Mi Perfil{% endblock %}
+{% block title %}
+  {% if role == 'estudiante' %}Mi Perfil & Datos Académicos - Saber TyT{% else %}Mi Perfil & Seguridad - Saber TyT{% endif %}
+{% endblock %}
+
 {% block content %}
-<div class="profile-shell"><section class="profile-card profile-main"><div class="profile-avatar">{{ profile.name|first }}</div><h1>{{ profile.name }}</h1><p>{{ profile.label }}</p><span>● Cuenta demo institucional</span></section><section class="profile-card"><h2>▣ Datos Personales e Institucionales</h2><label>Nombre Completo<input value="{{ profile.name }}" readonly></label><label>Correo Institucional<input value="{{ profile.email }}" readonly></label><label>Rol del Sistema<input value="{{ profile.label }}" readonly></label></section><section class="profile-card"><h2>♧ Cambio de Contraseña</h2><p>Modo demostración: las credenciales no se validan todavía.</p><input type="password" value="demo1234" readonly></section><a class="admin-create" href="{% url 'home' %}">▣ Guardar Cambios</a></div>
+<div class="container" style="max-width: 980px; margin: 1.5rem auto 3rem; padding: 0 1rem;">
+  <!-- Breadcrumb -->
+  <div style="margin-bottom: 1.25rem;">
+    {% if role == 'estudiante' %}
+      <a href="{% url 'estudiante_catalogo' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+        ← Volver al Catálogo de Simulacros
+      </a>
+    {% elif role == 'docente' %}
+      <a href="{% url 'docente_dashboard' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+        ← Volver al Panel Docente
+      </a>
+    {% else %}
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+        ← Volver al Panel de Administración
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Messages / Alerts -->
+  {% if messages %}
+    <div style="margin-bottom: 1.5rem;">
+      {% for message in messages %}
+        <div style="
+          display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1.15rem;
+          border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 600;
+          background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+        ">
+          <span>✓</span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Hero Header Profile Card -->
+  <section class="card" style="margin-bottom: 2rem; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+    <div style="
+      background: linear-gradient(135deg, #092c4c 0%, #0d4653 100%);
+      padding: 2.25rem 2rem; color: #ffffff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;
+    ">
+      <div style="display: flex; align-items: center; gap: 1.5rem;">
+        <div style="
+          width: 72px; height: 72px; border-radius: 50%; background: #ffffff; color: var(--primary-800);
+          display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900;
+          font-family: var(--font-display); box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+        ">
+          {{ profile.name|first }}
+        </div>
+        <div>
+          <span class="hero-pill-badge" style="background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.25); margin-bottom: 0.4rem;">
+            {% if role == 'estudiante' %}
+              [M03: Mi Perfil & Datos Académicos]
+            {% else %}
+              [M03: Mi Perfil & Seguridad Institucional]
+            {% endif %}
+          </span>
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: #ffffff; margin: 0 0 0.25rem;">
+            {{ profile.name }}
+          </h1>
+          <p style="margin: 0; font-size: 0.88rem; opacity: 0.85;">
+            {{ profile.email }} <span>•</span> Código: <strong style="font-family: var(--font-mono);">{{ profile.code|default:"2024-INST" }}</strong>
+          </p>
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <span class="badge badge-success" style="font-size: 0.85rem; padding: 0.4rem 0.95rem;">
+          ● Cuenta Activa y Verificada
+        </span>
+        <div style="font-size: 0.75rem; opacity: 0.75; margin-top: 0.4rem; font-family: var(--font-mono);">
+          UPUTUMAYO • Periodo 2024-II
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Role-Specific Body Layout -->
+  {% if role == 'estudiante' %}
+  <!-- ================= VISTA ESTUDIANTE: DATOS ACADÉMICOS ================= -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2.25rem;">
+    <!-- Ficha Académica Oficial -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Ficha Académica Institucional</strong>
+        <span class="badge badge-primary">Matrícula Regular</span>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Programa Curricular:</span>
+          <strong style="color: var(--text-primary); text-align: right;">{{ programa }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Nivel Formativo:</span>
+          <strong style="color: var(--text-primary);">Técnico Profesional y Tecnológico</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Semestre Cursado:</span>
+          <strong style="color: var(--text-primary);">{{ semestre }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Sede Universitaria:</span>
+          <strong style="color: var(--text-primary);">{{ sede }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Estado de Habilitación:</span>
+          <span class="badge badge-success">{{ estado_academico }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicadores de Preparación Saber TyT -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Historial de Desempeño Saber TyT</strong>
+        <a href="{% url 'estudiante_catalogo' %}" style="font-size: 0.78rem; color: var(--primary-600); font-weight: 700;">Ver Simulacros →</a>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: var(--bg-subtle); padding: 1.15rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border-subtle);">
+            <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700;">Simulacros Finalizados</span>
+            <div style="font-size: 1.85rem; font-weight: 900; color: var(--primary-600); font-family: var(--font-mono); margin-top: 0.25rem;">
+              {{ total_intentos }}
+            </div>
+          </div>
+          <div style="background: var(--bg-subtle); padding: 1.15rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border-subtle);">
+            <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700;">Promedio Global</span>
+            <div style="font-size: 1.85rem; font-weight: 900; color: var(--success-text); font-family: var(--font-mono); margin-top: 0.25rem;">
+              {{ promedio_acumulado|floatformat:1 }} <small style="font-size: 0.9rem; color: var(--text-tertiary);">/ 5.0</small>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.8rem; color: var(--primary-800);">
+          <strong>Diagnóstico Formativo:</strong> Tienes acceso garantizado a las baterías de práctica y los informes evaluativos con retroalimentación inmediata tras cada entrega.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% elif role == 'docente' %}
+  <!-- ================= VISTA DOCENTE: DATOS ACADÉMICOS Y SEGURIDAD ================= -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2.25rem;">
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Adscripción Académica Docente</strong>
+        <span class="badge badge-info">Rol Evaluador</span>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Departamento:</span>
+          <strong style="color: var(--text-primary); text-align: right;">{{ departamento }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Cargo Evaluativo:</span>
+          <strong style="color: var(--text-primary);">{{ cargo_docente }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Sede de Operación:</span>
+          <strong style="color: var(--text-primary);">{{ sede }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Módulos a Cargo:</span>
+          <span class="badge badge-primary">Lectura Crítica & Razonamiento</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Actividad Pedagógica Registrada</strong>
+        <span class="badge badge-success">Activo</span>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; text-align: center; margin-bottom: 1.25rem;">
+          <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-600); font-family: var(--font-mono);">{{ total_preguntas }}</div>
+            <div style="font-size: 0.7rem; color: var(--text-tertiary); font-weight: 600;">Reactivos</div>
+          </div>
+          <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--cat-cuanti); font-family: var(--font-mono);">{{ total_cuestionarios }}</div>
+            <div style="font-size: 0.7rem; color: var(--text-tertiary); font-weight: 600;">Cuestionarios</div>
+          </div>
+          <div style="background: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--cat-ingles); font-family: var(--font-mono);">{{ total_intentos }}</div>
+            <div style="font-size: 0.7rem; color: var(--text-tertiary); font-weight: 600;">Evaluados</div>
+          </div>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+          Tienes permisos de estructuración de reactivos, importación masiva por Excel en 3 fases y monitoreo de intentos.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ================= VISTA ADMINISTRADOR: SEGURIDAD Y AUDITORÍA ================= -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2.25rem;">
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Nivel de Acceso y Privilegios RBAC</strong>
+        <span class="badge badge-danger">Root / Superuser</span>
+      </div>
+      <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Dependencia:</span>
+          <strong style="color: var(--text-primary); text-align: right;">{{ dependencia }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Rango de Privilegios:</span>
+          <strong style="color: var(--danger-solid);">{{ nivel_privilegio }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Control de Auditoría:</span>
+          <span class="badge badge-success">M04, M05, M06, M12 Habilitados</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.65rem;">
+          <span style="color: var(--text-tertiary);">Supervisión Docente:</span>
+          <span class="badge badge-primary">M07, M08, M10 Total</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Estado del Entorno y Respaldo</strong>
+        <span class="badge badge-success">Óptimo</span>
+      </div>
+      <div class="card-body">
+        <ul style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; padding-left: 1.25rem; margin: 0 0 1rem;">
+          <li>Directorio institucional sincronizado: <strong>{{ total_usuarios }} cuentas</strong></li>
+          <li>Banco central activo: <strong>{{ total_preguntas }} preguntas</strong></li>
+          <li>Cuestionarios en producción: <strong>{{ total_pruebas }} evaluaciones</strong></li>
+          <li>Encriptación de datos: <strong>TLS 1.3 / AES-256</strong></li>
+        </ul>
+        <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text-tertiary);">
+          Última auditoría de seguridad completada hoy con 0 vulnerabilidades.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Formularios de Actualización de Datos y Contraseña -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem;">
+    <!-- Actualizar Datos Personales -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Editar Información de Contacto</strong>
+      </div>
+      <form method="POST" class="card-body">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Nombre Completo</label>
+          <input type="text" name="name" value="{{ profile.name }}" class="form-control" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Correo Electrónico Institucional</label>
+          <input type="email" value="{{ profile.email }}" class="form-control" readonly style="background: var(--bg-subtle); color: var(--text-secondary);">
+          <div class="form-text">El correo está vinculado al Directorio Activo institucional.</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label">Teléfono / Celular de Contacto</label>
+          <input type="text" name="telefono" value="{{ profile.telefono|default:'+57 311 450 8920' }}" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Guardar Cambios de Perfil
+        </button>
+      </form>
+    </div>
+
+    <!-- Seguridad y Cambio de Contraseña -->
+    <div class="card">
+      <div class="card-header">
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Seguridad y Actualización de Contraseña</strong>
+      </div>
+      <form method="POST" class="card-body">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Contraseña Actual</label>
+          <input type="password" name="current_password" placeholder="••••••••" value="demo1234" class="form-control">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Nueva Contraseña</label>
+          <input type="password" name="new_password" placeholder="Mínimo 8 caracteres" class="form-control">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label">Confirmar Nueva Contraseña</label>
+          <input type="password" name="confirm_password" placeholder="Repite la nueva contraseña" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="width: 100%;">
+          Actualizar Clave de Acceso
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}

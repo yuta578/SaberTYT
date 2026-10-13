@@ -4,77 +4,259 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso institucional | SABER TyT</title>
+  <title>Acceso Institucional | Saber TyT UPUTUMAYO</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <style>
+    .alert-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.9rem 1.1rem;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      margin-bottom: 1.25rem;
+      animation: fadeInAlert 0.25s ease-out;
+    }
+    .alert-danger {
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      color: #9f1239;
+    }
+    .alert-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .alert-info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+    .alert-success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    @keyframes fadeInAlert {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .demo-credential-chips {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      margin: 0.75rem 0 1.25rem;
+    }
+    .demo-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.38rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border-medium);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .demo-chip:hover {
+      background: var(--primary-50);
+      border-color: var(--primary-400);
+      color: var(--primary-700);
+      transform: translateY(-1px);
+    }
+    .demo-chip.chip-warning:hover {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #b45309;
+    }
+    .demo-chip.chip-danger:hover {
+      background: #fff1f2;
+      border-color: #f43f5e;
+      color: #be123c;
+    }
+  </style>
 </head>
 <body class="login-page">
   <main class="login-shell">
+    <!-- Panel Izquierdo Institucional -->
     <section class="login-brand-panel">
       <div class="login-brand-mark">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2 2 7l10 5 10-5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
         </svg>
       </div>
-      <span class="login-eyebrow">Instituto Tecnológico del Putumayo</span>
+      <span class="login-eyebrow">Instituto Tecnológico del Putumayo • UPUTUMAYO</span>
       <h1>Saber TyT</h1>
-      <p>Una plataforma para preparar, evaluar y acompañar el aprendizaje en las pruebas de Estado.</p>
+      <p>Sistema Oficial para la Evaluación, Simulación Cronometrada y Retroalimentación Pedagógica en las Pruebas de Estado.</p>
+      
       <div class="login-feature-list">
-        <span><b>✓</b> Simulacros cronometrados</span>
-        <span><b>✓</b> Retroalimentación pedagógica</span>
-        <span><b>✓</b> Gestión académica centralizada</span>
+        <span><b>✓</b> Simulacros cronometrados con liquidación oficial</span>
+        <span><b>✓</b> Banco institucional de reactivos pedagógicos</span>
+        <span><b>✓</b> Informes detallados por competencias ICFES</span>
+        <span><b>✓</b> Control de accesos RBAC y auditoría administrativa</span>
+      </div>
+
+      <div style="margin-top: 2rem; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.08); font-size: 0.78rem; color: rgba(255,255,255,0.75);">
+        <span>● Conexión Segura SSL • Directorio Activo Institucional</span>
       </div>
     </section>
 
+    <!-- Panel Derecho de Formulario de Acceso -->
     <section class="login-form-panel">
       <div class="login-form-heading">
-        <span class="hero-pill-badge"><span class="pulse-dot"></span> Acceso institucional</span>
-        <h2>Bienvenido de nuevo</h2>
-        <p>Ingresa para continuar a tu espacio de trabajo.</p>
+        <span class="hero-pill-badge"><span class="pulse-dot"></span> [M01: Pantalla de Acceso]</span>
+        <h2>Ingreso Institucional</h2>
+        <p>Introduce tus credenciales para acceder a tu entorno de trabajo.</p>
       </div>
 
-      <form method="post" class="login-form">
+      <!-- Alertas de Autenticación (Fallida / Exitosa) -->
+      {% if messages %}
+        <div class="messages-container" style="margin-bottom: 1rem;">
+          {% for message in messages %}
+            <div class="alert-banner alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;">
+                {% if message.tags == 'error' %}
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="15" y1="9" x2="9" y2="15"></line>
+                  <line x1="9" y1="9" x2="15" y2="15"></line>
+                {% elif message.tags == 'warning' %}
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                {% else %}
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 14 14"></polyline>
+                {% endif %}
+              </svg>
+              <div>
+                <strong>
+                  {% if message.tags == 'error' %}Autenticación Fallida:
+                  {% elif message.tags == 'warning' %}Alerta de Cuenta:
+                  {% else %}Información:
+                  {% endif %}
+                </strong>
+                <span>{{ message }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Atajos de Prueba Rápida -->
+      <div style="margin-bottom: 0.5rem;">
+        <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);">
+          Cargar Credenciales de Prueba:
+        </span>
+        <div class="demo-credential-chips">
+          <button type="button" class="demo-chip" onclick="fillCredentials('admin@itp.edu.co', 'demo1234', 'admin')">
+            🛡️ Administrador
+          </button>
+          <button type="button" class="demo-chip" onclick="fillCredentials('docente@itp.edu.co', 'demo1234', 'docente')">
+            🎓 Docente
+          </button>
+          <button type="button" class="demo-chip" onclick="fillCredentials('estudiante@itp.edu.co', 'demo1234', 'estudiante')">
+            📖 Estudiante
+          </button>
+          <button type="button" class="demo-chip chip-warning" onclick="fillCredentials('inactivo@itp.edu.co', 'demo1234', 'estudiante')">
+            ⚠️ Cuenta Inactiva
+          </button>
+          <button type="button" class="demo-chip chip-danger" onclick="fillCredentials('invalido@itp.edu.co', 'clave_erronea', 'estudiante')">
+            ✕ Credencial Inválida
+          </button>
+          <button type="button" class="demo-chip" onclick="clearCredentials()">
+            ∅ Campos Vacíos
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulario de Acceso -->
+      <form method="POST" action="{% url 'login' %}" class="login-form" id="loginForm">
         {% csrf_token %}
-        <label class="form-label" for="institutional-email">Correo o usuario institucional</label>
-        <div class="login-input-wrap">
-          <span>@</span>
-          <input id="institutional-email" type="email" value="demo@itp.edu.co" autocomplete="username" aria-label="Correo institucional">
+
+        <div class="form-group" style="margin-bottom: 1.15rem;">
+          <label class="form-label" for="institutional-email">Correo Electrónico Institucional</label>
+          <div class="login-input-wrap">
+            <span>@</span>
+            <input 
+              id="institutional-email" 
+              name="email" 
+              type="text" 
+              placeholder="ejemplo@itp.edu.co" 
+              value="{{ email|default:'estudiante@itp.edu.co' }}" 
+              autocomplete="username" 
+              aria-label="Correo institucional"
+            >
+          </div>
         </div>
 
-        <label class="form-label" for="institutional-password">Contraseña</label>
-        <div class="login-input-wrap">
-          <span>●</span>
-          <input id="institutional-password" type="password" value="demo1234" autocomplete="current-password" aria-label="Contraseña">
-          <span>⌁</span>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" for="institutional-password">Contraseña Institucional</label>
+          <div class="login-input-wrap">
+            <span>●</span>
+            <input 
+              id="institutional-password" 
+              name="password" 
+              type="password" 
+              value="demo1234" 
+              placeholder="Ingresa tu contraseña"
+              autocomplete="current-password" 
+              aria-label="Contraseña"
+            >
+            <span style="cursor: pointer;" onclick="togglePasswordVisibility()" title="Mostrar u ocultar contraseña">👁</span>
+          </div>
         </div>
 
-        <div class="login-demo-note">
-          <strong>Modo demostración</strong>
-          <span>No se validan credenciales reales. Elige el panel que quieres explorar.</span>
-        </div>
-
-        <fieldset class="role-choice-group">
-          <legend>Ingresar como</legend>
+        <fieldset class="role-choice-group" style="margin-bottom: 1.5rem;">
+          <legend>Perfil de Destino</legend>
           <label class="role-choice">
-            <input type="radio" name="role" value="estudiante" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
-            <span class="role-choice-icon">⌂</span>
-            <span><strong>Estudiante</strong><small>Evaluaciones y simulacros</small></span>
+            <input type="radio" name="role" id="role_estudiante" value="estudiante" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
+            <span class="role-choice-icon">📖</span>
+            <span><strong>Estudiante</strong><small>Mis evaluaciones, sala de espera y simulacro</small></span>
           </label>
           <label class="role-choice">
-            <input type="radio" name="role" value="docente" {% if selected_role == 'docente' %}checked{% endif %}>
-            <span class="role-choice-icon">♙</span>
-            <span><strong>Docente evaluador</strong><small>Banco, pruebas y reportes</small></span>
+            <input type="radio" name="role" id="role_docente" value="docente" {% if selected_role == 'docente' %}checked{% endif %}>
+            <span class="role-choice-icon">🎓</span>
+            <span><strong>Docente Evaluador</strong><small>Banco de ítems, carga Excel y cuestionarios</small></span>
           </label>
           <label class="role-choice">
-            <input type="radio" name="role" value="admin" {% if selected_role == 'admin' %}checked{% endif %}>
-            <span class="role-choice-icon">⚙</span>
-            <span><strong>Administrador</strong><small>Usuarios, permisos y sistema</small></span>
+            <input type="radio" name="role" id="role_admin" value="admin" {% if selected_role == 'admin' %}checked{% endif %}>
+            <span class="role-choice-icon">🛡️</span>
+            <span><strong>Administrador</strong><small>Directorio, usuarios, permisos y reportes</small></span>
           </label>
         </fieldset>
 
-        <button type="submit" class="btn btn-primary btn-lg login-submit">Continuar al panel <span>→</span></button>
+        <button type="submit" class="btn btn-primary btn-lg login-submit" style="width: 100%;">
+          Ingresar al Sistema Saber TyT <span>→</span>
+        </button>
       </form>
-
     </section>
   </main>
+
+  <script>
+    function fillCredentials(email, pass, role) {
+      document.getElementById('institutional-email').value = email;
+      document.getElementById('institutional-password').value = pass;
+      const radio = document.getElementById('role_' + role);
+      if (radio) radio.checked = true;
+    }
+
+    function clearCredentials() {
+      document.getElementById('institutional-email').value = '';
+      document.getElementById('institutional-password').value = '';
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('institutional-password');
+      if (input.type === 'password') {
+        input.type = 'text';
+      } else {
+        input.type = 'password';
+      }
+    }
+  </script>
 </body>
 </html>

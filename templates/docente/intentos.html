@@ -1,43 +1,125 @@
 {% extends 'base.html' %}
-
-{% block title %}Historial de Intentos y Calificaciones - Módulo Docente{% endblock %}
+{% block title %}Métricas y Resultados por Cuestionario a Cargo - Módulo Docente{% endblock %}
 
 {% block content %}
 <div class="container-wide">
-  <!-- Top Bar -->
+  <!-- Cabecera M12 -->
   <div style="margin-bottom: 1.75rem;">
     <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-      Monitoreo de Calificaciones
+      [M12: Métricas y Resultados por Cuestionario a Cargo]
     </div>
     <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
-      Registro de Intentos de Estudiantes
+      Métricas Pedagógicas y Resultados por Cuestionario
     </h1>
     <p style="font-size: 0.88rem; color: var(--text-secondary);">
-      Auditoría en tiempo real de sesiones presentadas, inmutabilidad de resultados finales y desglose de respuestas.
+      Diagnóstico y auditoría de sesiones evaluadas en los simulacros bajo responsabilidad del docente evaluador.
     </p>
+  </div>
+
+  <!-- Selector de Cuestionario a Cargo -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body" style="padding: 1.15rem;">
+      <form method="GET" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 280px;">
+          <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary);">
+            Filtrar por Cuestionario a Cargo:
+          </label>
+          <select name="cuestionario_id" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Todos los Cuestionarios Institucionales ({{ cuestionarios.count }}) --</option>
+            {% for c in cuestionarios %}
+              <option value="{{ c.id }}" {% if selected_cuestionario_id == c.id|stringformat:"i" %}selected{% endif %}>
+                {{ c.nombre }} ({{ c.cuestionario_preguntas.count }} ítems • {{ c.intentos.count }} intentos)
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary">Aplicar Filtro</button>
+          {% if selected_cuestionario_id %}
+            <a href="{% url 'docente_intentos' %}" class="btn btn-secondary">Limpiar</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- KPI Cards del Cuestionario Filtrado -->
+  <div class="stats-grid" style="margin-bottom: 1.75rem;">
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper indigo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Intentos Presentados</span>
+        <span class="stat-meta-value">{{ total_intentos }}</span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">
+          {% if cuestionario_seleccionado %}{{ cuestionario_seleccionado.nombre|truncatechars:28 }}{% else %}Consolidado institucional{% endif %}
+        </small>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper teal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Calificación Promedio</span>
+        <span class="stat-meta-value" style="color: var(--primary-600);">{{ promedio_nota }}</span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Escala 0.00 a 5.00 pts</small>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Tasa de Aprobación</span>
+        <span class="stat-meta-value" style="color: var(--success-solid);">{{ tasa_aprobacion }}%</span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Umbral mínimo: 3.00 pts</small>
+      </div>
+    </div>
+
+    <div class="stat-card-modern">
+      <div class="stat-icon-wrapper amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      </div>
+      <div class="stat-meta-content">
+        <span class="stat-meta-title">Cuestionario</span>
+        <span class="stat-meta-value" style="font-size: 1.15rem; color: var(--text-primary);">
+          {% if cuestionario_seleccionado %}{{ cuestionario_seleccionado.cuestionario_preguntas.count }} ítems{% else %}{{ cuestionarios.count }} pruebas{% endif %}
+        </span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">
+          {% if cuestionario_seleccionado %}Límite: {{ cuestionario_seleccionado.tiempo_limite_minutos }} min{% else %}Banco general{% endif %}
+        </small>
+      </div>
+    </div>
   </div>
 
   <!-- Intentos Table Card -->
   <div class="card">
-    <div class="card-header">
-      <strong style="font-size: 0.95rem; color: var(--text-primary);">Historial de Evaluaciones Presentadas</strong>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">
+        Listado de Estudiantes y Calificaciones Liquidadas
+      </strong>
       <span class="badge badge-primary">{{ intentos.count }} Intentos Registrados</span>
     </div>
     <div class="table-responsive-wrapper">
       <table class="table-modern">
         <thead>
           <tr>
-            <th>ID</th>
+            <th style="width: 60px;">ID</th>
             <th>Estudiante</th>
             <th>Código</th>
             <th>Cuestionario Presentado</th>
-            <th style="text-align: center;">Intento #</th>
-            <th>Fecha de Inicio</th>
-            <th style="text-align: center;">Calificación Final</th>
+            <th style="text-align: center;">Intento</th>
+            <th>Fecha de Presentación</th>
+            <th style="text-align: center;">Calificación</th>
             <th>Estado</th>
-            <th>Resultado</th>
-            <th style="text-align: right;">Detalle</th>
+            <th>Diagnóstico</th>
+            <th style="text-align: right;">Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +136,7 @@
               {{ it.cuestionario.nombre|truncatechars:40 }}
             </td>
             <td style="text-align: center; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">
-              {{ it.numero_intento }}
+              #{{ it.numero_intento }}
             </td>
             <td style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
               {{ it.fecha_inicio|date:"d/m/Y H:i" }}
@@ -90,15 +172,15 @@
               {% endif %}
             </td>
             <td style="text-align: right;">
-              <a href="{% url 'estudiante_resultado' it.id %}" class="btn btn-sm btn-secondary">
-                Ver Examen
+              <a href="{% url 'estudiante_resultado' it.id %}" class="btn btn-sm btn-secondary" title="Ver examen y retroalimentación pedagógica">
+                Ver Examen →
               </a>
             </td>
           </tr>
           {% empty %}
           <tr>
             <td colspan="10" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
-              Aún no se han registrado intentos de presentación.
+              No se encontraron intentos para el criterio seleccionado.
             </td>
           </tr>
           {% endfor %}

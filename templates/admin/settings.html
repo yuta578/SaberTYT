@@ -1,5 +1,122 @@
 {% extends 'base.html' %}
-{% block title %}Configuración General - Administrador{% endblock %}
+{% block title %}Configuración Global Institucional - Administrador{% endblock %}
+
 {% block content %}
-<div class="admin-shell admin-list-page"><span class="admin-pill">● MÓDULO ADMINISTRATIVO</span><h1>Configuración General</h1><p>Ajustes globales de marca, operatividad y soporte institucional.</p><section class="admin-settings-card"><h2>◉ Identidad Institucional y Marca</h2><label>Nombre de la Plataforma<input value="Simulador Saber TyT - UPUTUMAYO"></label><label>Institución Educativa<input value="Instituto Tecnológico del Putumayo"></label><label>Logo Corporativo Institucional<div class="admin-logo-box">UPUTUMAYO • Saber TyT<br><small>✓ Alta Resolución</small></div></label></section><section class="admin-settings-card"><h2>☷ Parámetros del Sistema</h2><label>Zona Horaria Oficial<input value="America/Bogota (UTC-05:00)"></label><label>Formato de Fecha y Hora<input value="DD/MM/AAAA - 12h"></label><label>Periodo Académico Activo<input value="2024-II (Ciclo Regular Saber TyT)"></label></section><section class="admin-settings-card"><h2>◌ Mesa de Ayuda y Soporte</h2><label>Correo Electrónico<input value="soporte.sabertyt@itp.edu.co"></label><label>Teléfono / WhatsApp<input value="+57 320 894 1200"></label></section><button class="admin-create">▣ Guardar Configuración</button></div>
+<div class="admin-shell admin-list-page">
+  <!-- Cabecera M06 -->
+  <section class="admin-hero">
+    <span class="admin-pill">● [M06: Configuración Global Institucional] • Parámetros de Sistema</span>
+    <h1>Configuración Global Institucional</h1>
+    <p>Ajustes de identidad, ciclo de evaluación, escala cuantitativa y canales de soporte técnico institucional.</p>
+    <div class="admin-server">
+      <span>●</span> Servidor Activo: <b>UPUTUMAYO Saber TyT • Versión 1.0 (Producción)</b>
+    </div>
+  </section>
+
+  <!-- Mensajes -->
+  {% if messages %}
+    <div style="margin: 1rem 0;">
+      {% for message in messages %}
+        <div style="padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-weight: 600; font-size: 0.88rem;">
+          ✓ {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="POST" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.75rem; margin-bottom: 2rem;">
+      <!-- Identidad Institucional -->
+      <div class="card">
+        <div class="card-header">
+          <strong style="font-size: 0.95rem; color: var(--text-primary);">Identidad y Marca Universitaria</strong>
+          <span class="badge badge-primary">UPUTUMAYO</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Nombre Oficial de la Plataforma</label>
+            <input type="text" name="platform_name" class="form-control" value="Plataforma de Simulación Saber TyT - UPUTUMAYO">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Institución de Educación Superior</label>
+            <input type="text" name="institution_name" class="form-control" value="Instituto Tecnológico del Putumayo">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Sello Institucional / Sede Central</label>
+            <input type="text" class="form-control" value="Mocoa, Putumayo • Colombia" readonly style="background: var(--bg-subtle);">
+          </div>
+        </div>
+      </div>
+
+      <!-- Parámetros del Ciclo Académico -->
+      <div class="card">
+        <div class="card-header">
+          <strong style="font-size: 0.95rem; color: var(--text-primary);">Parámetros Académicos & Evaluativos</strong>
+          <span class="badge badge-success">Ciclo Vigente</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Periodo Académico Activo</label>
+            <input type="text" name="academic_cycle" class="form-control" value="2024-II (Ciclo Regular Saber TyT)">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Zona Horaria de Referencia</label>
+            <input type="text" class="form-control" value="America/Bogota (UTC-05:00)" readonly style="background: var(--bg-subtle);">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Escala Oficial de Calificación</label>
+            <input type="text" class="form-control" value="0.00 a 5.00 pts (Aprobación mínima: 3.00 pts)" readonly style="background: var(--bg-subtle);">
+          </div>
+        </div>
+      </div>
+
+      <!-- Soporte Técnico & Mesa de Ayuda -->
+      <div class="card">
+        <div class="card-header">
+          <strong style="font-size: 0.95rem; color: var(--text-primary);">Mesa de Ayuda y Soporte Técnico</strong>
+        </div>
+        <div class="card-body">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Correo de Soporte Institucional</label>
+            <input type="email" name="support_email" class="form-control" value="soporte.sabertyt@itp.edu.co">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Línea de Atención / WhatsApp Soporte</label>
+            <input type="text" name="support_phone" class="form-control" value="+57 320 894 1200">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Horario de Mesa de Ayuda</label>
+            <input type="text" class="form-control" value="Lunes a Viernes 08:00 - 18:00 COT" readonly style="background: var(--bg-subtle);">
+          </div>
+        </div>
+      </div>
+
+      <!-- Copias de Seguridad & Respaldo -->
+      <div class="card">
+        <div class="card-header">
+          <strong style="font-size: 0.95rem; color: var(--text-primary);">Políticas de Respaldo & Inmutabilidad</strong>
+          <span class="badge badge-info">Automático</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1rem;">
+            Los intentos evaluados, respuestas y bitácoras de auditoría se almacenan bajo esquema inmutable y se respaldan diariamente a las 04:00 AM.
+          </p>
+          <div style="background: var(--bg-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-tertiary); font-family: var(--font-mono);">
+            Último backup: Hoy, 04:00 AM • Estado: Válido (SHA-256)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón de Guardado -->
+    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-bottom: 3rem;">
+      <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Guardar Configuración Institucional
+      </button>
+    </div>
+  </form>
+</div>
 {% endblock %}

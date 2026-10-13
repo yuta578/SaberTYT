@@ -1,13 +1,229 @@
 {% extends 'base.html' %}
-{% block title %}Gestión de Usuarios - Administrador{% endblock %}
+{% block title %}Directorio y CRUD de Usuarios - Administrador{% endblock %}
+
 {% block content %}
 <div class="admin-shell admin-list-page">
-  <div class="admin-page-title"><h1>♙ Gestión de Usuarios</h1><span>1,420 Registros</span></div>
-  <div class="admin-summary"><b>● 1,380 Activos</b><b>● 40 Inactivos</b><b>♧ 1,250 Estudiantes</b></div>
-  <input class="admin-search" placeholder="⌕  Buscar por nombre, código o correo...">
-  <div class="admin-filters"><button>▣ Rol: Todos⌄</button><button>◉ Estado: Todos⌄</button><button>♧ Programa⌄</button></div>
-  <a class="admin-create" href="#">♙ + Crear Usuario</a>
-  <h3>LISTADO INSTITUCIONAL <em>Orden: Recientes primero</em></h3>
-  <section class="admin-user-list">{% for user in users %}<article><div class="admin-user-avatar">{{ user.name|first }}</div><div><strong>{{ user.name }}</strong><p>▧ {{ user.code }}<br>⌾ {{ user.email }}</p></div><aside><b>{{ user.role }}</b><span class="{% if user.active %}active{% else %}inactive{% endif %}">● {% if user.active %}Activo{% else %}Inactivo{% endif %}</span></aside><footer>✎　🔑　⏸</footer></article>{% endfor %}</section>
+  <!-- Cabecera de Página & CTA -->
+  <div class="admin-page-header">
+    <div class="admin-page-title">
+      <h1>
+        <span class="title-glyph">♙</span>
+        [M04: Directorio y CRUD de Usuarios]
+      </h1>
+      <span class="admin-count-badge">{{ users|length }} Usuarios en Catálogo</span>
+    </div>
+    <button type="button" class="admin-create" data-modal-target="modalCrearUsuario">
+      <span>+</span> Crear Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Métricas Resumen -->
+  <div class="admin-summary">
+    <b class="stat-badge stat-active">
+      <span class="status-indicator"></span> Activos
+    </b>
+    <b class="stat-badge stat-inactive">
+      <span class="status-indicator"></span> Inactivos / Suspendidos
+    </b>
+    <b class="stat-badge stat-students">
+      <span class="status-indicator"></span> Estudiantes, Docentes y Administradores
+    </b>
+  </div>
+
+  <!-- Controles: Búsqueda y Filtros Interactivos -->
+  <div class="admin-controls-bar">
+    <div class="admin-search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input class="admin-search" id="buscarUsuariosInput" type="search" placeholder="Buscar por nombre, código o correo institucional..." oninput="filtrarUsuarios()">
+    </div>
+    <div class="admin-filters">
+      <button type="button" class="filter-chip" id="filtroRolBtn" onclick="rotarFiltroRol()">
+        <span>▣</span> Rol: <strong id="filtroRolTexto">Todos</strong> <span class="chip-caret">▾</span>
+      </button>
+      <button type="button" class="filter-chip" id="filtroEstadoBtn" onclick="rotarFiltroEstado()">
+        <span>◉</span> Estado: <strong id="filtroEstadoTexto">Todos</strong> <span class="chip-caret">▾</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Separador Institucional -->
+  <div class="admin-section-header">
+    <h3>LISTADO INSTITUCIONAL</h3>
+    <em>Directorio RBAC Sincronizado</em>
+  </div>
+
+  <!-- Listado de Usuarios -->
+  <section class="admin-user-list" id="usersList">
+    {% for user in users %}
+    <article class="admin-user-card" data-role="{{ user.role|lower }}" data-active="{{ user.active|yesno:'true,false' }}" data-search="{{ user.name|lower }} {{ user.code|lower }} {{ user.email|lower }}">
+      <div class="admin-user-avatar role-{{ user.role|lower }}">
+        {{ user.name|first }}
+      </div>
+      <div class="admin-user-info">
+        <strong>{{ user.name }}</strong>
+        <p>
+          <span class="user-meta-item code-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <path d="M7 8h10M7 12h10M7 16h6"></path>
+            </svg>
+            {{ user.code }}
+          </span>
+          <span class="user-meta-item email-link">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            {{ user.email }}
+          </span>
+        </p>
+      </div>
+      <aside class="admin-user-badges">
+        <b class="badge-role role-{{ user.role|lower }}">{{ user.role }}</b>
+        <span class="badge-status {% if user.active %}active{% else %}inactive{% endif %}">
+          <span class="status-indicator"></span> {% if user.active %}Activo{% else %}Inactivo{% endif %}
+        </span>
+      </aside>
+      <footer class="admin-user-actions">
+        <!-- Botón Toggle Estado Activo / Inactivo -->
+        <form method="POST" action="{% url 'admin_toggle_estado_usuario' %}" style="display: inline; margin: 0;">
+          {% csrf_token %}
+          <input type="hidden" name="email" value="{{ user.email }}">
+          <button type="submit" class="btn-user-action" title="{% if user.active %}Suspender / Desactivar Usuario{% else %}Activar Usuario{% endif %}" style="{% if not user.active %}color: var(--adm-emerald); border-color: var(--adm-emerald);{% endif %}">
+            {% if user.active %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            {% else %}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            {% endif %}
+          </button>
+        </form>
+
+        <button type="button" class="btn-user-action" title="Restablecer Credenciales de Acceso" onclick="alert('Se ha enviado un correo con el enlace de restablecimiento de contraseña a {{ user.email }}.')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2l-2 2m-1.5 6.1L13 14l-4-4 3.9-4.5M16 11l2 2m-5-5l2 2"></path>
+            <circle cx="7.5" cy="16.5" r="4.5"></circle>
+          </svg>
+        </button>
+
+        <button type="button" class="btn-user-action" title="Editar Información de Usuario" onclick="abrirEdicion('{{ user.name }}', '{{ user.email }}', '{{ user.role }}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </button>
+      </footer>
+    </article>
+    {% empty %}
+    <div style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
+      No se registran usuarios institucionales.
+    </div>
+    {% endfor %}
+  </section>
 </div>
+
+<!-- Modal: Crear Nuevo Usuario Institucional -->
+<div class="modal-backdrop" id="modalCrearUsuario">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title">Registrar Nuevo Usuario</h3>
+        <span style="font-size: 0.78rem; color: var(--text-tertiary);">Directorio Institucional Saber TyT</span>
+      </div>
+      <button class="btn-ghost" data-modal-close style="border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <form method="POST" action="{% url 'admin_crear_usuario' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Nombre Completo <span class="required">*</span></label>
+          <input type="text" name="name" class="form-control" placeholder="Ej: Dra. Carmen Rosa Benavides" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Código Institucional</label>
+            <input type="text" name="code" class="form-control" placeholder="Ej: DOC-20240092">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rol del Sistema <span class="required">*</span></label>
+            <select name="role" class="form-select" required>
+              <option value="Estudiante">Estudiante</option>
+              <option value="Docente">Docente Evaluador</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label">Correo Institucional <span class="required">*</span></label>
+          <input type="email" name="email" class="form-control" placeholder="usuario@itp.edu.co" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Estado Inicial</label>
+          <select name="active" class="form-select">
+            <option value="true">Activo (Habilitado para pruebas y acceso)</option>
+            <option value="false">Inactivo / Suspendido</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-modal-close>Cancelar</button>
+        <button type="submit" class="btn btn-success">Guardar y Habilitar Usuario</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let roles = ['todos', 'estudiante', 'docente', 'administrador'];
+  let rolIndex = 0;
+
+  let estados = ['todos', 'activo', 'inactivo'];
+  let estadoIndex = 0;
+
+  function rotarFiltroRol() {
+    rolIndex = (rolIndex + 1) % roles.length;
+    const r = roles[rolIndex];
+    document.getElementById('filtroRolTexto').textContent = r.charAt(0).toUpperCase() + r.slice(1);
+    filtrarUsuarios();
+  }
+
+  function rotarFiltroEstado() {
+    estadoIndex = (estadoIndex + 1) % estados.length;
+    const e = estados[estadoIndex];
+    document.getElementById('filtroEstadoTexto').textContent = e.charAt(0).toUpperCase() + e.slice(1);
+    filtrarUsuarios();
+  }
+
+  function filtrarUsuarios() {
+    const q = document.getElementById('buscarUsuariosInput').value.toLowerCase().trim();
+    const currentRol = roles[rolIndex];
+    const currentEstado = estados[estadoIndex];
+
+    const cards = document.querySelectorAll('.admin-user-card');
+    cards.forEach(card => {
+      const cardSearch = card.getAttribute('data-search') || '';
+      const cardRole = card.getAttribute('data-role') || '';
+      const cardActive = card.getAttribute('data-active') === 'true';
+
+      const matchesSearch = !q || cardSearch.includes(q);
+      const matchesRole = currentRol === 'todos' || cardRole === currentRol;
+      const matchesEstado = currentEstado === 'todos' || (currentEstado === 'activo' && cardActive) || (currentEstado === 'inactivo' && !cardActive);
+
+      if (matchesSearch && matchesRole && matchesEstado) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function abrirEdicion(name, email, role) {
+    alert(`Modo Demostración: Editando usuario ${name} (${role}). Puedes cambiar su estado con el botón de pausa/activar o agregar nuevos usuarios con el botón superior.`);
+  }
+</script>
 {% endblock %}

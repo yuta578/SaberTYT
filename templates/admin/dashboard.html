@@ -2,32 +2,127 @@
 {% block title %}Panel de Control General - Administrador{% endblock %}
 {% block content %}
 <div class="admin-shell">
+  <!-- Cabecera Institucional M02 -->
   <section class="admin-hero">
-    <span class="admin-pill">● UPUTUMAYO • CICLO ACTIVO 2024-II</span>
-    <h1>Panel de Control General</h1>
-    <p>Bienvenido, Ing. Roberto Andrade<br><small>(Administrador de Plataforma)</small></p>
-    <div class="admin-server"><span>●</span> Servidor Institucional UPUTUMAYO <b>En línea • 42ms</b></div>
+    <span class="admin-pill">● [M02: Panel General de Administración] • UPUTUMAYO 2024-II</span>
+    <h1>Panel General de Administración</h1>
+    <p>Bienvenido, {{ request.session.demo_profile.name|default:"Ing. Roberto Andrade" }}<br><small>({{ request.session.demo_profile.label|default:"Administrador de Plataforma" }})</small></p>
+    <div class="admin-server"><span>●</span> Servidor Institucional UPUTUMAYO <b>En línea • 42ms • SSL Seguro</b></div>
   </section>
-  <div class="section-heading"><h2>▥ Métricas Operativas</h2><small>Actualizado en tiempo real</small></div>
+
+  <!-- Métricas Operativas Globales -->
+  <div class="section-heading">
+    <h2>▥ Métricas Operativas Globales</h2>
+    <small>Actualizado en tiempo real</small>
+  </div>
   <section class="admin-metrics">
-    <article><span>Total Usuarios Activos</span><strong>{{ total_usuarios|floatformat:0 }}</strong><small>usuarios</small><b>↗ +8.4%</b><div class="admin-meter"></div><footer><i>Estudiantes<br><strong>{{ total_estudiantes }}</strong></i><i>Docentes<br><strong>{{ total_docentes }}</strong></i><i>Admins<br><strong>{{ total_admins }}</strong></i></footer></article>
-    <article><span>Pruebas Activas</span><strong>{{ pruebas_activas }}</strong><small>5 bancos Saber TyT</small></article>
-    <article><span>Simulacros Ejecutados</span><strong>{{ simulacros_ejecutados|floatformat:0 }}</strong><small>Tasa culminación alta</small></article>
+    <article>
+      <span>Total Usuarios Registrados</span>
+      <strong>{{ total_usuarios|floatformat:0 }}</strong>
+      <small>Directorio institucional activo</small>
+      <b>↗ +8.4% ciclo</b>
+      <div class="admin-meter"></div>
+      <footer>
+        <i>Estudiantes<br><strong>{{ total_estudiantes|default:1240 }}</strong></i>
+        <i>Docentes<br><strong>{{ total_docentes|default:168 }}</strong></i>
+        <i>Admins<br><strong>{{ total_admins|default:12 }}</strong></i>
+      </footer>
+    </article>
+    <article>
+      <span>Pruebas y Baterías Activas</span>
+      <strong>{{ pruebas_activas|default:5 }}</strong>
+      <small>5 módulos genéricos Saber TyT</small>
+      <div style="margin-top: 1rem; font-size: 0.82rem; color: var(--text-secondary);">
+        RC, LC, CC, ING, CE
+      </div>
+    </article>
+    <article>
+      <span>Simulacros Ejecutados</span>
+      <strong>{{ simulacros_ejecutados|default:248|floatformat:0 }}</strong>
+      <small>Tasa de culminación favorable (94.2%)</small>
+      <div style="margin-top: 1rem;">
+        <a href="{% url 'admin_reportes' %}" style="color: var(--primary-600); font-size: 0.8rem; font-weight: 700;">
+          Ver Reporte M12 →
+        </a>
+      </div>
+    </article>
   </section>
-  <div class="section-heading"><h2>ϟ Accesos Directos</h2><small>Operación</small></div>
+
+  <!-- Módulos de Gestión Administrativa -->
+  <div class="section-heading">
+    <h2>ϟ Módulos de Gestión y Seguridad</h2>
+    <small>Administración RBAC & Global</small>
+  </div>
   <section class="admin-actions">
-    <a href="{% url 'admin_users' %}"><b>♙</b><strong>Gestionar Usuarios</strong><span>Crear, editar roles y estados</span><em>Abrir catálogo →</em></a>
-    <a href="{% url 'admin_permissions' %}"><b>⬡</b><strong>Matriz Permisos</strong><span>Auditoría de accesos RBAC</span><em>Ver niveles →</em></a>
-    <a href="{% url 'docente_preguntas' %}"><b>▣</b><strong>Bancos Saber TyT</strong><span>Aprobación y publicación</span><em>5 pendientes →</em></a>
-    <a href="{% url 'admin_settings' %}"><b>☷</b><strong>Ajustes Sistema</strong><span>Parámetros e integraciones</span><em>Configurar →</em></a>
+    <a href="{% url 'admin_users' %}">
+      <b>♙</b>
+      <strong>[M04] Directorio y CRUD de Usuarios</strong>
+      <span>Crear, editar roles, activar o suspender</span>
+      <em>Abrir directorio →</em>
+    </a>
+    <a href="{% url 'admin_permissions' %}">
+      <b>⬡</b>
+      <strong>[M05] Matriz de Roles y Permisos</strong>
+      <span>Auditoría de privilegios y control RBAC</span>
+      <em>Ver matriz →</em>
+    </a>
+    <a href="{% url 'admin_settings' %}">
+      <b>☷</b>
+      <strong>[M06] Configuración Institucional</strong>
+      <span>Parámetros globales, periodos y soporte</span>
+      <em>Configurar →</em>
+    </a>
+    <a href="{% url 'admin_reportes' %}">
+      <b>⌁</b>
+      <strong>[M12] Reporte Global de Resultados</strong>
+      <span>Histórico, notas promedio y exportación</span>
+      <em>Abrir analítica →</em>
+    </a>
   </section>
-  <div class="section-heading"><h2>◌ Actividad del Sistema</h2><small class="admin-live">En Vivo</small></div>
+
+  <!-- Supervisión Curricular y Académica [M07, M08, M10] -->
+  <div class="section-heading">
+    <h2>👁 Supervisión Curricular y Académica [M07, M08, M10]</h2>
+    <small>Supervisión directa de módulos docentes</small>
+  </div>
+  <section class="admin-actions" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <a href="{% url 'docente_competencias' %}" style="border-left: 3px solid var(--cat-cuanti);">
+      <b>▤</b>
+      <strong>[M07] Supervisión de Áreas y Competencias</strong>
+      <span>Auditoría de los 5 módulos ICFES Saber TyT</span>
+      <em>Inspeccionar competencias →</em>
+    </a>
+    <a href="{% url 'docente_preguntas' %}" style="border-left: 3px solid var(--cat-lectura);">
+      <b>▣</b>
+      <strong>[M08] Supervisión de Banco de Ítems</strong>
+      <span>Control de reactivos Opción Múltiple y V/F</span>
+      <em>Auditar banco central →</em>
+    </a>
+    <a href="{% url 'docente_cuestionarios' %}" style="border-left: 3px solid var(--cat-ingles);">
+      <b>▥</b>
+      <strong>[M10] Supervisión de Cuestionarios y Ponderaciones</strong>
+      <span>Programador, tiempos límite y pesos</span>
+      <em>Monitorear pruebas →</em>
+    </a>
+    <a href="{% url 'profile' %}" style="border-left: 3px solid var(--primary-600);">
+      <b>👤</b>
+      <strong>[M03] Mi Perfil & Seguridad de Administrador</strong>
+      <span>Privilegios root, credenciales y clave</span>
+      <em>Gestionar credencial →</em>
+    </a>
+  </section>
+
+  <!-- Actividad Reciente y Auditoría -->
+  <div class="section-heading">
+    <h2>◌ Actividad del Sistema y Auditoría</h2>
+    <small class="admin-live">En Vivo</small>
+  </div>
   <section class="admin-activity">
-    <p>▣ <b>Simulacro Docente</b><span>Hace 12 min</span><br>Prof. Hernán Díaz publicó el simulacro <em>#05 - Razonamiento Cuantitativo.</em></p>
-    <p>♙ <b>Admisión Estudiantil</b><span>Hace 45 min</span><br>Se registraron 35 nuevos estudiantes del programa Tec. en Gestión Contable.</p>
-    <p class="alert">♧ <b>Alerta Seguridad</b><span>Hace 2 horas</span><br>Intento de acceso fallido recurrente para el usuario <em>j.burbano@itp.edu.co</em></p>
-    <p>☁ <b>Mantenimiento</b><span>Hoy, 04:00 AM</span><br>Actualización de copia de seguridad institucional completada.</p>
+    <p>▣ <b>Simulacro Docente</b><span>Hace 12 min</span><br>Prof. Hernán Díaz parametrizó el cuestionario <em>#05 - Razonamiento Cuantitativo.</em></p>
+    <p>♙ <b>Directorio Estudiantil</b><span>Hace 45 min</span><br>Registro y validación de estudiantes del programa Tec. en Gestión Contable.</p>
+    <p class="alert">♧ <b>Auditoría de Seguridad</b><span>Hoy, 10:14 AM</span><br>Alerta preventiva registrada para el usuario suspendido <em>inactivo@itp.edu.co</em></p>
+    <p>☁ <b>Copia de Respaldo</b><span>Hoy, 04:00 AM</span><br>Instantánea de base de datos e historial inmutable generada correctamente.</p>
   </section>
-  <a class="admin-audit" href="{% url 'admin_users' %}">▤ Ver registro completo de auditoría</a>
+  <a class="admin-audit" href="{% url 'admin_reportes' %}">▤ Ver registro completo de resultados institucionales [M12] →</a>
 </div>
 {% endblock %}

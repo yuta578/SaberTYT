@@ -39,101 +39,141 @@
           </div>
         </a>
 
-        <!-- Dynamic Navigation Links by Role -->
-        <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="main-navigation" aria-label="Abrir navegación">
+        <!-- Mobile Hamburger Toggle -->
+        <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="main-navigation" aria-label="Abrir menú de navegación">
           <span></span><span></span><span></span>
         </button>
 
+        <!-- Main Navigation Bar (Adapts on Desktop, transforms into Drawer on Mobile/Tablet) -->
         <nav id="main-navigation" class="main-navigation">
-          <!-- Nav Links for Estudiante -->
-          <ul class="nav-links-menu" id="navGroupEstudiante" style="{% if '/docente/' in request.path or '/admin-panel/' in request.path or request.path == '/perfil/' %}display: none;{% endif %}">
-            <li>
-              <a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn {% if '/estudiante/' in request.path %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                </svg>
-                Mis Evaluaciones
-              </a>
-            </li>
-            <li><a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn">▦ Inicio</a></li>
-            <li><a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn">▣ Simulacros</a></li>
-            <li><a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn">⌁ Resultados</a></li>
-            <li><a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn">▤ Recursos</a></li>
+          <ul class="nav-links-menu">
+            {% if request.session.demo_profile.role == 'admin' or not request.session.demo_profile and '/admin-panel/' in request.path %}
+              <!-- ROL ADMINISTRADOR (Módulos M02, M04, M05, M06, M12, Supervisión M07/M08/M10) -->
+              <li>
+                <a href="{% url 'admin_dashboard' %}" class="nav-link-btn {% if request.path == '/admin-panel/' %}active{% endif %}">
+                  <span class="nav-tag">M02</span>
+                  <span>Inicio</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'admin_users' %}" class="nav-link-btn {% if '/usuarios/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M04</span>
+                  <span>Usuarios</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'admin_permissions' %}" class="nav-link-btn {% if '/permisos/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M05</span>
+                  <span>Permisos</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'admin_settings' %}" class="nav-link-btn {% if '/configuracion/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M06</span>
+                  <span>Ajustes</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'admin_reportes' %}" class="nav-link-btn {% if '/reportes/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M12</span>
+                  <span>Reportes</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_competencias' %}" class="nav-link-btn {% if '/docente/' in request.path %}active{% endif %}" title="Supervisión Curricular Saber TyT (M07, M08, M10)">
+                  <span class="nav-tag">👁</span>
+                  <span>Supervisión</span>
+                </a>
+              </li>
+
+            {% elif request.session.demo_profile.role == 'docente' or not request.session.demo_profile and '/docente/' in request.path %}
+              <!-- ROL DOCENTE (Módulos M02, M07, M08, M09, M10, M12) -->
+              <li>
+                <a href="{% url 'docente_dashboard' %}" class="nav-link-btn {% if request.path == '/docente/' %}active{% endif %}">
+                  <span class="nav-tag">M02</span>
+                  <span>Inicio</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_competencias' %}" class="nav-link-btn {% if '/docente/competencias/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M07</span>
+                  <span>Competencias</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_preguntas' %}" class="nav-link-btn {% if '/docente/preguntas/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M08</span>
+                  <span>Banco Ítems</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_importaciones' %}" class="nav-link-btn {% if '/docente/importaciones/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M09</span>
+                  <span>Carga Excel</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_cuestionarios' %}" class="nav-link-btn {% if '/docente/cuestionarios/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M10</span>
+                  <span>Cuestionarios</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'docente_intentos' %}" class="nav-link-btn {% if '/docente/intentos/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M12</span>
+                  <span>Métricas</span>
+                </a>
+              </li>
+
+            {% else %}
+              <!-- ROL ESTUDIANTE (Módulos M02, M03) -->
+              <li>
+                <a href="{% url 'estudiante_catalogo' %}" class="nav-link-btn {% if '/estudiante/' in request.path and not '/resultado/' in request.path %}active{% endif %}">
+                  <span class="nav-tag">M02</span>
+                  <span>Catálogo de Simulacros</span>
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'profile' %}" class="nav-link-btn {% if request.path == '/perfil/' %}active{% endif %}">
+                  <span class="nav-tag">M03</span>
+                  <span>Mi Perfil & Datos</span>
+                </a>
+              </li>
+            {% endif %}
           </ul>
 
-          <ul class="nav-links-menu" id="navGroupAdmin" style="{% if not '/admin-panel/' in request.path %}display: none;{% endif %}">
-            <li><a href="{% url 'admin_dashboard' %}" class="nav-link-btn {% if request.path == '/admin-panel/' %}active{% endif %}">▦ Inicio</a></li>
-            <li><a href="{% url 'admin_users' %}" class="nav-link-btn {% if '/usuarios/' in request.path %}active{% endif %}">♙ Usuarios</a></li>
-            <li><a href="{% url 'admin_permissions' %}" class="nav-link-btn {% if '/permisos/' in request.path %}active{% endif %}">♧ Permisos</a></li>
-            <li><a href="{% url 'admin_settings' %}" class="nav-link-btn {% if '/configuracion/' in request.path %}active{% endif %}">☷ Ajustes</a></li>
-          </ul>
-
-          <!-- Nav Links for Docente / Profesor -->
-          <ul class="nav-links-menu" id="navGroupDocente" style="{% if not '/docente/' in request.path %}display: none;{% endif %}">
-            <li>
-              <a href="{% url 'docente_dashboard' %}" class="nav-link-btn {% if request.path == '/docente/' %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-                Panel Docente
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'docente_preguntas' %}" class="nav-link-btn {% if '/docente/preguntas/' in request.path %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                Banco de Preguntas
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'docente_cuestionarios' %}" class="nav-link-btn {% if '/docente/cuestionarios/' in request.path %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
-                Cuestionarios
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'docente_importaciones' %}" class="nav-link-btn {% if '/docente/importaciones/' in request.path %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 16 12 12 8 16"></polyline>
-                  <line x1="12" y1="12" x2="12" y2="21"></line>
-                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
-                </svg>
-                Importar Excel
-              </a>
-            </li>
-            <li>
-              <a href="{% url 'docente_intentos' %}" class="nav-link-btn {% if '/docente/intentos/' in request.path %}active{% endif %}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-                Registro de Intentos
-              </a>
-            </li>
-          </ul>
+          <!-- Pie del Drawer Móvil -->
+          <div class="mobile-nav-footer">
+            {% if request.session.demo_profile %}
+              <div class="mobile-user-card">
+                <span class="mobile-avatar">{{ request.session.demo_profile.name|first }}</span>
+                <div class="mobile-user-info">
+                  <strong>{{ request.session.demo_profile.name }}</strong>
+                  <small>{{ request.session.demo_profile.label }}</small>
+                </div>
+              </div>
+              <div class="mobile-drawer-actions">
+                <a href="{% url 'profile' %}" class="btn btn-sm btn-secondary" style="flex: 1; text-align: center;">👤 Mi Perfil [M03]</a>
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-ghost" style="color: #f87171;">↪ Salir</a>
+              </div>
+            {% else %}
+              <a href="{% url 'login' %}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center;">Ingresar al Sistema</a>
+            {% endif %}
+          </div>
         </nav>
 
-        <!-- Header Actions -->
+        <!-- Header Actions (Theme Toggle & Session Profile) -->
         <div class="nav-actions-group">
-          <!-- Theme Toggle -->
           <!-- Theme Toggle -->
           <button class="theme-toggle-btn" title="Alternar Modo Oscuro / Claro" aria-label="Alternar Tema">
             <svg class="theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
           </button>
+
           {% if request.session.demo_profile %}
           <details class="profile-menu">
-            <summary class="session-user" title="Abrir menú de perfil">
+            <summary class="session-user" title="Abrir menú de usuario">
               <span class="session-avatar">{{ request.session.demo_profile.name|first }}</span>
               <span class="session-user-copy">
                 <strong>{{ request.session.demo_profile.name }}</strong>
@@ -141,7 +181,7 @@
               </span>
             </summary>
             <div class="profile-menu-panel">
-              <a href="{% url 'profile' %}">♙ Ver perfil</a>
+              <a href="{% url 'profile' %}">👤 Mi Perfil [M03]</a>
               <a href="{% url 'logout' %}">↪ Cerrar sesión</a>
             </div>
           </details>
@@ -151,6 +191,9 @@
         </div>
       </div>
     </header>
+
+    <!-- Overlay de Fondo para Menú Móvil -->
+    <div id="navBackdrop" class="nav-backdrop"></div>
 
     <!-- Main Content Area -->
     <main class="main-content">

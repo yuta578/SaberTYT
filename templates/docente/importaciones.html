@@ -1,203 +1,304 @@
 {% extends 'base.html' %}
 
-{% block title %}Importación Masiva de Ítems - Módulo Docente{% endblock %}
+{% block title %}Asistente de Carga Excel en 3 Fases - Módulo Docente{% endblock %}
 
 {% block content %}
 <div class="container">
-  <!-- Header -->
+  <!-- Cabecera -->
   <div style="margin-bottom: 1.75rem;">
     <div class="hero-pill-badge" style="margin-bottom: 0.35rem;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
-      Módulo de Importación Masiva
+      [M09: Asistente de Carga Excel en 3 Fases]
     </div>
-    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
-      Carga Masiva de Ítems y Bitácora de Validación
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">
+      Asistente de Importación Masiva de Reactivos
     </h1>
-    <p style="font-size: 0.88rem; color: var(--text-secondary);">
-      Procesa archivos estructurados (.xlsx / .csv) con validación fila por fila de campos obligatorios, coherencia de alternativas y clave de respuesta.
+    <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+      Carga masiva por fases con verificación sintáctica de campos, coherencia de alternativas y auditoría previa a la inserción en el banco de ítems.
     </p>
   </div>
 
-  <!-- Upload Area and Template Download Card -->
-  <div style="display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; margin-bottom: 2.25rem; align-items: start;">
-    <!-- Upload Dropzone Form -->
+  <!-- Stepper Visual de las 3 Fases -->
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div style="padding: 1rem; border-radius: var(--radius-sm); border: 2px solid {% if paso_actual == 1 %}var(--primary-600){% else %}var(--border-subtle){% endif %}; background: {% if paso_actual == 1 %}var(--primary-50){% else %}var(--bg-surface){% endif %}; transition: all 0.2s ease;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: {% if paso_actual == 1 %}var(--primary-600){% else %}var(--border-medium){% endif %}; color: white; display: grid; place-items: center; font-size: 0.75rem; font-weight: 800;">1</span>
+        <strong style="font-size: 0.88rem; color: var(--text-primary);">Paso 1: Selección</strong>
+      </div>
+      <p style="margin: 0; font-size: 0.74rem; color: var(--text-secondary);">Archivo .xlsx / .csv y plantilla oficial</p>
+    </div>
+
+    <div style="padding: 1rem; border-radius: var(--radius-sm); border: 2px solid {% if paso_actual == 2 %}var(--primary-600){% else %}var(--border-subtle){% endif %}; background: {% if paso_actual == 2 %}var(--primary-50){% else %}var(--bg-surface){% endif %}; transition: all 0.2s ease;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: {% if paso_actual == 2 %}var(--primary-600){% else %}var(--border-medium){% endif %}; color: white; display: grid; place-items: center; font-size: 0.75rem; font-weight: 800;">2</span>
+        <strong style="font-size: 0.88rem; color: var(--text-primary);">Paso 2: Validación</strong>
+      </div>
+      <p style="margin: 0; font-size: 0.74rem; color: var(--text-secondary);">Auditoría y reporte de inconsistencias</p>
+    </div>
+
+    <div style="padding: 1rem; border-radius: var(--radius-sm); border: 2px solid {% if paso_actual == 3 %}var(--success-solid){% else %}var(--border-subtle){% endif %}; background: {% if paso_actual == 3 %}var(--success-bg){% else %}var(--bg-surface){% endif %}; transition: all 0.2s ease;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: {% if paso_actual == 3 %}var(--success-solid){% else %}var(--border-medium){% endif %}; color: white; display: grid; place-items: center; font-size: 0.75rem; font-weight: 800;">3</span>
+        <strong style="font-size: 0.88rem; color: var(--text-primary);">Paso 3: Confirmación</strong>
+      </div>
+      <p style="margin: 0; font-size: 0.74rem; color: var(--text-secondary);">Envío formal al banco de ítems</p>
+    </div>
+  </div>
+
+  {% if paso_actual == 1 %}
+  <!-- ================= FASE 1: SELECCIÓN DE ARCHIVO Y PLANTILLA ================= -->
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; margin-bottom: 2.25rem; align-items: start;">
+    <!-- Formulario de Subida -->
     <div class="card">
       <div class="card-header">
-        <strong style="font-size: 0.95rem; color: var(--text-primary);">Cargar Archivo de Preguntas (.xlsx / .csv)</strong>
-        <span class="badge badge-primary">Validación Fila por Fila</span>
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">Fase 1: Subir Archivo para Validación Previa</strong>
+        <span class="badge badge-primary">Paso 1 de 3</span>
       </div>
       <form method="POST" enctype="multipart/form-data" class="card-body">
         {% csrf_token %}
+        <input type="hidden" name="accion" value="validar">
+
         <div id="excelDropzone" style="
           border: 2px dashed var(--border-medium);
           border-radius: var(--radius-md);
-          padding: 2.25rem 1.5rem;
+          padding: 2.5rem 1.5rem;
           text-align: center;
           background-color: var(--bg-subtle);
           cursor: pointer;
-          transition: all 160ms var(--ease-smooth);
+          transition: all 160ms ease;
         ">
           <input type="file" id="excelFileInput" name="archivo_excel" accept=".xlsx, .xls, .csv" style="display: none;" required>
-          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--primary-50); color: var(--primary-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.85rem; border: 1px solid var(--primary-200);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--primary-50); color: var(--primary-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.85rem; border: 1px solid var(--primary-200);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
           </div>
-          <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
-            Arrastra tu plantilla Excel aquí o haz clic para examinar
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
+            Arrastra tu archivo Excel / CSV aquí o haz clic para examinar
           </h3>
-          <p style="font-size: 0.78rem; color: var(--text-secondary);">
-            Formatos soportados: <strong>.xlsx</strong> y <strong>.csv</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+            El archivo será analizado y pre-validado sin afectar el banco de datos hasta tu confirmación final en la Fase 3.
           </p>
 
-          <button type="button" class="btn btn-sm btn-primary" style="margin-top: 0.85rem;" onclick="document.getElementById('excelFileInput').click();">
-            Seleccionar Archivo
+          <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('excelFileInput').click();">
+            Examinar Archivo...
           </button>
         </div>
 
-        <div id="uploadFileInfo" style="display: none; margin-top: 1rem; padding: 0.65rem 0.85rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.85rem;">
-          <span style="color: var(--text-tertiary);">Archivo seleccionado:</span> <strong id="uploadFileName" style="color: var(--text-primary);"></strong>
+        <div id="uploadFileInfo" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.85rem;">
+          <span style="color: var(--text-tertiary);">Archivo preparado:</span> <strong id="uploadFileName" style="color: var(--text-primary);"></strong>
         </div>
 
-        <div style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
           <button type="submit" class="btn btn-success btn-lg">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Procesar e Importar al Banco
+            Avanzar a Paso 2: Validar e Inspeccionar Inconsistencias <span>→</span>
           </button>
         </div>
       </form>
     </div>
 
-    <!-- Template Specification Guide -->
+    <!-- Guía y Descarga de Plantilla Oficial -->
     <div class="card">
       <div class="card-header">
-        <strong style="font-size: 0.9rem; color: var(--text-primary);">Plantilla Oficial de Carga</strong>
+        <strong style="font-size: 0.9rem; color: var(--text-primary);">Plantilla Oficial Estandarizada</strong>
       </div>
       <div class="card-body">
         <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
-          Descargue la plantilla estandarizada con las cabeceras requeridas para la carga masiva.
+          Descarga el modelo con cabeceras correctas, tipos de ítem compatibles y ejemplos pedagógicos.
         </p>
 
-        <a href="{% url 'descargar_plantilla_excel' %}" class="btn btn-secondary" style="width: 100%; margin-bottom: 1.15rem;">
+        <a href="{% url 'descargar_plantilla_excel' %}" class="btn btn-secondary" style="width: 100%; margin-bottom: 1.25rem;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Descargar Plantilla .csv
+          Descargar Plantilla Oficial .csv
         </a>
 
         <div style="font-size: 0.75rem; color: var(--text-tertiary);">
-          <strong style="color: var(--text-secondary);">Columnas requeridas:</strong>
-          <ul style="padding-left: 1.15rem; margin-top: 0.35rem; display: flex; flex-direction: column; gap: 0.2rem; font-family: var(--font-mono); color: var(--text-secondary);">
-            <li>categoria</li>
-            <li>tipo (MULTIPLE / V-F)</li>
-            <li>enunciado</li>
-            <li>opcion_a, opcion_b...</li>
-            <li>clave_correcta</li>
-            <li>retroalimentacion</li>
+          <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Columnas requeridas:</strong>
+          <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.25rem; font-family: var(--font-mono); color: var(--text-secondary);">
+            <li>categoria (Lectura Crítica, etc.)</li>
+            <li>tipo (MULTIPLE / VERDADERO_FALSO)</li>
+            <li>texto_base (Contexto de lectura)</li>
+            <li>enunciado (Pregunta obligatoria)</li>
+            <li>opcion_a, opcion_b, opcion_c, opcion_d</li>
+            <li>clave_correcta (A, B, C o D)</li>
+            <li>retroalimentacion (Justificación pedagógica)</li>
           </ul>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Historial de Importaciones -->
+  {% elif paso_actual == 2 and reporte_validacion %}
+  <!-- ================= FASE 2 & FASE 3: VALIDACIÓN & CONFIRMACIÓN ================= -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong style="font-size: 1rem; color: var(--text-primary);">
+          Fase 2: Reporte de Validación e Inconsistencias
+        </strong>
+        <span style="font-size: 0.78rem; color: var(--text-tertiary); margin-left: 0.4rem;">
+          Archivo: {{ reporte_validacion.nombre_archivo }}
+        </span>
+      </div>
+      <div style="display: flex; gap: 0.65rem;">
+        <span class="badge badge-success">
+          ✓ {{ reporte_validacion.filas_validas|length }} Filas Válidas
+        </span>
+        {% if reporte_validacion.inconsistencias %}
+        <span class="badge badge-danger">
+          ⚠️ {{ reporte_validacion.inconsistencias|length }} Inconsistencias Detectadas
+        </span>
+        {% else %}
+        <span class="badge badge-primary">
+          0 Inconsistencias Críticas
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Resumen Métrico -->
+      <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <strong style="color: var(--text-primary); font-size: 0.95rem;">Auditoría Previa Completada</strong>
+          <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">
+            Revisa los reactivos extraídos antes de autorizar la inserción definitiva en el banco de ítems.
+          </p>
+        </div>
+
+        <!-- Botones de Acción Fase 3 -->
+        <div style="display: flex; gap: 0.75rem;">
+          <a href="{% url 'docente_importaciones' %}" class="btn btn-secondary">
+            ✕ Descartar y Cargar Otro
+          </a>
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="confirmar">
+            <button type="submit" class="btn btn-success btn-lg">
+              Paso 3: Confirmar y Enviar {{ reporte_validacion.filas_validas|length }} Ítems al Banco →
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tabla de Filas Validadas -->
+      <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem;">
+        Ítems Verificados Listos para Importar ({{ reporte_validacion.filas_validas|length }}):
+      </h3>
+      <div class="table-responsive-wrapper" style="margin-bottom: 2rem;">
+        <table class="table-modern">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Fila</th>
+              <th>Competencia</th>
+              <th>Tipo</th>
+              <th>Enunciado de la Pregunta</th>
+              <th>Clave</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in reporte_validacion.filas_validas %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-weight: 700;">#{{ item.num_fila }}</td>
+              <td><span class="badge badge-info">{{ item.categoria }}</span></td>
+              <td><span class="badge badge-neutral">{{ item.tipo }}</span></td>
+              <td>
+                <strong style="color: var(--text-primary);">{{ item.enunciado|truncatechars:90 }}</strong>
+                {% if item.texto_base %}
+                <div style="font-size: 0.72rem; color: var(--text-tertiary);">Contexto: {{ item.texto_base|truncatechars:60 }}</div>
+                {% endif %}
+              </td>
+              <td><span class="badge badge-primary font-mono" style="font-size: 0.85rem; font-weight: 800;">({{ item.clave }})</span></td>
+              <td><span class="badge badge-success">✓ Válida para Banco</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align: center; color: var(--danger-solid);">No se detectaron filas válidas en este archivo.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Inconsistencias Reportadas (si hubiere) -->
+      {% if reporte_validacion.inconsistencias %}
+      <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--danger-solid); margin-bottom: 0.75rem;">
+        Reporte de Inconsistencias Omitidas ({{ reporte_validacion.inconsistencias|length }}):
+      </h3>
+      <div class="table-responsive-wrapper">
+        <table class="table-modern" style="border: 1px solid var(--danger-border);">
+          <thead>
+            <tr style="background: var(--danger-bg);">
+              <th style="width: 50px;">Fila</th>
+              <th>Enunciado Parcial</th>
+              <th>Observación / Inconsistencia Detectada</th>
+              <th>Acción Tomada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inc in reporte_validacion.inconsistencias %}
+            <tr>
+              <td style="font-family: var(--font-mono); font-weight: 700;">#{{ inc.num_fila }}</td>
+              <td>{{ inc.enunciado|default:"(Sin enunciado)"|truncatechars:70 }}</td>
+              <td style="color: var(--danger-solid); font-weight: 600;">
+                {{ inc.errores|join:", " }}
+              </td>
+              <td><span class="badge badge-danger">Omitida de la Carga</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Historial Institucional de Cargas Masivas -->
   <div class="card">
     <div class="card-header">
-      <div>
-        <h2 style="font-size: 1.1rem; font-weight: 800;">Historial de Cargas Realizadas</h2>
-        <p style="font-size: 0.75rem; color: var(--text-tertiary);">Registro de importaciones y bitácoras de validación</p>
-      </div>
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">Historial de Importaciones Previas</strong>
+      <span style="font-size: 0.78rem; color: var(--text-tertiary);">Registro cronológico de operaciones</span>
     </div>
     <div class="table-responsive-wrapper">
       <table class="table-modern">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Nombre del Archivo</th>
-            <th>Fecha de Carga</th>
-            <th style="text-align: center;">Filas Totales</th>
-            <th style="text-align: center;">Válidas</th>
-            <th style="text-align: center;">Errores</th>
-            <th>Estado</th>
-            <th style="text-align: right;">Bitácora</th>
+            <th>Archivo Procesado</th>
+            <th>Fecha y Hora</th>
+            <th>Total Filas</th>
+            <th>Válidas</th>
+            <th>Inconsistencias</th>
+            <th>Detalle / Bitácora</th>
           </tr>
         </thead>
         <tbody>
           {% for imp in importaciones %}
           <tr>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-tertiary); font-size: 0.8rem;">#{{ imp.id }}</td>
             <td>
-              <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ imp.nombre_archivo }}</strong>
+              <strong style="color: var(--text-primary);">{{ imp.nombre_archivo }}</strong>
             </td>
-            <td style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">
+            <td style="font-size: 0.8rem; color: var(--text-secondary);">
               {{ imp.fecha_carga|date:"d M Y, H:i" }}
             </td>
-            <td style="text-align: center; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">
-              {{ imp.total_filas }}
-            </td>
-            <td style="text-align: center;">
-              <span class="badge badge-success">{{ imp.total_validas }}</span>
-            </td>
-            <td style="text-align: center;">
+            <td style="font-family: var(--font-mono);">{{ imp.total_filas }}</td>
+            <td><span class="badge badge-success">{{ imp.total_validas }} válidas</span></td>
+            <td>
               {% if imp.total_errores > 0 %}
-                <span class="badge badge-danger">{{ imp.total_errores }}</span>
+                <span class="badge badge-danger">{{ imp.total_errores }} inconsistencias</span>
               {% else %}
-                <span class="badge badge-neutral">0</span>
+                <span class="badge badge-primary">0 observaciones</span>
               {% endif %}
             </td>
             <td>
-              {% if imp.total_errores == 0 %}
-                <span class="badge badge-success"><span class="pulse-dot"></span> Exitoso</span>
-              {% else %}
-                <span class="badge badge-warning">Con Advertencias</span>
-              {% endif %}
-            </td>
-            <td style="text-align: right;">
-              <button class="btn btn-sm btn-secondary" data-modal-target="logModal_{{ imp.id }}">
-                Ver Log
-              </button>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">{{ imp.detalle_log|default:"Carga exitosa sin errores."|truncatechars:65 }}</span>
             </td>
           </tr>
-
-          <!-- Log Modal for this import -->
-          <div class="modal-backdrop" id="logModal_{{ imp.id }}">
-            <div class="modal-dialog">
-              <div class="modal-header">
-                <div>
-                  <h3 class="modal-title">Bitácora de Validación</h3>
-                  <span style="font-size: 0.75rem; color: var(--text-tertiary); font-family: var(--font-mono);">{{ imp.nombre_archivo }}</span>
-                </div>
-                <button class="btn-ghost" data-modal-close style="font-size: 1.2rem; cursor: pointer; border: none;">✕</button>
-              </div>
-              <div class="modal-body">
-                <div style="display: flex; gap: 0.65rem; margin-bottom: 1rem;">
-                  <span class="badge badge-info">Evaluadas: {{ imp.total_filas }}</span>
-                  <span class="badge badge-success">Válidas: {{ imp.total_validas }}</span>
-                  <span class="badge badge-danger">Errores: {{ imp.total_errores }}</span>
-                </div>
-                <pre style="
-                  background: var(--primary-950);
-                  color: #6ee7b7;
-                  padding: 1.15rem;
-                  border-radius: var(--radius-sm);
-                  font-family: var(--font-mono);
-                  font-size: 0.78rem;
-                  line-height: 1.55;
-                  max-height: 300px;
-                  overflow-y: auto;
-                  white-space: pre-wrap;
-                ">{{ imp.detalle_log|default:"Procesamiento finalizado sin incidencias." }}</pre>
-              </div>
-              <div class="modal-footer">
-                <button class="btn btn-secondary" data-modal-close>Cerrar</button>
-              </div>
-            </div>
-          </div>
-
           {% empty %}
           <tr>
-            <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-tertiary);">
-              Aún no se han realizado importaciones de preguntas.
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-tertiary);">
+              No se registran importaciones previas aún.
             </td>
           </tr>
           {% endfor %}

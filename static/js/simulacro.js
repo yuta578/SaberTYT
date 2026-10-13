@@ -138,6 +138,12 @@ class SimulacroEngine {
     allOptions.forEach(opt => opt.classList.remove('selected'));
     selectedElement.classList.add('selected');
 
+    const block = document.querySelector(`.question-block[data-question-index="${qIndex}"]`);
+    if (block) {
+      const hiddenInput = block.querySelector('.hidden-answer-input');
+      if (hiddenInput) hiddenInput.value = letter;
+    }
+
     this.updatePaletteButton(qIndex);
     this.updateStats();
   }
@@ -145,12 +151,25 @@ class SimulacroEngine {
   clearSelection(qIndex, allOptions) {
     delete this.answers[qIndex];
     allOptions.forEach(opt => opt.classList.remove('selected'));
+
+    const block = document.querySelector(`.question-block[data-question-index="${qIndex}"]`);
+    if (block) {
+      const hiddenInput = block.querySelector('.hidden-answer-input');
+      if (hiddenInput) hiddenInput.value = '';
+    }
+
     this.updatePaletteButton(qIndex);
     this.updateStats();
   }
 
   toggleFlag(qIndex, flagBtn) {
     this.flagged[qIndex] = !this.flagged[qIndex];
+
+    const block = document.querySelector(`.question-block[data-question-index="${qIndex}"]`);
+    if (block) {
+      const hiddenRev = block.querySelector('.hidden-revision-input');
+      if (hiddenRev) hiddenRev.value = this.flagged[qIndex] ? 'true' : 'false';
+    }
 
     if (this.flagged[qIndex]) {
       flagBtn.classList.remove('btn-secondary');
