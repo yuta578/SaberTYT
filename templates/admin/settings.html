@@ -5,7 +5,7 @@
 <div class="admin-shell admin-list-page">
   <!-- Cabecera M06 -->
   <section class="admin-hero">
-    <span class="admin-pill">● [M06: Configuración Global Institucional] • Parámetros de Sistema</span>
+    <span class="admin-pill">● Configuración Global Institucional • Parámetros de Sistema</span>
     <h1>Configuración Global Institucional</h1>
     <p>Ajustes de identidad, ciclo de evaluación, escala cuantitativa y canales de soporte técnico institucional.</p>
     <div class="admin-server">
@@ -17,7 +17,7 @@
   {% if messages %}
     <div style="margin: 1rem 0;">
       {% for message in messages %}
-        <div style="padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-weight: 600; font-size: 0.88rem;">
+        <div style="padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text); font-weight: 600; font-size: 0.88rem;">
           ✓ {{ message }}
         </div>
       {% endfor %}

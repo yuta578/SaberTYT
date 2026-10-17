@@ -272,3 +272,161 @@
     font-weight: 800;
   }
 }
+
+/* ==========================================================================
+   DOCENTE & PERFIL DARK MODE SUPPORT
+   ========================================================================== */
+
+[data-theme="dark"] .docente-page {
+  --teacher-ink: #f8fafc;
+  --teacher-green: #10b981;
+  --teacher-lavender: #141c30;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .profile-page .main-content,
+[data-theme="dark"] .docente-page .main-content {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .profile-page .navbar,
+[data-theme="dark"] .docente-page .navbar {
+  background: linear-gradient(110deg, #07192f 0%, #0c2847 55%, #10345d 100%) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .docente-page .page-hero {
+  background: linear-gradient(115deg, #091726, #0e273f 58%, #07192b);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .docente-page .page-hero .hero-title-main,
+[data-theme="dark"] .docente-page .page-hero .hero-description-text {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .docente-page .hero-pill-badge {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .docente-page .stat-card-modern,
+[data-theme="dark"] .docente-page .card {
+  background-color: var(--bg-surface);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .docente-page .card-header {
+  border-bottom-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .docente-page .btn-primary,
+[data-theme="dark"] .docente-page .btn-success {
+  background: #059669;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .docente-page .btn-primary:hover,
+[data-theme="dark"] .docente-page .btn-success:hover {
+  background: #10b981;
+  border-color: #059669;
+}
+
+[data-theme="dark"] .docente-page .btn-secondary,
+[data-theme="dark"] .docente-page .btn-ghost {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border-color: var(--border-medium);
+}
+
+[data-theme="dark"] .docente-page .btn-secondary:hover,
+[data-theme="dark"] .docente-page .btn-ghost:hover {
+  color: #ffffff;
+  background: var(--bg-subtle-hover);
+  border-color: var(--border-strong);
+}
+
+[data-theme="dark"] .docente-page .form-control,
+[data-theme="dark"] .docente-page .form-select {
+  background-color: var(--bg-surface);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .docente-page .form-control:focus,
+[data-theme="dark"] .docente-page .form-select:focus {
+  border-color: #34d399;
+  background-color: var(--bg-surface-elevated);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .docente-page .form-select option {
+  background-color: var(--bg-surface-elevated);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .docente-page .table-modern thead th {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .docente-page .table-modern td {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .docente-page .badge-primary {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .docente-page .badge-info,
+[data-theme="dark"] .docente-page .badge-neutral {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+[data-theme="dark"] .docente-page .badge-success {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .docente-bottom-nav {
+  background: rgba(14, 20, 36, 0.97);
+  border-top-color: var(--border-subtle);
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .docente-bottom-nav a {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .docente-bottom-nav a.active {
+  color: #34d399;
+}
+
+[data-theme="dark"] .profile-menu-panel {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-medium);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .profile-menu-panel a {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .profile-menu-panel a:hover {
+  background: var(--bg-subtle-hover);
+  color: #ffffff;
+}

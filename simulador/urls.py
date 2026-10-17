@@ -5,6 +5,7 @@ urlpatterns = [
     # M01: Portal Principal & Acceso Institucional
     path('', views.home_view, name='home'),
     path('login/', views.login_view, name='login'),
+    path('registro/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     
     # M03: Mi Perfil & Seguridad

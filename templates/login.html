@@ -5,6 +5,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso Institucional | Saber TyT UNIPUTUMAYO</title>
+  <!-- Preload critical logo image with high priority to prevent late rendering -->
+  <link rel="preload" as="image" href="{% static 'img/loginlogo.png' %}" fetchpriority="high">
+  <!-- Theme initialization script (pre-render execution to prevent FOUC) -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('tyt_theme');
+        var theme = saved ? saved : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   <style>
     .alert-banner {
@@ -78,18 +90,50 @@
       border-color: #f43f5e;
       color: #be123c;
     }
+    [data-theme="dark"] .alert-danger {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+    [data-theme="dark"] .alert-warning {
+      background: rgba(245, 158, 11, 0.16);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+    [data-theme="dark"] .alert-info {
+      background: rgba(59, 130, 246, 0.16);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+    }
+    [data-theme="dark"] .alert-success {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #6ee7b7;
+    }
+    [data-theme="dark"] .demo-chip:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--primary-400);
+      color: #93c5fd;
+    }
+    [data-theme="dark"] .demo-chip.chip-warning:hover {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: #f59e0b;
+      color: #fcd34d;
+    }
+    [data-theme="dark"] .demo-chip.chip-danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #f43f5e;
+      color: #fca5a5;
+    }
   </style>
 </head>
 <body class="login-page">
   <main class="login-shell">
     <!-- Panel Izquierdo Institucional -->
     <section class="login-brand-panel">
-      <div class="login-brand-mark">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-        </svg>
+      <div style="margin-bottom: 1.75rem;">
+        <img src="{% static 'img/loginlogo.png' %}" alt="Logo UNIPUTUMAYO" loading="eager" fetchpriority="high" decoding="sync" style="max-width: 260px; width: 100%; height: auto; object-fit: contain; display: block;">
       </div>
-      <span class="login-eyebrow">Instituto Tecnológico del Putumayo • UNIPUTUMAYO</span>
       <h1>Saber TyT</h1>
       <p>Sistema Oficial para la Evaluación, Simulación Cronometrada y Retroalimentación Pedagógica en las Pruebas de Estado.</p>
       
@@ -99,16 +143,18 @@
         <span><b>✓</b> Informes detallados por competencias ICFES</span>
         <span><b>✓</b> Control de accesos RBAC y auditoría administrativa</span>
       </div>
-
-      <div style="margin-top: 2rem; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.08); font-size: 0.78rem; color: rgba(255,255,255,0.75);">
-        <span>● Conexión Segura SSL • Directorio Activo Institucional</span>
-      </div>
     </section>
 
     <!-- Panel Derecho de Formulario de Acceso -->
     <section class="login-form-panel">
       <div class="login-form-heading">
-        <span class="hero-pill-badge"><span class="pulse-dot"></span> [M01: Pantalla de Acceso]</span>
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.6rem;">
+          <button class="theme-toggle-btn" type="button" title="Alternar Modo Oscuro / Claro" aria-label="Alternar Tema" style="background: var(--bg-subtle); border: 1px solid var(--border-medium); color: var(--text-primary); border-radius: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
         <h2>Ingreso Institucional</h2>
         <p>Introduce tus credenciales para acceder a tu entorno de trabajo.</p>
       </div>
@@ -152,19 +198,16 @@
           Cargar Credenciales de Prueba:
         </span>
         <div class="demo-credential-chips">
-          <button type="button" class="demo-chip" onclick="fillCredentials('admin@itp.edu.co', 'demo1234', 'admin')">
+          <button type="button" class="demo-chip" onclick="fillCredentials('admin@itp.edu.co', 'demo1234')">
             🛡️ Administrador
           </button>
-          <button type="button" class="demo-chip" onclick="fillCredentials('docente@itp.edu.co', 'demo1234', 'docente')">
+          <button type="button" class="demo-chip" onclick="fillCredentials('docente@itp.edu.co', 'demo1234')">
             🎓 Docente
           </button>
-          <button type="button" class="demo-chip" onclick="fillCredentials('estudiante@itp.edu.co', 'demo1234', 'estudiante')">
+          <button type="button" class="demo-chip" onclick="fillCredentials('estudiante@itp.edu.co', 'demo1234')">
             📖 Estudiante
           </button>
-          <button type="button" class="demo-chip chip-warning" onclick="fillCredentials('inactivo@itp.edu.co', 'demo1234', 'estudiante')">
-            ⚠️ Cuenta Inactiva
-          </button>
-          <button type="button" class="demo-chip chip-danger" onclick="fillCredentials('invalido@itp.edu.co', 'clave_erronea', 'estudiante')">
+          <button type="button" class="demo-chip chip-danger" onclick="fillCredentials('invalido@itp.edu.co', 'clave_erronea')">
             ✕ Credencial Inválida
           </button>
           <button type="button" class="demo-chip" onclick="clearCredentials()">
@@ -210,55 +253,27 @@
           </div>
         </div>
 
-        <fieldset class="role-choice-group" style="margin-bottom: 1.5rem;">
-          <legend>Perfil de Destino</legend>
-          <label class="role-choice" for="role_estudiante" style="cursor: pointer;">
-            <input type="radio" name="role" id="role_estudiante" value="estudiante" onchange="handleRoleChange('estudiante')" {% if selected_role == 'estudiante' or not selected_role %}checked{% endif %}>
-            <span class="role-choice-icon">📖</span>
-            <span><strong>Estudiante</strong><small>Mis evaluaciones, sala de espera y simulacro</small></span>
-          </label>
-          <label class="role-choice" for="role_docente" style="cursor: pointer;">
-            <input type="radio" name="role" id="role_docente" value="docente" onchange="handleRoleChange('docente')" {% if selected_role == 'docente' %}checked{% endif %}>
-            <span class="role-choice-icon">🎓</span>
-            <span><strong>Docente Evaluador</strong><small>Banco de ítems, carga Excel y cuestionarios</small></span>
-          </label>
-          <label class="role-choice" for="role_admin" style="cursor: pointer;">
-            <input type="radio" name="role" id="role_admin" value="admin" onchange="handleRoleChange('admin')" {% if selected_role == 'admin' %}checked{% endif %}>
-            <span class="role-choice-icon">🛡️</span>
-            <span><strong>Administrador</strong><small>Directorio, usuarios, permisos y reportes</small></span>
-          </label>
-        </fieldset>
-
         <button type="submit" class="btn btn-primary btn-lg login-submit" style="width: 100%;">
           Ingresar al Sistema Saber TyT <span>→</span>
         </button>
+
+        <!-- Apartado para Registrarse -->
+        <div style="margin-top: 1.5rem; text-align: center; padding-top: 1.25rem; border-top: 1px solid var(--border-medium);">
+          <p style="font-size: 0.83rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            ¿Eres estudiante y aún no tienes cuenta institucional?
+          </p>
+          <a href="{% url 'register' %}" class="btn" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; padding: 0.72rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.86rem; background: var(--bg-subtle); color: var(--text-primary); border: 1.5px solid var(--border-medium); transition: all 0.2s ease;">
+            <span>🎓</span> Registrarse como Estudiante <span>→</span>
+          </a>
+        </div>
       </form>
     </section>
   </main>
 
   <script>
-    const roleCredentials = {
-      'admin': { email: 'admin@itp.edu.co', pass: 'demo1234' },
-      'docente': { email: 'docente@itp.edu.co', pass: 'demo1234' },
-      'estudiante': { email: 'estudiante@itp.edu.co', pass: 'demo1234' }
-    };
-
-    function handleRoleChange(role) {
-      if (roleCredentials[role]) {
-        document.getElementById('institutional-email').value = roleCredentials[role].email;
-        document.getElementById('institutional-password').value = roleCredentials[role].pass;
-      }
-    }
-
-    function fillCredentials(email, pass, role) {
+    function fillCredentials(email, pass) {
       document.getElementById('institutional-email').value = email;
       document.getElementById('institutional-password').value = pass;
-      if (role) {
-        const radio = document.getElementById('role_' + role);
-        if (radio) {
-          radio.checked = true;
-        }
-      }
     }
 
     function clearCredentials() {
@@ -274,17 +289,7 @@
         input.type = 'password';
       }
     }
-
-    // Inicializar sincronización en DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('input[name="role"]').forEach(function(radio) {
-        radio.addEventListener('change', function() {
-          if (this.checked) {
-            handleRoleChange(this.value);
-          }
-        });
-      });
-    });
   </script>
+  <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

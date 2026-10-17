@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=120, verbose_name="Nombre de Competencia / Categoría")
@@ -169,3 +170,58 @@ class RespuestaIntento(models.Model):
         unique_together = ('intento', 'pregunta')
         verbose_name = 'Respuesta de Intento'
         verbose_name_plural = 'Respuestas de Intento'
+
+
+class Usuario(models.Model):
+    ROL_CHOICES = [
+        ('admin', 'Administrador'),
+        ('docente', 'Docente'),
+        ('estudiante', 'Estudiante'),
+    ]
+
+    nombre_completo = models.CharField(max_length=150, verbose_name="Nombre Completo")
+    codigo_institucional = models.CharField(max_length=30, unique=True, verbose_name="Código Institucional / Carné")
+    email = models.EmailField(unique=True, verbose_name="Correo Electrónico Institucional")
+    password = models.CharField(max_length=255, verbose_name="Contraseña")
+    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='estudiante', verbose_name="Rol Institucional")
+    telefono = models.CharField(max_length=25, blank=True, null=True, verbose_name="Teléfono / Celular")
+    programa_academico = models.CharField(max_length=120, blank=True, null=True, default="Tecnología en Gestión Contable", verbose_name="Programa Académico")
+    activo = models.BooleanField(default=True, verbose_name="Usuario Activo")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'usuarios'
+        verbose_name = 'Usuario Institucional'
+        verbose_name_plural = 'Usuarios Institucionales'
+        ordering = ['nombre_completo']
+
+    def __str__(self):
+        return f"{self.nombre_completo} ({self.get_rol_display()}) - {self.email}"
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        if not self.password:
+            return False
+        if self.password.startswith('pbkdf2_') or self.password.startswith('argon2') or self.password.startswith('bcrypt'):
+            return check_password(raw_password, self.password)
+        return self.password == raw_password
+
+    @property
+    def name(self):
+        return self.nombre_completo
+
+    @property
+    def code(self):
+        return self.codigo_institucional
+
+    @property
+    def role(self):
+        return self.get_rol_display()
+
+    @property
+    def active(self):
+        return self.activo
+

@@ -7,16 +7,16 @@
   <!-- Saludo & Estado del Estudiante -->
   <section class="student-welcome-card">
     <div>
-      <span class="student-eyebrow"><span class="pulse-dot"></span> [M02: Catálogo de Simulacros] • Preparación y Diagnóstico Oficial</span>
+      <span class="student-eyebrow"><span class="pulse-dot"></span> Catálogo de Simulacros • Preparación y Diagnóstico Oficial</span>
       <h1>¡Hola de nuevo, {{ request.session.demo_profile.name|default:"Alexandra López" }}! 👋</h1>
       <p>Tecnología en Gestión Contable <span>•</span> Sede Mocoa <strong>Ciclo Académico 2024-II</strong></p>
     </div>
     <div class="student-status-card">
       <span class="student-avatar-large">{{ request.session.demo_profile.name|default:"A"|first }}</span>
       <div>
-        <strong>Registro Institucional</strong>
+        <strong>Código: {{ request.session.demo_profile.code }}</strong>
         <b>{{ request.session.demo_profile.email|default:"estudiante@itp.edu.co" }}</b>
-        <small>● Habilitada para Pruebas en Vivo</small>
+        <small>● Habilitado/a para Pruebas en Vivo</small>
       </div>
     </div>
   </section>
@@ -49,16 +49,16 @@
   <!-- Barra de Filtros: Disponibles / Programados / Historial -->
   <div class="student-filterbar">
     <strong>Catálogo <b>{{ total_cuestionarios }}</b></strong>
-    <span class="tab-pill active" onclick="filtrarExamenes('todos', this)" style="cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--primary-50); color: var(--primary-700); font-weight: 700;">
+    <span class="tab-pill active" onclick="filtrarExamenes('todos', this)">
       ◈ Todos
     </span>
-    <span class="tab-pill" onclick="filtrarExamenes('Disponible', this)" style="cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--bg-subtle); color: var(--text-secondary);">
+    <span class="tab-pill" onclick="filtrarExamenes('Disponible', this)">
       ◉ Disponibles
     </span>
-    <span class="tab-pill" onclick="filtrarExamenes('Programado', this)" style="cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--bg-subtle); color: var(--text-secondary);">
+    <span class="tab-pill" onclick="filtrarExamenes('Programado', this)">
       ◷ Programados
     </span>
-    <span class="tab-pill" onclick="filtrarExamenes('Cerrado', this)" style="cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 999px; background: var(--bg-subtle); color: var(--text-secondary);">
+    <span class="tab-pill" onclick="filtrarExamenes('Cerrado', this)">
       ✓ Historial y Cerrados
     </span>
     <input type="search" id="busquedaInput" placeholder="⌕ Buscar por nombre o competencia..." oninput="buscarExamenes(this.value)">
@@ -98,7 +98,7 @@
 
       {% if c.estado == 'Disponible' %}
         <a href="{% url 'estudiante_sala_espera' c.id %}" class="student-primary-action" style="display: block; text-decoration: none; text-align: center;">
-          [M11] Ficha Técnica & Iniciar Prueba →
+          Ficha Técnica & Iniciar Prueba →
         </a>
       {% else %}
         <a href="{% url 'estudiante_sala_espera' c.id %}" class="student-secondary-action" style="display: block; text-decoration: none; text-align: center;">
@@ -119,7 +119,7 @@
       <h2>{{ ultimo_intento.cuestionario.nombre }}</h2>
       <p>Revisa tu resultado, desglose por competencias y retroalimentación pedagógica detallada.</p>
       <a class="student-secondary-action" href="{% url 'estudiante_resultado' ultimo_intento.id %}" style="display: inline-block; text-decoration: none;">
-        [M12] Ver Informe de Resultados ({{ ultimo_intento.calificacion_final }}/{{ ultimo_intento.cuestionario.calificacion_maxima }} pts) →
+        Ver Informe de Resultados ({{ ultimo_intento.calificacion_final }}/{{ ultimo_intento.cuestionario.calificacion_maxima }} pts) →
       </a>
       {% else %}
       <span>◷ Programado Oficial</span>
@@ -140,14 +140,8 @@
 
 <script>
   function filtrarExamenes(estado, tabElement) {
-    document.querySelectorAll('.tab-pill').forEach(el => {
-      el.style.background = 'var(--bg-subtle)';
-      el.style.color = 'var(--text-secondary)';
-      el.style.fontWeight = '500';
-    });
-    tabElement.style.background = 'var(--primary-50)';
-    tabElement.style.color = 'var(--primary-700)';
-    tabElement.style.fontWeight = '700';
+    document.querySelectorAll('.tab-pill').forEach(el => el.classList.remove('active'));
+    tabElement.classList.add('active');
 
     const cards = document.querySelectorAll('.student-exam-card');
     cards.forEach(card => {

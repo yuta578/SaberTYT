@@ -1,0 +1,582 @@
+[
+{
+  "model": "simulador.categoria",
+  "pk": 1,
+  "fields": {
+    "nombre": "Lectura Crítica",
+    "descripcion": "Evalúa la capacidad de entender, interpretar y evaluar textos que pueden encontrarse en la vida cotidiana y en ámbitos académicos no especializados.",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:27.953Z",
+    "updated_at": "2026-10-02T23:45:27.953Z"
+  }
+},
+{
+  "model": "simulador.categoria",
+  "pk": 2,
+  "fields": {
+    "nombre": "Razonamiento Cuantitativo",
+    "descripcion": "Evalúa habilidades para comprender y transformar información cuantitativa, interpretar datos y formular soluciones matemáticas a problemas reales.",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:27.958Z",
+    "updated_at": "2026-10-02T23:45:27.958Z"
+  }
+},
+{
+  "model": "simulador.categoria",
+  "pk": 3,
+  "fields": {
+    "nombre": "Competencias Ciudadanas",
+    "descripcion": "Evalúa conocimientos sobre la Constitución Política de Colombia, derechos, deberes y el análisis reflexivo de problemáticas sociales.",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:27.973Z",
+    "updated_at": "2026-10-02T23:45:27.973Z"
+  }
+},
+{
+  "model": "simulador.categoria",
+  "pk": 4,
+  "fields": {
+    "nombre": "Inglés",
+    "descripcion": "Evalúa la competencia para comunicarse efectivamente en inglés en niveles A1, A2, B1 de acuerdo al Marco Común Europeo.",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:27.987Z",
+    "updated_at": "2026-10-02T23:45:27.987Z"
+  }
+},
+{
+  "model": "simulador.categoria",
+  "pk": 5,
+  "fields": {
+    "nombre": "Comunicación Escrita",
+    "descripcion": "Evalúa la coherencia, cohesión y estructuración argumentativa en textos de naturaleza técnica y tecnológica.",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.001Z",
+    "updated_at": "2026-10-02T23:45:28.001Z"
+  }
+},
+{
+  "model": "simulador.pregunta",
+  "pk": 1,
+  "fields": {
+    "categoria": 1,
+    "tipo": "MULTIPLE",
+    "texto_base": "«En la última década, la digitalización acelerada ha transformado los entornos educativos. Sin embargo, la simple incorporación de dispositivos sin una renovación pedagógica profunda produce un espejismo de modernidad: el estudiante consume información pasivamente sin desarrollar pensamiento reflexivo ni habilidades de resolución contextualizada.»",
+    "enunciado": "Según el autor del texto, ¿cuál es el argumento central frente a la adopción indiscriminada de tecnologías emergentes en la educación técnica?",
+    "retroalimentacion": "La opción correcta sintetiza la tesis del texto: la tecnología por sí sola no genera aprendizaje significativo si no viene acompañada de una transformación pedagógica estructural.",
+    "puntaje_base": "1.25",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.031Z",
+    "updated_at": "2026-10-02T23:45:28.031Z"
+  }
+},
+{
+  "model": "simulador.pregunta",
+  "pk": 2,
+  "fields": {
+    "categoria": 2,
+    "tipo": "MULTIPLE",
+    "texto_base": "Considere una relación de proporcionalidad inversa donde el tiempo de finalización varía en proporción inversa al número de trabajadores disponibles con rendimiento homogéneo.",
+    "enunciado": "Una empresa de desarrollo de software estima que para entregar un proyecto en 20 días se requieren 6 programadores trabajando 8 horas diarias. Si se contratan 2 programadores más con igual rendimiento, ¿cuántos días tardará el equipo en finalizar el proyecto trabajando la misma jornada?",
+    "retroalimentacion": "Se aplica una regla de tres simple inversa: (6 programadores * 20 días) / 8 programadores = 120 / 8 = 15 días.",
+    "puntaje_base": "1.25",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.090Z",
+    "updated_at": "2026-10-02T23:45:28.090Z"
+  }
+},
+{
+  "model": "simulador.pregunta",
+  "pk": 3,
+  "fields": {
+    "categoria": 3,
+    "tipo": "MULTIPLE",
+    "texto_base": "El artículo 79 de la Constitución Política garantiza el derecho de todas las personas a gozar de un ambiente sano, mientras que el artículo 333 consagra la libertad de empresa y la iniciativa privada dentro de los límites del bien común.",
+    "enunciado": "Ante la decisión de una alcaldía de restringir el paso de vehículos particulares en el centro histórico para reducir emisiones contaminantes, los comerciantes del sector protestan alegando una disminución drástica en sus ventas. En esta situación, ¿cuáles dimensiones o intereses están en conflicto?",
+    "retroalimentacion": "El conflicto radica en la tensión entre la protección del medio ambiente y la salud pública (interés colectivo) frente a la libertad económica y estabilidad comercial de los locatarios.",
+    "puntaje_base": "1.25",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.164Z",
+    "updated_at": "2026-10-02T23:45:28.164Z"
+  }
+},
+{
+  "model": "simulador.pregunta",
+  "pk": 4,
+  "fields": {
+    "categoria": 4,
+    "tipo": "MULTIPLE",
+    "texto_base": "Third conditional structures are used to talk about unreal situations in the past and their hypothetical results.",
+    "enunciado": "Complete the sentence: If the development team ______ the automated unit tests before deploying, they would have caught the critical database bug earlier.",
+    "retroalimentacion": "The Third Conditional structure requires 'had + past participle' in the if-clause: 'If the team had run the automated tests...'",
+    "puntaje_base": "1.25",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.233Z",
+    "updated_at": "2026-10-02T23:45:28.233Z"
+  }
+},
+{
+  "model": "simulador.pregunta",
+  "pk": 5,
+  "fields": {
+    "categoria": 1,
+    "tipo": "VERDADERO_FALSO",
+    "texto_base": "En lógica formal, la validez se refiere a la estructura inferencial del razonamiento, mientras que la solidez requiere tanto validez lógica como premisas empíricamente verdaderas.",
+    "enunciado": "¿Un argumento deductivo válido garantiza necesariamente la verdad de su conclusión, siempre y cuando todas sus premisas sean verdaderas?",
+    "retroalimentacion": "Verdadero. En un argumento deductivo válido con premisas verdaderas (argumento sólido), la conclusión es forzosamente verdadera.",
+    "puntaje_base": "1.00",
+    "activo": true,
+    "created_at": "2026-10-02T23:45:28.338Z",
+    "updated_at": "2026-10-02T23:45:28.338Z"
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 1,
+  "fields": {
+    "pregunta": 1,
+    "letra": "A",
+    "texto": "La tecnología reduce los costos operativos de las instituciones técnicas.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 2,
+  "fields": {
+    "pregunta": 1,
+    "letra": "B",
+    "texto": "El uso de dispositivos tecnológicos sin un cambio de modelo pedagógico no garantiza el aprendizaje crítico.",
+    "es_correcta": true
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 3,
+  "fields": {
+    "pregunta": 1,
+    "letra": "C",
+    "texto": "Todos los estudiantes aprenden mejor mediante plataformas interactivas automatizadas.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 4,
+  "fields": {
+    "pregunta": 1,
+    "letra": "D",
+    "texto": "La digitalización debe restringirse únicamente a programas universitarios avanzados.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 5,
+  "fields": {
+    "pregunta": 2,
+    "letra": "A",
+    "texto": "12 días",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 6,
+  "fields": {
+    "pregunta": 2,
+    "letra": "B",
+    "texto": "15 días",
+    "es_correcta": true
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 7,
+  "fields": {
+    "pregunta": 2,
+    "letra": "C",
+    "texto": "18 días",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 8,
+  "fields": {
+    "pregunta": 2,
+    "letra": "D",
+    "texto": "24 días",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 9,
+  "fields": {
+    "pregunta": 3,
+    "letra": "A",
+    "texto": "El derecho a la libre locomoción de los peatones frente al cobro de impuestos de rodamiento.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 10,
+  "fields": {
+    "pregunta": 3,
+    "letra": "B",
+    "texto": "El interés colectivo por un ambiente sano y movilidad sostenible frente a los intereses económicos de los comerciantes.",
+    "es_correcta": true
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 11,
+  "fields": {
+    "pregunta": 3,
+    "letra": "C",
+    "texto": "El presupuesto de obras públicas municipales frente a las directrices del Ministerio de Transporte.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 12,
+  "fields": {
+    "pregunta": 3,
+    "letra": "D",
+    "texto": "La autonomía del gobierno local frente a las leyes de ordenamiento territorial nacional.",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 13,
+  "fields": {
+    "pregunta": 4,
+    "letra": "A",
+    "texto": "has run",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 14,
+  "fields": {
+    "pregunta": 4,
+    "letra": "B",
+    "texto": "had run",
+    "es_correcta": true
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 15,
+  "fields": {
+    "pregunta": 4,
+    "letra": "C",
+    "texto": "would run",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 16,
+  "fields": {
+    "pregunta": 4,
+    "letra": "D",
+    "texto": "is running",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 17,
+  "fields": {
+    "pregunta": 5,
+    "letra": "A",
+    "texto": "Verdadero",
+    "es_correcta": true
+  }
+},
+{
+  "model": "simulador.opcionrespuesta",
+  "pk": 18,
+  "fields": {
+    "pregunta": 5,
+    "letra": "B",
+    "texto": "Falso",
+    "es_correcta": false
+  }
+},
+{
+  "model": "simulador.cuestionario",
+  "pk": 1,
+  "fields": {
+    "nombre": "Simulacro General Saber TyT 2026 - Módulo Genéricas",
+    "descripcion": "Simulador oficial de competencias genéricas: Lectura Crítica, Razonamiento Cuantitativo, Competencias Ciudadanas e Inglés. Diseñado según los lineamientos del ICFES.",
+    "fecha_apertura": "2026-09-30T23:45:28.389Z",
+    "fecha_cierre": "2026-10-17T23:45:28.389Z",
+    "tiempo_limite_minutos": 45,
+    "intentos_permitidos": 2,
+    "calificacion_maxima": "5.00",
+    "calificacion_aprobacion": "3.00",
+    "mezclar_preguntas": true,
+    "mezclar_respuestas": true,
+    "permitir_revision": true,
+    "estado": "Disponible",
+    "created_at": "2026-10-02T23:45:28.389Z",
+    "updated_at": "2026-10-02T23:45:28.389Z"
+  }
+},
+{
+  "model": "simulador.cuestionario",
+  "pk": 2,
+  "fields": {
+    "nombre": "Evaluación Diagnóstica: Razonamiento Cuantitativo y Lógica",
+    "descripcion": "Prueba corta de diagnóstico previo a la jornada de refuerzo institucional.",
+    "fecha_apertura": "2026-09-27T23:45:28.389Z",
+    "fecha_cierre": "2026-10-07T23:45:28.389Z",
+    "tiempo_limite_minutos": 30,
+    "intentos_permitidos": 1,
+    "calificacion_maxima": "5.00",
+    "calificacion_aprobacion": "3.50",
+    "mezclar_preguntas": false,
+    "mezclar_respuestas": false,
+    "permitir_revision": true,
+    "estado": "Disponible",
+    "created_at": "2026-10-02T23:45:28.413Z",
+    "updated_at": "2026-10-02T23:45:28.413Z"
+  }
+},
+{
+  "model": "simulador.cuestionario",
+  "pk": 3,
+  "fields": {
+    "nombre": "Simulacro Especial Inglés B1 - Saber TyT",
+    "descripcion": "Batería de preguntas enfocadas en comprensión lectora y estructuras gramaticales en lengua extranjera.",
+    "fecha_apertura": "2026-10-05T23:45:28.389Z",
+    "fecha_cierre": "2026-10-22T23:45:28.389Z",
+    "tiempo_limite_minutos": 60,
+    "intentos_permitidos": 3,
+    "calificacion_maxima": "100.00",
+    "calificacion_aprobacion": "60.00",
+    "mezclar_preguntas": true,
+    "mezclar_respuestas": true,
+    "permitir_revision": true,
+    "estado": "Programado",
+    "created_at": "2026-10-02T23:45:28.428Z",
+    "updated_at": "2026-10-02T23:45:28.428Z"
+  }
+},
+{
+  "model": "simulador.cuestionariopregunta",
+  "pk": 1,
+  "fields": {
+    "cuestionario": 1,
+    "pregunta": 1,
+    "orden": 1,
+    "puntaje_ponderado": "1.00"
+  }
+},
+{
+  "model": "simulador.cuestionariopregunta",
+  "pk": 2,
+  "fields": {
+    "cuestionario": 1,
+    "pregunta": 2,
+    "orden": 2,
+    "puntaje_ponderado": "1.00"
+  }
+},
+{
+  "model": "simulador.cuestionariopregunta",
+  "pk": 3,
+  "fields": {
+    "cuestionario": 1,
+    "pregunta": 3,
+    "orden": 3,
+    "puntaje_ponderado": "1.00"
+  }
+},
+{
+  "model": "simulador.cuestionariopregunta",
+  "pk": 4,
+  "fields": {
+    "cuestionario": 1,
+    "pregunta": 4,
+    "orden": 4,
+    "puntaje_ponderado": "1.00"
+  }
+},
+{
+  "model": "simulador.cuestionariopregunta",
+  "pk": 5,
+  "fields": {
+    "cuestionario": 1,
+    "pregunta": 5,
+    "orden": 5,
+    "puntaje_ponderado": "1.00"
+  }
+},
+{
+  "model": "simulador.importacion",
+  "pk": 1,
+  "fields": {
+    "nombre_archivo": "Banco_Preguntas_Lectura_Critica_SaberTyT_2026.xlsx",
+    "fecha_carga": "2026-10-02T23:45:28.513Z",
+    "total_filas": 25,
+    "total_validas": 24,
+    "total_errores": 1,
+    "detalle_log": "[INFO 2026-09-18 10:15:00] Procesando archivo .xlsx con 25 registros...\n[OK] Fila 1 a 14 validadas e importadas correctamente.\n[WARN] Fila 15: Opción 'D' tenía espacios sobrantes, se normalizó.\n[ERROR] Fila 22: No se especificó la clave de respuesta correcta (es_correcta = TRUE). Registro omitido.\n[OK] Fila 23 a 25 validadas con éxito.\n[SUMMARY] 24 preguntas añadidas a la base de datos, 1 error reportado.",
+    "created_at": "2026-10-02T23:45:28.513Z"
+  }
+},
+{
+  "model": "simulador.importacion",
+  "pk": 2,
+  "fields": {
+    "nombre_archivo": "Preguntas_Razonamiento_Cuantitativo_Mod1.xlsx",
+    "fecha_carga": "2026-10-02T23:45:28.528Z",
+    "total_filas": 18,
+    "total_validas": 18,
+    "total_errores": 0,
+    "detalle_log": "[INFO 2026-09-19 14:30:10] Validación masiva iniciada.\n[OK] Todas las 18 preguntas cumplieron con la regla R04 (Clave única de respuesta) y R05 (4 alternativas estructuradas).\n[SUCCESS] Importación finalizada con 100% de efectividad.",
+    "created_at": "2026-10-02T23:45:28.528Z"
+  }
+},
+{
+  "model": "simulador.importacion",
+  "pk": 3,
+  "fields": {
+    "nombre_archivo": "CURZO DE LIDERAZGO (1).xlsx",
+    "fecha_carga": "2026-10-02T23:57:36.983Z",
+    "total_filas": 15,
+    "total_validas": 15,
+    "total_errores": 0,
+    "detalle_log": "[INFO 2026-10-02 23:57:36] Iniciando procesamiento de plantilla: CURZO DE LIDERAZGO (1).xlsx\n[OK] Cabeceras de archivo validadas correctamente (categoria, tipo, enunciado, opciones, clave_correcta).\n[OK] 15 preguntas importadas y vinculadas exitosamente al banco de ítems.\n[SUCCESS] Validación masiva completada con éxito.",
+    "created_at": "2026-10-02T23:57:36.983Z"
+  }
+},
+{
+  "model": "simulador.importacion",
+  "pk": 4,
+  "fields": {
+    "nombre_archivo": "01-04-2026 - BAACA27 -PUESTOS DE CONTROL.xlsx",
+    "fecha_carga": "2026-10-03T00:22:10.386Z",
+    "total_filas": 15,
+    "total_validas": 15,
+    "total_errores": 0,
+    "detalle_log": "[INFO 2026-10-03 00:22:10] Iniciando procesamiento de plantilla: 01-04-2026 - BAACA27 -PUESTOS DE CONTROL.xlsx\n[OK] Cabeceras de archivo validadas correctamente (categoria, tipo, enunciado, opciones, clave_correcta).\n[OK] 15 preguntas importadas y vinculadas exitosamente al banco de ítems.\n[SUCCESS] Validación masiva completada con éxito.",
+    "created_at": "2026-10-03T00:22:10.386Z"
+  }
+},
+{
+  "model": "simulador.intento",
+  "pk": 1,
+  "fields": {
+    "cuestionario": 1,
+    "nombre_estudiante": "Eduardo Alexander López",
+    "codigo_estudiante": "TYT-2026-0891",
+    "numero_intento": 1,
+    "fecha_inicio": "2026-10-02T23:45:28.542Z",
+    "fecha_fin": "2026-10-02T21:45:28.389Z",
+    "puntaje_obtenido": "4.00",
+    "calificacion_final": "4.00",
+    "estado": "Finalizado",
+    "created_at": "2026-10-02T23:45:28.542Z"
+  }
+},
+{
+  "model": "simulador.intento",
+  "pk": 2,
+  "fields": {
+    "cuestionario": 2,
+    "nombre_estudiante": "rerwe",
+    "codigo_estudiante": "werwer",
+    "numero_intento": 1,
+    "fecha_inicio": "2026-10-03T00:06:20.301Z",
+    "fecha_fin": "2026-10-03T00:06:33.984Z",
+    "puntaje_obtenido": "0.00",
+    "calificacion_final": "0.00",
+    "estado": "Finalizado",
+    "created_at": "2026-10-03T00:06:20.301Z"
+  }
+},
+{
+  "model": "simulador.intento",
+  "pk": 3,
+  "fields": {
+    "cuestionario": 2,
+    "nombre_estudiante": "Alexandra Patricia López",
+    "codigo_estudiante": "EST-202310023",
+    "numero_intento": 1,
+    "fecha_inicio": "2026-10-16T21:54:56.301Z",
+    "fecha_fin": "2026-10-16T21:55:01.672Z",
+    "puntaje_obtenido": "0.00",
+    "calificacion_final": "0.00",
+    "estado": "Finalizado",
+    "created_at": "2026-10-16T21:54:56.301Z"
+  }
+},
+{
+  "model": "simulador.respuestaintento",
+  "pk": 1,
+  "fields": {
+    "intento": 1,
+    "pregunta": 1,
+    "opcion_seleccionada": 2,
+    "es_correcta": true,
+    "puntaje_asignado": "1.00",
+    "marcada_revision": false
+  }
+},
+{
+  "model": "simulador.respuestaintento",
+  "pk": 2,
+  "fields": {
+    "intento": 1,
+    "pregunta": 2,
+    "opcion_seleccionada": 6,
+    "es_correcta": true,
+    "puntaje_asignado": "1.00",
+    "marcada_revision": false
+  }
+},
+{
+  "model": "simulador.respuestaintento",
+  "pk": 3,
+  "fields": {
+    "intento": 1,
+    "pregunta": 3,
+    "opcion_seleccionada": 10,
+    "es_correcta": true,
+    "puntaje_asignado": "1.00",
+    "marcada_revision": true
+  }
+},
+{
+  "model": "simulador.respuestaintento",
+  "pk": 4,
+  "fields": {
+    "intento": 1,
+    "pregunta": 4,
+    "opcion_seleccionada": 13,
+    "es_correcta": false,
+    "puntaje_asignado": "0.00",
+    "marcada_revision": false
+  }
+},
+{
+  "model": "simulador.respuestaintento",
+  "pk": 5,
+  "fields": {
+    "intento": 1,
+    "pregunta": 5,
+    "opcion_seleccionada": 17,
+    "es_correcta": true,
+    "puntaje_asignado": "1.00",
+    "marcada_revision": false
+  }
+}
+]

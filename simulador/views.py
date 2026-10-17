@@ -2,6 +2,9 @@ import os
 import csv
 import io
 import codecs
+import random
+import unicodedata
+import openpyxl
 from io import StringIO
 from decimal import Decimal
 from datetime import datetime, timedelta
@@ -15,156 +18,204 @@ from django.db.models import Count, Sum, Avg
 
 from .models import (
     Categoria, Pregunta, OpcionRespuesta, Cuestionario,
-    CuestionarioPregunta, Importacion, Intento, RespuestaIntento
+    CuestionarioPregunta, Importacion, Intento, RespuestaIntento, Usuario
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --------------------------------------------------------------------------
-# M01: PANTALLA DE ACCESO / LOGIN & AUTENTICACIÓN INSTITUCIONAL
+# M01: PANTALLA DE ACCESO / LOGIN & AUTENTICACIÓN INSTITUCIONAL CON MYSQL
 # --------------------------------------------------------------------------
 def login_view(request):
     """
     [M01: Pantalla de Acceso / Login]
-    - Autenticación Fallida: Alertas por campos vacíos, credenciales inválidas o cuenta inactiva.
-    - Autenticación Exitosa: Redirección según rol (Administrador, Docente, Estudiante).
+    - Autenticación con Base de Datos MySQL (tabla 'usuarios').
+    - Soporte completo para inicio de sesión regular y botones de prueba (demo).
+    - Redirección automática según el rol asignado en la BD (Administrador, Docente, Estudiante).
     """
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
-        selected_role = request.POST.get('role', '').strip()
 
         # Alerta 1: Campos vacíos
         if not email or not password:
             messages.error(request, "Campos incompletos: Por favor ingresa tanto tu correo institucional como tu contraseña.")
             return render(request, 'login.html', {
                 'email': email,
-                'selected_role': selected_role,
+            })
+
+        # Búsqueda en MySQL por correo electrónico o por código institucional
+        user = Usuario.objects.filter(email__iexact=email).first()
+        if not user:
+            user = Usuario.objects.filter(codigo_institucional__iexact=email).first()
+
+        if not user:
+            messages.error(request, "Credenciales inválidas: El correo o código ingresado no está registrado en la base de datos institucional.")
+            return render(request, 'login.html', {
+                'email': email,
             })
 
         # Alerta 2: Cuenta inactiva o suspendida
-        cuentas_inactivas = ['inactivo@itp.edu.co', 'j.burbano@itp.edu.co', 'suspendido@itp.edu.co']
-        if email.lower() in cuentas_inactivas or password == 'inactivo':
+        if not user.activo:
             messages.warning(request, "Cuenta inactiva o suspendida: Tu usuario no cuenta con permisos activos para ingresar a la plataforma. Comunícate con la Dirección Académica.")
             return render(request, 'login.html', {
                 'email': email,
-                'selected_role': selected_role,
             })
 
-        # Directorio de perfiles institucionales válidos
-        credenciales_validas = {
-            'admin@itp.edu.co': {
-                'role': 'admin',
-                'name': 'Ing. Roberto Andrade',
-                'label': 'Administrador',
-                'redirect': 'admin_dashboard',
-                'code': 'ADM-20200012',
-                'email': 'admin@itp.edu.co',
-            },
-            'r.andrade@itp.edu.co': {
-                'role': 'admin',
-                'name': 'Ing. Roberto Andrade',
-                'label': 'Administrador',
-                'redirect': 'admin_dashboard',
-                'code': 'ADM-20200012',
-                'email': 'r.andrade@itp.edu.co',
-            },
-            'docente@itp.edu.co': {
-                'role': 'docente',
-                'name': 'Prof. Hernán Díaz Mora',
-                'label': 'Docente',
-                'redirect': 'docente_dashboard',
-                'code': 'DOC-20180045',
-                'email': 'docente@itp.edu.co',
-            },
-            'hernan.diaz@itp.edu.co': {
-                'role': 'docente',
-                'name': 'Prof. Hernán Díaz Mora',
-                'label': 'Docente',
-                'redirect': 'docente_dashboard',
-                'code': 'DOC-20180045',
-                'email': 'hernan.diaz@itp.edu.co',
-            },
-            'estudiante@itp.edu.co': {
-                'role': 'estudiante',
-                'name': 'Alexandra Patricia López',
-                'label': 'Estudiante',
-                'redirect': 'estudiante_catalogo',
-                'code': 'EST-202310023',
-                'email': 'estudiante@itp.edu.co',
-            },
-            'alexandra.lopez@itp.edu.co': {
-                'role': 'estudiante',
-                'name': 'Alexandra Patricia López',
-                'label': 'Estudiante',
-                'redirect': 'estudiante_catalogo',
-                'code': 'EST-202310023',
-                'email': 'alexandra.lopez@itp.edu.co',
-            },
-        }
-
-        role_defaults = {
-            'admin': credenciales_validas['admin@itp.edu.co'],
-            'docente': credenciales_validas['docente@itp.edu.co'],
-            'estudiante': credenciales_validas['estudiante@itp.edu.co'],
-        }
-
-        # Determinación de perfil:
-        # Si el usuario seleccionó una vía rápida de "Perfil de Destino", respetamos estrictamente su elección.
-        profile = None
-        if selected_role in role_defaults:
-            # Si el correo coincide con una de las cuentas demo estándar o difiere del rol seleccionado
-            if email.lower() in ['admin@itp.edu.co', 'docente@itp.edu.co', 'estudiante@itp.edu.co'] or not credenciales_validas.get(email.lower()):
-                profile = role_defaults[selected_role]
-            elif credenciales_validas.get(email.lower()):
-                matched = credenciales_validas[email.lower()]
-                if matched['role'] == selected_role:
-                    profile = matched
-                else:
-                    profile = role_defaults[selected_role]
-        else:
-            profile = credenciales_validas.get(email.lower())
-
-        if not profile:
-            if 'admin' in email.lower():
-                profile = role_defaults['admin']
-            elif 'docente' in email.lower():
-                profile = role_defaults['docente']
-            elif 'estudiante' in email.lower():
-                profile = role_defaults['estudiante']
-            else:
-                messages.error(request, "Credenciales inválidas: El correo institucional ingresado no está registrado en el directorio activo.")
-                return render(request, 'login.html', {
-                    'email': email,
-                    'selected_role': selected_role,
-                })
-
-        # Alerta 3: Contraseña errónea
-        passwords_validas = ['demo1234', 'admin123', 'docente123', 'estudiante123', '123456']
-        if password not in passwords_validas and not password.startswith('demo') and not password.startswith('pass'):
+        # Alerta 3: Verificación de contraseña
+        if not user.check_password(password):
             messages.error(request, "Credenciales inválidas: La contraseña ingresada no es correcta. Verifica tus datos de acceso.")
             return render(request, 'login.html', {
                 'email': email,
-                'selected_role': selected_role,
             })
 
-        # Autenticación Exitosa: Limpiar sesión previa para evitar persistencia errónea de roles
+        # Autenticación Exitosa con MySQL
+        role_redirects = {
+            'admin': 'admin_dashboard',
+            'docente': 'docente_dashboard',
+            'estudiante': 'estudiante_catalogo',
+        }
+        profile = {
+            'id': user.id,
+            'role': user.rol,
+            'name': user.nombre_completo,
+            'label': user.get_rol_display(),
+            'redirect': role_redirects.get(user.rol, 'estudiante_catalogo'),
+            'code': user.codigo_institucional,
+            'email': user.email,
+            'telefono': user.telefono or '',
+            'programa': user.programa_academico,
+        }
+
         request.session.flush()
         request.session['demo_profile'] = profile
         request.session.modified = True
-        messages.success(request, f"Acceso concedido. Perfil activo: {profile['name']} ({profile['label']}).")
         return redirect(profile['redirect'])
 
-    selected_role = request.GET.get('role', 'estudiante')
-    default_emails = {
-        'admin': 'admin@itp.edu.co',
-        'docente': 'docente@itp.edu.co',
-        'estudiante': 'estudiante@itp.edu.co',
-    }
+    default_email = request.GET.get('email', 'estudiante@itp.edu.co')
     return render(request, 'login.html', {
-        'selected_role': selected_role,
-        'email': default_emails.get(selected_role, 'estudiante@itp.edu.co'),
+        'email': default_email,
     })
+
+
+def generate_random_user_code(role='estudiante'):
+    """
+    Genera un código institucional único con las letras del rol (EST, DOC, ADM)
+    seguido de un guion y 8 dígitos aleatorios (ej: EST-49201837, DOC-71940283, ADM-83920145).
+    Garantiza unicidad en la base de datos MySQL.
+    """
+    role_map = {
+        'estudiante': 'EST',
+        'docente': 'DOC',
+        'admin': 'ADM',
+    }
+    prefix = role_map.get(str(role).strip().lower(), 'EST')
+    while True:
+        random_digits = f"{random.randint(10000000, 99999999)}"
+        code = f"{prefix}-{random_digits}"
+        if not Usuario.objects.filter(codigo_institucional=code).exists():
+            return code
+
+
+def get_next_student_code():
+    return generate_random_user_code('estudiante')
+
+
+def register_view(request):
+    """
+    [M01: Registro de Usuarios Institucionales]
+    - REGLA ESTRICTA: Todo usuario que se registre SIEMPRE obtiene el rol de 'estudiante'.
+    - El código estudiantil no se solicita en el formulario; se genera y asigna automáticamente al crear la cuenta.
+    - Almacena en MySQL (tabla 'usuarios') con contraseña hasheada.
+    - Inicio de sesión inmediato tras el registro con redirección al catálogo de simulacros.
+    """
+    if request.method == 'POST':
+        nombre_completo = request.POST.get('nombre_completo', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        telefono = request.POST.get('telefono', '').strip()
+        programa_academico = request.POST.get('programa_academico', 'Tecnología en Gestión Contable').strip()
+        password = request.POST.get('password', '').strip()
+        password_confirm = (request.POST.get('password_confirm') or request.POST.get('confirm_password') or '').strip()
+
+        # Validación 1: Campos requeridos
+        if not nombre_completo or not email or not password or not password_confirm:
+            messages.error(request, "Campos obligatorios incompletos: Por favor completa todos los campos requeridos para el registro.")
+            return render(request, 'register.html', {
+                'nombre_completo': nombre_completo,
+                'email': email,
+                'telefono': telefono,
+                'programa_academico': programa_academico,
+            })
+
+        # Validación 2: Coincidencia de contraseñas
+        if password != password_confirm:
+            messages.error(request, "Las contraseñas no coinciden. Por favor escribe la misma contraseña en ambos campos.")
+            return render(request, 'register.html', {
+                'nombre_completo': nombre_completo,
+                'email': email,
+                'telefono': telefono,
+                'programa_academico': programa_academico,
+            })
+
+        # Validación 3: Longitud mínima de contraseña
+        if len(password) < 6:
+            messages.error(request, "La contraseña debe tener al menos 6 caracteres por seguridad institucional.")
+            return render(request, 'register.html', {
+                'nombre_completo': nombre_completo,
+                'email': email,
+                'telefono': telefono,
+                'programa_academico': programa_academico,
+            })
+
+        # Validación 4: Email ya registrado en MySQL
+        if Usuario.objects.filter(email__iexact=email).exists():
+            messages.error(request, f"El correo institucional '{email}' ya se encuentra registrado. Inicia sesión con tus credenciales.")
+            return render(request, 'register.html', {
+                'nombre_completo': nombre_completo,
+                'email': email,
+                'telefono': telefono,
+                'programa_academico': programa_academico,
+            })
+
+        # Generación automática del código estudiantil único
+        codigo_institucional = get_next_student_code()
+
+        # Creación en MySQL: SIEMPRE con rol='estudiante' y código asignado automáticamente
+        nuevo_estudiante = Usuario(
+            nombre_completo=nombre_completo,
+            codigo_institucional=codigo_institucional,
+            email=email,
+            rol='estudiante',  # SIEMPRE rol de estudiante
+            telefono=telefono,
+            programa_academico=programa_academico or "Tecnología en Gestión Contable",
+            activo=True,
+        )
+        nuevo_estudiante.set_password(password)
+        nuevo_estudiante.save()
+
+        # Inicio de sesión automático tras registro
+        profile = {
+            'id': nuevo_estudiante.id,
+            'role': 'estudiante',
+            'name': nuevo_estudiante.nombre_completo,
+            'label': 'Estudiante',
+            'redirect': 'estudiante_catalogo',
+            'code': nuevo_estudiante.codigo_institucional,
+            'email': nuevo_estudiante.email,
+            'telefono': nuevo_estudiante.telefono or '',
+            'programa': nuevo_estudiante.programa_academico,
+        }
+        request.session.flush()
+        request.session['demo_profile'] = profile
+        request.session.modified = True
+
+        messages.success(
+            request, 
+            f"¡Cuenta creada con éxito! Tu Código Estudiantil asignado es {nuevo_estudiante.codigo_institucional}. Bienvenido/a {nuevo_estudiante.nombre_completo}."
+        )
+        return redirect('estudiante_catalogo')
+
+    return render(request, 'register.html')
 
 
 def logout_view(request):
@@ -270,67 +321,53 @@ def admin_dashboard_view(request):
 
 
 def admin_users_view(request):
-    """[M04: Directorio y CRUD de Usuarios]"""
-    default_users = [
-        {'name': 'Laura Patricia Meneses', 'code': 'EST-202310023', 'email': 'l.meneses@itp.edu.co', 'role': 'Estudiante', 'active': True},
-        {'name': 'Prof. Hernán Díaz Mora', 'code': 'DOC-20180045', 'email': 'h.diaz@itp.edu.co', 'role': 'Docente', 'active': True},
-        {'name': 'Ing. Carlos R. Caicedo', 'code': 'ADM-20200012', 'email': 'c.caicedo@itp.edu.co', 'role': 'Administrador', 'active': True},
-        {'name': 'Julián Andrés Burbano', 'code': 'EST-202220412', 'email': 'j.burbano@itp.edu.co', 'role': 'Estudiante', 'active': False},
-    ]
-    users = request.session.get('admin_users_list', default_users)
+    """[M04: Directorio y CRUD de Usuarios en MySQL]"""
+    users = Usuario.objects.all().order_by('-created_at')
     return render(request, 'admin/users.html', {'users': users})
 
 
 def admin_crear_usuario_view(request):
-    """[M04: CRUD de Usuarios - Crear Usuario]"""
+    """[M04: CRUD de Usuarios - Crear Usuario en MySQL]"""
     if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        code = request.POST.get('code', '').strip()
-        email = request.POST.get('email', '').strip()
-        role = request.POST.get('role', 'Estudiante').strip()
-        active = request.POST.get('active', 'true') == 'true'
+        name = (request.POST.get('name') or request.POST.get('nombre_completo') or '').strip()
+        code = (request.POST.get('code') or request.POST.get('codigo_institucional') or '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        role = (request.POST.get('role') or request.POST.get('rol') or 'estudiante').strip().lower()
+        active = request.POST.get('active', 'true') in ['true', 'True', True, 'on', '1']
 
         if name and email:
-            default_users = [
-                {'name': 'Laura Patricia Meneses', 'code': 'EST-202310023', 'email': 'l.meneses@itp.edu.co', 'role': 'Estudiante', 'active': True},
-                {'name': 'Prof. Hernán Díaz Mora', 'code': 'DOC-20180045', 'email': 'h.diaz@itp.edu.co', 'role': 'Docente', 'active': True},
-                {'name': 'Ing. Carlos R. Caicedo', 'code': 'ADM-20200012', 'email': 'c.caicedo@itp.edu.co', 'role': 'Administrador', 'active': True},
-                {'name': 'Julián Andrés Burbano', 'code': 'EST-202220412', 'email': 'j.burbano@itp.edu.co', 'role': 'Estudiante', 'active': False},
-            ]
-            users = request.session.get('admin_users_list', default_users)
-            users.insert(0, {
-                'name': name,
-                'code': code or f"TYT-{timezone.now().year}-{len(users)+10:04d}",
-                'email': email,
-                'role': role,
-                'active': active
-            })
-            request.session['admin_users_list'] = users
-            messages.success(request, f"Usuario institucional '{name}' creado correctamente con rol {role}.")
+            if Usuario.objects.filter(email__iexact=email).exists():
+                messages.error(request, f"El correo institucional '{email}' ya se encuentra registrado.")
+            elif code and Usuario.objects.filter(codigo_institucional__iexact=code).exists():
+                messages.error(request, f"El código '{code}' ya está asignado a otro usuario.")
+            else:
+                user = Usuario(
+                    nombre_completo=name,
+                    codigo_institucional=code or generate_random_user_code(role),
+                    email=email,
+                    rol=role if role in ['admin', 'docente', 'estudiante'] else 'estudiante',
+                    activo=active
+                )
+                user.set_password('demo1234')
+                user.save()
+                messages.success(request, f"Usuario institucional '{name}' creado correctamente en MySQL con rol {user.get_rol_display()}.")
 
     return redirect('admin_users')
 
 
 def admin_toggle_estado_usuario_view(request):
-    """[M04: CRUD de Usuarios - Cambiar Estado Activo/Inactivo]"""
+    """[M04: CRUD de Usuarios - Cambiar Estado Activo/Inactivo en MySQL]"""
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
-        default_users = [
-            {'name': 'Laura Patricia Meneses', 'code': 'EST-202310023', 'email': 'l.meneses@itp.edu.co', 'role': 'Estudiante', 'active': True},
-            {'name': 'Prof. Hernán Díaz Mora', 'code': 'DOC-20180045', 'email': 'h.diaz@itp.edu.co', 'role': 'Docente', 'active': True},
-            {'name': 'Ing. Carlos R. Caicedo', 'code': 'ADM-20200012', 'email': 'c.caicedo@itp.edu.co', 'role': 'Administrador', 'active': True},
-            {'name': 'Julián Andrés Burbano', 'code': 'EST-202220412', 'email': 'j.burbano@itp.edu.co', 'role': 'Estudiante', 'active': False},
-        ]
-        users = request.session.get('admin_users_list', default_users)
-        for u in users:
-            if u['email'].lower() == email.lower():
-                u['active'] = not u['active']
-                estado_str = "Activo" if u['active'] else "Inactivo"
-                messages.info(request, f"Estado del usuario {u['name']} actualizado a: {estado_str}.")
-                break
-        request.session['admin_users_list'] = users
+        user = Usuario.objects.filter(email__iexact=email).first()
+        if user:
+            user.activo = not user.activo
+            user.save()
+            estado_str = "Activo" if user.activo else "Inactivo / Suspendido"
+            messages.info(request, f"Estado del usuario {user.nombre_completo} actualizado a: {estado_str} en la base de datos.")
 
     return redirect('admin_users')
+
 
 
 def admin_permissions_view(request):
@@ -497,14 +534,14 @@ def docente_pregunta_nueva_view(request):
     categorias = Categoria.objects.filter(activo=True)
 
     if request.method == 'POST':
-        categoria_id = request.POST.get('categoria_id')
+        categoria_id = request.POST.get('categoria_id') or request.POST.get('categoria')
         tipo = request.POST.get('tipo', 'MULTIPLE')
         puntaje_base = Decimal(request.POST.get('puntaje_base', '1.00'))
         texto_base = request.POST.get('texto_base', '').strip()
         enunciado = request.POST.get('enunciado', '').strip()
         retroalimentacion = request.POST.get('retroalimentacion', '').strip()
-        activo = request.POST.get('activo') == 'on'
-        correcta_letra = request.POST.get('correcta_letra', 'A')
+        activo = request.POST.get('activo') in ['on', 'true', True, '1']
+        correcta_letra = request.POST.get('correcta_letra') or request.POST.get('correcta') or 'A'
 
         categoria = get_object_or_404(Categoria, id=categoria_id)
 
@@ -518,10 +555,10 @@ def docente_pregunta_nueva_view(request):
             activo=activo
         )
 
-        opc_a = request.POST.get('opcion_A_texto', '').strip()
-        opc_b = request.POST.get('opcion_B_texto', '').strip()
-        opc_c = request.POST.get('opcion_C_texto', '').strip()
-        opc_d = request.POST.get('opcion_D_texto', '').strip()
+        opc_a = (request.POST.get('opcion_A_texto') or request.POST.get('opcion_a') or '').strip()
+        opc_b = (request.POST.get('opcion_B_texto') or request.POST.get('opcion_b') or '').strip()
+        opc_c = (request.POST.get('opcion_C_texto') or request.POST.get('opcion_c') or '').strip()
+        opc_d = (request.POST.get('opcion_D_texto') or request.POST.get('opcion_d') or '').strip()
 
         if opc_a:
             OpcionRespuesta.objects.create(pregunta=pregunta, letra='A', texto=opc_a, es_correcta=(correcta_letra == 'A'))
@@ -549,22 +586,22 @@ def docente_pregunta_editar_view(request, pk):
     opciones_dict = {opc.letra: opc for opc in pregunta.opciones.all()}
 
     if request.method == 'POST':
-        pregunta.categoria_id = request.POST.get('categoria_id')
+        pregunta.categoria_id = request.POST.get('categoria_id') or request.POST.get('categoria')
         pregunta.tipo = request.POST.get('tipo', 'MULTIPLE')
         pregunta.puntaje_base = Decimal(request.POST.get('puntaje_base', '1.00'))
         pregunta.texto_base = request.POST.get('texto_base', '').strip()
         pregunta.enunciado = request.POST.get('enunciado', '').strip()
         pregunta.retroalimentacion = request.POST.get('retroalimentacion', '').strip()
-        pregunta.activo = request.POST.get('activo') == 'on'
+        pregunta.activo = request.POST.get('activo') in ['on', 'true', True, '1']
         pregunta.save()
 
-        correcta_letra = request.POST.get('correcta_letra', 'A')
+        correcta_letra = request.POST.get('correcta_letra') or request.POST.get('correcta') or 'A'
         pregunta.opciones.all().delete()
 
-        opc_a = request.POST.get('opcion_A_texto', '').strip()
-        opc_b = request.POST.get('opcion_B_texto', '').strip()
-        opc_c = request.POST.get('opcion_C_texto', '').strip()
-        opc_d = request.POST.get('opcion_D_texto', '').strip()
+        opc_a = (request.POST.get('opcion_A_texto') or request.POST.get('opcion_a') or '').strip()
+        opc_b = (request.POST.get('opcion_B_texto') or request.POST.get('opcion_b') or '').strip()
+        opc_c = (request.POST.get('opcion_C_texto') or request.POST.get('opcion_c') or '').strip()
+        opc_d = (request.POST.get('opcion_D_texto') or request.POST.get('opcion_d') or '').strip()
 
         if opc_a:
             OpcionRespuesta.objects.create(pregunta=pregunta, letra='A', texto=opc_a, es_correcta=(correcta_letra == 'A'))
@@ -589,6 +626,127 @@ def docente_pregunta_editar_view(request, pk):
     })
 
 
+def _normalizar_nombre_columna(col_name):
+    if not col_name:
+        return ''
+    clean = unicodedata.normalize('NFKD', str(col_name)).encode('ascii', 'ignore').decode('utf-8')
+    return ''.join(c for c in clean.lower() if c.isalnum())
+
+
+def _mapear_fila_cruda(raw_dict):
+    """
+    Mapea encabezados humanos amigables (ej: 'Competencia / Área', 'Pregunta / Enunciado', 
+    'Respuesta Correcta', etc.) o técnicos ('categoria', 'enunciado', 'clave_correcta') a claves canónicas.
+    """
+    mapa_priorizado = [
+        ('respuestacorrecta', 'clave_correcta'),
+        ('clavecorrecta', 'clave_correcta'),
+        ('clave', 'clave_correcta'),
+        ('tipodepregunta', 'tipo'),
+        ('tipo', 'tipo'),
+        ('contexto', 'texto_base'),
+        ('lectura', 'texto_base'),
+        ('textobase', 'texto_base'),
+        ('caso', 'texto_base'),
+        ('pregunta', 'enunciado'),
+        ('enunciado', 'enunciado'),
+        ('opciona', 'opcion_a'),
+        ('opcionb', 'opcion_b'),
+        ('opcionc', 'opcion_c'),
+        ('opciond', 'opcion_d'),
+        ('alternativaa', 'opcion_a'),
+        ('alternativab', 'opcion_b'),
+        ('alternativac', 'opcion_c'),
+        ('alternativad', 'opcion_d'),
+        ('competencia', 'categoria'),
+        ('categoria', 'categoria'),
+        ('area', 'categoria'),
+        ('modulo', 'categoria'),
+        ('retroalimentacion', 'retroalimentacion'),
+        ('explicacion', 'retroalimentacion'),
+        ('justificacion', 'retroalimentacion'),
+        ('puntaje', 'puntaje'),
+        ('puntos', 'puntaje'),
+        ('valor', 'puntaje'),
+        ('peso', 'puntaje'),
+    ]
+
+    fila_limpia = {}
+    for k, v in raw_dict.items():
+        if not k:
+            continue
+        cleaned_k = _normalizar_nombre_columna(k)
+        
+        matched_key = None
+        if cleaned_k in ['a', 'b', 'c', 'd']:
+            matched_key = f'opcion_{cleaned_k}'
+        else:
+            for needle, canon in mapa_priorizado:
+                if needle in cleaned_k:
+                    matched_key = canon
+                    break
+
+        if matched_key and matched_key not in fila_limpia:
+            fila_limpia[matched_key] = str(v).strip() if v is not None else ''
+
+    return fila_limpia
+
+
+def _extraer_filas_de_archivo(archivo):
+    """
+    Lee archivos tanto en formato Microsoft Excel (.xlsx / .xls) como CSV,
+    mapeando automáticamente los nombres de columna a los campos requeridos.
+    """
+    raw_content = archivo.read()
+    nombre_archivo = archivo.name.lower()
+    filas = []
+
+    # 1. Intentar como archivo Excel binario
+    es_excel = nombre_archivo.endswith('.xlsx') or nombre_archivo.endswith('.xls') or raw_content[:4] == b'PK\x03\x04'
+    if es_excel:
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(raw_content), data_only=True)
+            ws = None
+            for sheet_name in wb.sheetnames:
+                if 'pregunta' in sheet_name.lower() or 'banco' in sheet_name.lower():
+                    ws = wb[sheet_name]
+                    break
+            if ws is None:
+                ws = wb.active
+
+            rows_iter = list(ws.iter_rows(values_only=True))
+            if rows_iter:
+                headers = [str(c or '').strip() for c in rows_iter[0]]
+                for row_values in rows_iter[1:]:
+                    if not any(row_values):
+                        continue
+                    row_dict = {}
+                    for h, val in zip(headers, row_values):
+                        if h:
+                            row_dict[h] = val
+                    filas.append(_mapear_fila_cruda(row_dict))
+            return filas
+        except Exception:
+            pass # Si falla openpyxl, intentar como CSV
+
+    # 2. Si es CSV o texto delimitado
+    text_content = ""
+    for enc in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+        try:
+            text_content = raw_content.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if text_content:
+        delimiter = ';' if ';' in text_content[:500] else ','
+        reader = csv.DictReader(StringIO(text_content), delimiter=delimiter)
+        for raw_row in reader:
+            filas.append(_mapear_fila_cruda(raw_row))
+
+    return filas
+
+
 def docente_importaciones_view(request):
     """
     [M09: Asistente de Carga Excel en 3 Fases]
@@ -604,52 +762,60 @@ def docente_importaciones_view(request):
         archivo = request.FILES['archivo_excel']
         nombre_archivo = archivo.name
         
-        # Leer y validar contenido
         filas_validas = []
         inconsistencias = []
 
         try:
-            raw_content = archivo.read()
-            # Detectar encoding
-            text_content = ""
-            for enc in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
-                try:
-                    text_content = raw_content.decode(enc)
-                    break
-                except UnicodeDecodeError:
-                    continue
-
-            # Detectar delimitador (punto y coma o coma)
-            delimiter = ';' if ';' in text_content[:500] else ','
-            reader = csv.DictReader(StringIO(text_content), delimiter=delimiter)
-
+            filas_extraidas = _extraer_filas_de_archivo(archivo)
             num_fila = 1
             categorias_db = {c.nombre.lower(): c for c in Categoria.objects.all()}
 
-            for row in reader:
+            for row in filas_extraidas:
                 num_fila += 1
                 cat_nombre = (row.get('categoria') or '').strip()
-                tipo = (row.get('tipo') or 'MULTIPLE').strip().upper()
+                tipo_raw = (row.get('tipo') or 'MULTIPLE').strip().upper()
                 enunciado = (row.get('enunciado') or '').strip()
                 opc_a = (row.get('opcion_a') or '').strip()
                 opc_b = (row.get('opcion_b') or '').strip()
                 opc_c = (row.get('opcion_c') or '').strip()
                 opc_d = (row.get('opcion_d') or '').strip()
-                clave = (row.get('clave_correcta') or '').strip().upper()
+                clave_raw = (row.get('clave_correcta') or '').strip().upper()
                 texto_base = (row.get('texto_base') or '').strip()
                 retro = (row.get('retroalimentacion') or '').strip()
                 puntaje = (row.get('puntaje') or '1.00').strip()
 
+                # Normalizar tipo de pregunta (soporta 'Opción Múltiple', 'Verdadero / Falso', 'V/F')
+                if 'VERDADERO' in tipo_raw or 'FALSO' in tipo_raw or 'V/F' in tipo_raw or 'VF' in tipo_raw:
+                    tipo = 'VERDADERO_FALSO'
+                    if not opc_a:
+                        opc_a = 'Verdadero'
+                    if not opc_b:
+                        opc_b = 'Falso'
+                else:
+                    tipo = 'MULTIPLE'
+
+                # Normalizar clave de respuesta correcta
+                if 'VERDADERO' in clave_raw:
+                    clave = 'A'
+                elif 'FALSO' in clave_raw:
+                    clave = 'B'
+                elif clave_raw in ['A', 'B', 'C', 'D']:
+                    clave = clave_raw
+                elif len(clave_raw) > 1 and clave_raw[-1] in ['A', 'B', 'C', 'D']:
+                    clave = clave_raw[-1]
+                else:
+                    clave = clave_raw
+
                 errores_fila = []
 
                 if not enunciado:
-                    errores_fila.append("Enunciado vacío")
+                    errores_fila.append("Enunciado o pregunta vacía")
                 if not opc_a or not opc_b:
                     errores_fila.append("Alternativas mínimas A y B ausentes")
                 if tipo == 'MULTIPLE' and (not opc_c or not opc_d):
-                    errores_fila.append("Tipo MULTIPLE requiere alternativas A, B, C y D")
+                    errores_fila.append("La pregunta de Opción Múltiple requiere alternativas A, B, C y D")
                 if clave not in ['A', 'B', 'C', 'D']:
-                    errores_fila.append(f"Clave incorrecta inválida ({clave})")
+                    errores_fila.append(f"Clave de respuesta incorrecta o ausente ('{clave_raw}'). Debe ser A, B, C o D.")
 
                 # Asignar categoría o fallback
                 cat_match = categorias_db.get(cat_nombre.lower()) or Categoria.objects.first()
@@ -658,7 +824,7 @@ def docente_importaciones_view(request):
                     'num_fila': num_fila,
                     'categoria': cat_match.nombre if cat_match else 'Lectura Crítica',
                     'categoria_id': cat_match.id if cat_match else 1,
-                    'tipo': tipo if tipo in ['MULTIPLE', 'VERDADERO_FALSO'] else 'MULTIPLE',
+                    'tipo': tipo,
                     'texto_base': texto_base,
                     'enunciado': enunciado,
                     'opcion_a': opc_a,
@@ -745,38 +911,215 @@ def docente_importaciones_view(request):
 
 
 def descargar_plantilla_excel_view(request):
-    """[M09: Descarga de Plantilla Oficial de Carga CSV/Excel]"""
+    """[M09: Descarga de Plantilla Oficial de Carga Excel .xlsx 100% Legible para Docentes]"""
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    wb = openpyxl.Workbook()
+    
+    # -------------------------------------------------------------
+    # PESTAÑA 1: Banco de Preguntas (Para diligenciar)
+    # -------------------------------------------------------------
+    ws1 = wb.active
+    ws1.title = "Banco de Preguntas"
+    ws1.views.sheetView[0].showGridLines = True
+
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="102D49", end_color="102D49", fill_type="solid")
+    
+    zebra_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    white_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    
+    thin_border_side = Side(border_style="thin", color="CBD5E1")
+    cell_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
+    
+    header_border_side = Side(border_style="medium", color="0B1F33")
+    header_border = Border(left=thin_border_side, right=thin_border_side, top=header_border_side, bottom=header_border_side)
+
+    align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    align_left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+    # Encabezados humanos y accesibles
+    headers = [
+        "Competencia / Área",
+        "Tipo de Pregunta",
+        "Contexto o Lectura (Opcional)",
+        "Pregunta / Enunciado",
+        "Opción A",
+        "Opción B",
+        "Opción C (Vacío si es V/F)",
+        "Opción D (Vacío si es V/F)",
+        "Respuesta Correcta (A, B, C o D)",
+        "Explicación / Retroalimentación",
+        "Puntos"
+    ]
+
+    ws1.append(headers)
+    ws1.row_dimensions[1].height = 36
+
+    for col_idx, col_name in enumerate(headers, 1):
+        cell = ws1.cell(row=1, column=col_idx)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = align_center
+        cell.border = header_border
+
+    # Filas de ejemplo reales y formativas
+    ejemplos = [
+        [
+            "Lectura Crítica",
+            "Opción Múltiple",
+            "En un debate sobre políticas públicas y transición energética, un analista sostiene que la descarbonización requiere subsidios focalizados y viabilidad fiscal gradual para no frenar la productividad industrial.",
+            "¿Cuál de los siguientes enunciados sintetiza con mayor precisión la postura central del analista?",
+            "La transición hacia energías limpias debe financiarse exclusivamente con impuestos al sector productivo.",
+            "La descarbonización sostenible demanda incentivos económicos focalizados y viabilidad fiscal gradual.",
+            "Todos los subsidios estatales al sector energético deben suprimirse de inmediato.",
+            "El mercado internacional autorregula las emisiones sin necesidad de intervención estatal.",
+            "B",
+            "La opción B resume fielmente la tesis planteada por el autor en el texto base.",
+            "1.00"
+        ],
+        [
+            "Razonamiento Cuantitativo",
+            "Opción Múltiple",
+            "Una empresa de servicios tecnológicos factura un servicio por un valor total de $1.190.000 COP, el cual incluye un IVA general del 19%.",
+            "¿Cuál es el valor del servicio antes de calcular el IVA?",
+            "$963.900 COP",
+            "$1.000.000 COP",
+            "$1.020.000 COP",
+            "$1.100.000 COP",
+            "B",
+            "Valor base = $1.190.000 / 1.19 = $1.000.000 COP.",
+            "1.00"
+        ],
+        [
+            "Competencias Ciudadanas",
+            "Verdadero / Falso",
+            "La alcaldía de un municipio decide reubicar por decreto a comerciantes informales sin habilitar previamente mesas de concertación ni alternativas de subsistencia.",
+            "La decisión unilateral de desalojo vulnera los principios constitucionales del debido proceso y el derecho al mínimo vital.",
+            "Verdadero",
+            "Falso",
+            "",
+            "",
+            "A",
+            "La jurisprudencia de la Corte Constitucional exige concertación y planes de reubicación previa.",
+            "1.00"
+        ],
+        [
+            "Inglés",
+            "Opción Múltiple",
+            "Cloud computing allows modern companies to store data on remote servers instead of local hard drives.",
+            "According to the context, what is the main benefit of cloud computing?",
+            "Storing data remotely rather than depending solely on local drives.",
+            "Replacing the need for internet access.",
+            "Deleting all internal corporate information.",
+            "Forcing companies to buy expensive physical mainframes.",
+            "A",
+            "The sentence explicitly affirms storing data on remote servers instead of local hard drives.",
+            "1.00"
+        ]
+    ]
+
+    for row_idx, fila in enumerate(ejemplos, 2):
+        ws1.append(fila)
+        ws1.row_dimensions[row_idx].height = 48
+        current_fill = zebra_fill if row_idx % 2 == 0 else white_fill
+
+        for col_idx in range(1, len(fila) + 1):
+            cell = ws1.cell(row=row_idx, column=col_idx)
+            cell.font = Font(name="Calibri", size=10, color="1E293B")
+            cell.fill = current_fill
+            cell.border = cell_border
+            
+            if col_idx in [2, 9, 11]:
+                cell.alignment = align_center
+            else:
+                cell.alignment = align_left
+
+    # Anchos óptimos para visualización humana sin truncamiento
+    anchos = {
+        'A': 25,  # Competencia
+        'B': 20,  # Tipo
+        'C': 42,  # Contexto
+        'D': 42,  # Pregunta
+        'E': 30,  # Opción A
+        'F': 30,  # Opción B
+        'G': 30,  # Opción C
+        'H': 30,  # Opción D
+        'I': 22,  # Respuesta Correcta
+        'J': 35,  # Explicación
+        'K': 12,  # Puntos
+    }
+    for col_letter, width in anchos.items():
+        ws1.column_dimensions[col_letter].width = width
+
+    # -------------------------------------------------------------
+    # PESTAÑA 2: Guía de Ayuda y Diligenciamiento
+    # -------------------------------------------------------------
+    ws2 = wb.create_sheet(title="Instrucciones para Docentes")
+    ws2.views.sheetView[0].showGridLines = True
+
+    ws2.column_dimensions['A'].width = 26
+    ws2.column_dimensions['B'].width = 38
+    ws2.column_dimensions['C'].width = 56
+
+    ws2.append(["GUÍA DE DILIGENCIAMIENTO - BANCO DE PREGUNTAS SABER TyT", "", ""])
+    ws2.merge_cells("A1:C1")
+    ws2.row_dimensions[1].height = 32
+    title_cell = ws2.cell(row=1, column=1)
+    title_cell.font = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
+    title_cell.fill = header_fill
+    title_cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+
+    ws2.append(["Esta plantilla te permite redactar tus preguntas en Excel de forma clara y cargarlas masivamente al sistema institucional.", "", ""])
+    ws2.merge_cells("A2:C2")
+    ws2.row_dimensions[2].height = 24
+    ws2.cell(row=2, column=1).font = Font(name="Calibri", size=10, italic=True, color="475569")
+    ws2.cell(row=2, column=1).alignment = Alignment(vertical="center", indent=1)
+
+    ws2.append([])
+
+    guide_headers = ["Campo / Columna", "¿Qué debes colocar?", "Reglas y Recomendaciones"]
+    ws2.append(guide_headers)
+    ws2.row_dimensions[4].height = 26
+    for c in range(1, 4):
+        cell = ws2.cell(row=4, column=c)
+        cell.font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        cell.fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+        cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
+
+    guia_filas = [
+        ("Competencia / Área", "El nombre del módulo o área evaluada.", "Ejemplos: Lectura Crítica, Razonamiento Cuantitativo, Competencias Ciudadanas, Inglés."),
+        ("Tipo de Pregunta", "Opción Múltiple o Verdadero / Falso.", "Si escribes 'Opción Múltiple' debes llenar opciones A, B, C y D. Si es 'Verdadero / Falso', solo A y B."),
+        ("Contexto o Lectura", "Párrafo de lectura, caso de estudio o situación problema.", "Opcional. Si la pregunta no necesita un texto previo de lectura, puedes dejar esta celda vacía."),
+        ("Pregunta / Enunciado", "La pregunta o tarea concreta a resolver.", "Obligatorio. No coloques la letra de la respuesta aquí."),
+        ("Opción A, B, C, D", "El contenido de cada alternativa de respuesta.", "Para preguntas V/F: En Opción A escribe 'Verdadero', en Opción B escribe 'Falso' y deja C y D vacías."),
+        ("Respuesta Correcta", "La letra mayúscula de la opción correcta: A, B, C o D.", "Obligatorio. Solo una letra (A, B, C o D). Si es V/F, coloca 'A' para Verdadero o 'B' para Falso."),
+        ("Explicación / Retroalimentación", "Justificación pedagógica de por qué la respuesta es correcta.", "Recomendado. El estudiante la leerá en su informe para comprender su desempeño formativo."),
+        ("Puntos", "Puntaje que suma la pregunta.", "Por defecto 1.00 punto.")
+    ]
+
+    for g_idx, g_row in enumerate(guia_filas, 5):
+        ws2.append(list(g_row))
+        ws2.row_dimensions[g_idx].height = 32
+        g_fill = zebra_fill if g_idx % 2 == 0 else white_fill
+        for c in range(1, 4):
+            cell = ws2.cell(row=g_idx, column=c)
+            cell.font = Font(name="Calibri", size=9.5, color="1E293B")
+            cell.fill = g_fill
+            cell.border = cell_border
+            cell.alignment = Alignment(vertical="center", wrap_text=True, indent=1)
+            if c == 1:
+                cell.font = Font(name="Calibri", size=9.5, bold=True, color="1E3A8A")
+
     buffer = io.BytesIO()
-    buffer.write(codecs.BOM_UTF8)
-    text_buffer = io.StringIO()
-    writer = csv.writer(text_buffer, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+    wb.save(buffer)
+    buffer.seek(0)
 
-    writer.writerow([
-        'categoria', 'tipo', 'texto_base', 'enunciado',
-        'opcion_a', 'opcion_b', 'opcion_c', 'opcion_d',
-        'clave_correcta', 'retroalimentacion', 'puntaje'
-    ])
-    writer.writerow([
-        'Lectura Crítica', 'MULTIPLE',
-        'En un debate sobre políticas públicas y transición energética, un analista sostiene que la descarbonización requiere subsidios focalizados.',
-        '¿Cuál de los siguientes enunciados sintetiza con mayor precisión la tesis principal?',
-        'La transición depende del incremento tributario.',
-        'La descarbonización sostenible demanda incentivos económicos focalizados y viabilidad fiscal gradual.',
-        'Los subsidios deben eliminarse en su totalidad.',
-        'El mercado internacional regula de forma autosuficiente las emisiones.',
-        'B', 'La opción B refleja la postura central del texto.', '1.00'
-    ])
-    writer.writerow([
-        'Competencias Ciudadanas', 'VERDADERO_FALSO',
-        'En un municipio, la administración decide reubicar a comerciantes informales sin mesas de concertación.',
-        'La decisión unilateral vulnera el derecho al debido proceso y al mínimo vital.',
-        'Verdadero', 'Falso', '', '', 'A',
-        'La jurisprudencia constitucional exige concertación previa.', '1.00'
-    ])
-
-    buffer.write(text_buffer.getvalue().encode('utf-8'))
-    response = HttpResponse(buffer.getvalue(), content_type='text/csv; charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="plantilla_oficial_saber_tyt.csv"'
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="Plantilla_Oficial_Preguntas_Saber_TyT.xlsx"'
     return response
 
 
@@ -941,14 +1284,26 @@ def docente_intentos_view(request):
 # --------------------------------------------------------------------------
 def estudiante_catalogo_view(request):
     """[M02: Catálogo de Simulacros (Disponibles / Programados / Historial)]"""
-    cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas').exclude(estado='Borrador').order_by('-id')
+    cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas__pregunta').exclude(estado='Borrador').order_by('id')
     total_cuestionarios = cuestionarios.count()
-    total_intentos = Intento.objects.count()
-    calificaciones = Intento.objects.filter(calificacion_final__isnull=False)
+
+    profile = request.session.get('demo_profile', {})
+    student_code = profile.get('code')
+
+    if student_code:
+        mis_intentos = Intento.objects.filter(codigo_estudiante=student_code, estado='Finalizado')
+    else:
+        mis_intentos = Intento.objects.filter(estado='Finalizado')
+
+    total_intentos = mis_intentos.count()
+    calificaciones = mis_intentos.filter(calificacion_final__isnull=False)
     promedio_general = Decimal('0.0')
     if calificaciones.exists():
-        promedio_general = calificaciones.aggregate(promedio=Sum('calificacion_final'))['promedio'] / calificaciones.count()
-    ultimo_intento = Intento.objects.filter(estado='Finalizado').select_related('cuestionario').first()
+        avg_val = calificaciones.aggregate(promedio=Avg('calificacion_final'))['promedio']
+        if avg_val is not None:
+            promedio_general = round(Decimal(str(avg_val)), 2)
+
+    ultimo_intento = mis_intentos.select_related('cuestionario').order_by('-fecha_fin').first()
 
     return render(request, 'estudiante/catalogo.html', {
         'cuestionarios': cuestionarios,
@@ -989,8 +1344,10 @@ def estudiante_iniciar_view(request, pk):
     cuestionario = get_object_or_404(Cuestionario, pk=pk)
 
     if request.method == 'POST':
-        nombre_estudiante = request.POST.get('nombre_estudiante', 'Estudiante Saber TyT').strip()
-        codigo_estudiante = request.POST.get('codigo_estudiante', 'EST-202310023').strip()
+        profile = request.session.get('demo_profile', {})
+        # Priorizar siempre la identidad autenticada institucionalmente para evitar adulteración
+        nombre_estudiante = profile.get('name') or request.POST.get('nombre_estudiante', 'Estudiante Saber TyT').strip()
+        codigo_estudiante = profile.get('code') or request.POST.get('codigo_estudiante', 'EST-202310023').strip()
 
         prev_intentos = Intento.objects.filter(cuestionario=cuestionario, codigo_estudiante=codigo_estudiante).count()
         num_intento = prev_intentos + 1
@@ -1045,10 +1402,9 @@ def estudiante_entregar_view(request, intento_id):
             if opcion_elegida and opcion_elegida.es_correcta:
                 es_acierto = True
         else:
-            # Si no hubo envío manual de respuestas específicas, simular respuesta correcta pedagógica
-            correcta = pregunta.opciones.filter(es_correcta=True).first()
-            opcion_elegida = correcta
-            es_acierto = True
+            # Pregunta no contestada / omitida formalmente por el estudiante (0.00 pts)
+            opcion_elegida = None
+            es_acierto = False
 
         pts = ponderado if es_acierto else Decimal('0.00')
         total_puntaje_obtenido += pts

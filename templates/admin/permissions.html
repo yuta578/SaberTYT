@@ -3,9 +3,9 @@
 
 {% block content %}
 <div class="admin-shell admin-list-page">
-  <!-- Cabecera M05 -->
+  <!-- Cabecera Permisos -->
   <section class="admin-hero">
-    <span class="admin-pill">● [M05: Matriz de Roles y Permisos] • Control de Acceso Basado en Roles (RBAC)</span>
+    <span class="admin-pill">● Matriz de Roles y Permisos • Control de Acceso Basado en Roles (RBAC)</span>
     <h1>Matriz de Roles y Permisos Institucionales</h1>
     <p>Auditoría y parametrización de privilegios para los perfiles Administrador, Docente Evaluador y Estudiante.</p>
     <div class="admin-server">
@@ -46,89 +46,89 @@
           </tr>
         </thead>
         <tbody>
-          <!-- M01: Acceso -->
+          <!-- Acceso -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M01] Autenticación</strong></td>
+            <td><strong style="color: var(--text-primary);">Autenticación</strong></td>
             <td>Ingreso al sistema con alertas y validación de estado</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Total</span></td>
           </tr>
-          <!-- M02: Paneles -->
+          <!-- Paneles -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M02] Paneles Principales</strong></td>
+            <td><strong style="color: var(--text-primary);">Paneles Principales</strong></td>
             <td>Visualización de dashboard según el rol institucional</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Admin</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Docente</span></td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Catálogo</span></td>
           </tr>
-          <!-- M04: Usuarios -->
+          <!-- Usuarios -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M04] Directorio de Usuarios</strong></td>
+            <td><strong style="color: var(--text-primary);">Directorio de Usuarios</strong></td>
             <td>Alta, baja lógica, edición de roles y toggle de estado</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ CRUD Total</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M05: Permisos -->
+          <!-- Permisos -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M05] Matriz de Privilegios</strong></td>
+            <td><strong style="color: var(--text-primary);">Matriz de Privilegios</strong></td>
             <td>Auditoría y reasignación de políticas RBAC</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Lectura/Edición</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M06: Configuración -->
+          <!-- Configuración -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M06] Configuración Global</strong></td>
+            <td><strong style="color: var(--text-primary);">Configuración Global</strong></td>
             <td>Ajustes institucionales, ciclo académico y soporte</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Control Global</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M07: Competencias -->
+          <!-- Competencias -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M07] Competencias Saber TyT</strong></td>
+            <td><strong style="color: var(--text-primary);">Competencias Saber TyT</strong></td>
             <td>Supervisión y consulta de áreas pedagógicas ICFES</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Gestión</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M08: Banco de Ítems -->
+          <!-- Banco de Ítems -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M08] Banco de Reactivos</strong></td>
+            <td><strong style="color: var(--text-primary);">Banco de Reactivos</strong></td>
             <td>Crear, editar ítems Opción Múltiple y Verdadero/Falso</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Autoría CRUD</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M09: Carga Excel -->
+          <!-- Carga Excel -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M09] Carga Masiva Excel</strong></td>
+            <td><strong style="color: var(--text-primary);">Carga Masiva Excel</strong></td>
             <td>Asistente en 3 fases: selección, validación y confirmación</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Auditoría</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Carga 3 Fases</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M10: Cuestionarios -->
+          <!-- Cuestionarios -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M10] Cuestionarios y Pesos</strong></td>
+            <td><strong style="color: var(--text-primary);">Cuestionarios y Pesos</strong></td>
             <td>Programación de pruebas, fechas y ponderaciones</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Supervisión</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Configuración</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Denegado</span></td>
           </tr>
-          <!-- M11: Sala de Espera y Simulacro -->
+          <!-- Sala de Espera y Simulacro -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M11] Presentación en Vivo</strong></td>
+            <td><strong style="color: var(--text-primary);">Presentación en Vivo</strong></td>
             <td>Acceso a sala de espera, cronómetro y examen sincrónico</td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Simulación</span></td>
             <td style="text-align: center;"><span class="badge badge-neutral">✕ Previsualización</span></td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Presentación Activa</span></td>
           </tr>
-          <!-- M12: Reportes y Resultados -->
+          <!-- Reportes y Resultados -->
           <tr class="perm-row">
-            <td><strong style="color: var(--text-primary);">[M12] Analítica y Reportes</strong></td>
+            <td><strong style="color: var(--text-primary);">Analítica y Reportes</strong></td>
             <td>Reporte global institucional vs retroalimentación individual</td>
             <td style="text-align: center;"><span class="badge badge-success">✓ Sábana Global</span></td>
             <td style="text-align: center;"><span class="badge badge-info">✓ Métricas a Cargo</span></td>

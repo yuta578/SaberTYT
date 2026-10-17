@@ -114,11 +114,11 @@
             </button>
 
             <div style="display: flex; gap: 0.55rem;">
-              <button type="button" class="btn btn-secondary" id="prevQuestionBtn">
+              <button type="button" class="btn btn-secondary prev-question-btn" onclick="if(window.simulacroEngine) window.simulacroEngine.prevQuestion();">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 Anterior
               </button>
-              <button type="button" class="btn btn-primary" id="nextQuestionBtn">
+              <button type="button" class="btn btn-primary next-question-btn" onclick="if(window.simulacroEngine) window.simulacroEngine.nextQuestion();">
                 Siguiente Pregunta
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
@@ -218,13 +218,23 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/simulacro.js' %}"></script>
+<script src="{% static 'js/simulacro.js' %}?v={% now 'U' %}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    new SimulacroEngine({
-      totalQuestions: {{ cp_list.count }},
-      timeLimitMinutes: {{ cuestionario.tiempo_limite_minutos }}
-    });
-  });
+  function launchExamEngine() {
+    if (typeof SimulacroEngine !== 'undefined') {
+      window.simulacroEngine = new SimulacroEngine({
+        totalQuestions: {{ cp_list.count }},
+        timeLimitMinutes: {{ cuestionario.tiempo_limite_minutos }}
+      });
+    } else {
+      console.warn('SimulacroEngine no cargado todavía.');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', launchExamEngine);
+  } else {
+    launchExamEngine();
+  }
 </script>
 {% endblock %}

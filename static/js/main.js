@@ -70,18 +70,19 @@ function initMobileNavigation() {
 
 // Theme Management (Light / Dark)
 function initThemeToggle() {
-  const savedTheme = localStorage.getItem('tyt_theme') || 'light';
+  const savedTheme = localStorage.getItem('tyt_theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   document.documentElement.setAttribute('data-theme', savedTheme);
 
   const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
   toggleBtns.forEach(btn => {
     updateThemeIcon(btn, savedTheme);
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('tyt_theme', next);
-      updateThemeIcon(btn, next);
+      document.querySelectorAll('.theme-toggle-btn').forEach(b => updateThemeIcon(b, next));
     });
   });
 }

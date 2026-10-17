@@ -15,7 +15,7 @@
   <div class="card" style="border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); margin-bottom: 1.75rem;">
     <div style="background: linear-gradient(135deg, #102d49 0%, #0b3f4c 100%); color: white; padding: 2.25rem 2rem; position: relative;">
       <span class="hero-pill-badge" style="background: rgba(16, 185, 129, 0.25); border: 1px solid rgba(16, 185, 129, 0.5); color: #6ee7b7; margin-bottom: 0.65rem;">
-        ● [M11: Sala de Espera / Ficha Técnica Oficial]
+        ● Sala de Espera • Ficha Técnica Oficial
       </span>
       <h1 style="font-size: 1.85rem; font-weight: 800; color: white; margin: 0 0 0.5rem; letter-spacing: -0.02em;">
         {{ cuestionario.nombre }}
@@ -97,14 +97,42 @@
       <!-- Formulario de Verificación de Identidad e Inicio -->
       <form method="POST" action="{% url 'estudiante_iniciar' cuestionario.id %}" style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
         {% csrf_token %}
-        <div class="form-row" style="margin-bottom: 1.5rem;">
-          <div class="form-group">
-            <label class="form-label">Nombre del Estudiante</label>
-            <input type="text" name="nombre_estudiante" class="form-control" value="{{ profile.name|default:'Alexandra Patricia López' }}" required readonly style="background: var(--bg-subtle);">
+
+        <!-- Ficha de Identidad Institucional Bloqueada -->
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); padding: 1.15rem 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+            <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
+              🔒 Identidad Institucional Oficial (Bloqueada)
+            </span>
+            <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 9999px;">
+              ● Vinculado a tu Cuenta
+            </span>
           </div>
-          <div class="form-group">
-            <label class="form-label">Código Institucional</label>
-            <input type="text" name="codigo_estudiante" class="form-control" value="{{ profile.code|default:'EST-202310023' }}" required readonly style="background: var(--bg-subtle); font-family: var(--font-mono);">
+
+          <div class="form-row" style="margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.78rem; color: var(--text-tertiary); margin-bottom: 0.35rem;">
+                Nombre del Estudiante
+              </label>
+              <div style="display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-weight: 700; color: var(--text-primary); cursor: not-allowed; user-select: none;">
+                <span>👤</span>
+                <span style="flex: 1; font-size: 0.9rem;">{{ profile.name|default:'Alexandra Patricia López' }}</span>
+                <span title="Dato verificado institucionalmente y protegido contra edición" style="font-size: 0.75rem; color: #10b981; font-weight: 700;">🔒 Bloqueado</span>
+              </div>
+              <input type="hidden" name="nombre_estudiante" value="{{ profile.name|default:'Alexandra Patricia López' }}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 0.78rem; color: var(--text-tertiary); margin-bottom: 0.35rem;">
+                Código Institucional
+              </label>
+              <div style="display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-family: var(--font-mono); font-weight: 800; color: var(--primary-700); letter-spacing: 0.5px; cursor: not-allowed; user-select: none;">
+                <span>🆔</span>
+                <span style="flex: 1; font-size: 0.9rem;">{{ profile.code|default:'EST-202310023' }}</span>
+                <span title="Código oficial del estudiante protegido contra edición" style="font-size: 0.75rem; color: #10b981; font-weight: 700;">🔒 Bloqueado</span>
+              </div>
+              <input type="hidden" name="codigo_estudiante" value="{{ profile.code|default:'EST-202310023' }}">
+            </div>
           </div>
         </div>
 

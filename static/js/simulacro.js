@@ -1,16 +1,19 @@
 /* ==========================================================================
-   SIMULADOR DE CUESTIONARIOS SABER TyT - EXAM ENGINE JS
+   SIMULADOR DE CUESTIONARIOS SABER TyT - ROBUST EXAM ENGINE JS
    ========================================================================== */
 
 class SimulacroEngine {
   constructor(config) {
-    this.totalQuestions = config.totalQuestions || 5;
-    this.timeLimitMinutes = config.timeLimitMinutes || 45;
+    this.totalQuestions = (config && config.totalQuestions) ? parseInt(config.totalQuestions, 10) : 5;
+    this.timeLimitMinutes = (config && config.timeLimitMinutes) ? parseInt(config.timeLimitMinutes, 10) : 45;
     this.currentQuestionIndex = 0;
     this.answers = {}; // { questionIndex: selectedOptionLetter or null }
     this.flagged = {}; // { questionIndex: true/false }
     this.timeRemainingSeconds = this.timeLimitMinutes * 60;
     this.timerInterval = null;
+
+    // Attach singleton to window so buttons and external scripts can always invoke it
+    window.simulacroEngine = this;
 
     this.init();
   }
@@ -19,12 +22,15 @@ class SimulacroEngine {
     this.bindEvents();
     this.startTimer();
     this.updateUI();
+    console.log('[SimulacroEngine] Inicializado con éxito. Total reactivos:', this.totalQuestions);
   }
 
   startTimer() {
     const timerElement = document.getElementById('examCountdown');
     const timerBox = document.getElementById('timerBox');
     if (!timerElement) return;
+
+    if (this.timerInterval) clearInterval(this.timerInterval);
 
     this.timerInterval = setInterval(() => {
       this.timeRemainingSeconds--;
@@ -33,7 +39,7 @@ class SimulacroEngine {
         clearInterval(this.timerInterval);
         this.timeRemainingSeconds = 0;
         timerElement.textContent = "00:00";
-        alert("¡El tiempo límite ha expirado! El examen se finalizará automáticamente.");
+        alert("¡El tiempo límite ha expirado! El examen se finalizará y entregará automáticamente.");
         this.submitExam();
         return;
       }
@@ -50,79 +56,115 @@ class SimulacroEngine {
   }
 
   bindEvents() {
-    // Navigation Palette Buttons
-    document.querySelectorAll('.palette-item-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt(btn.getAttribute('data-index'), 10);
-        this.goToQuestion(index);
-      });
-    });
-
-    // Previous / Next Buttons
-    const prevBtn = document.getElementById('prevQuestionBtn');
-    const nextBtn = document.getElementById('nextQuestionBtn');
-
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        if (this.currentQuestionIndex > 0) {
-          this.goToQuestion(this.currentQuestionIndex - 1);
+    // Robust document-level event delegation (never fails even if DOM is updated)
+    document.addEventListener('click', (e) => {
+      // 1. Next Question Button
+      const nextBtn = e.target.closest('.next-question-btn, #nextQuestionBtn');
+      if (nextBtn) {
+        e.preventDefault();
+        if (!nextBtn.getAttribute('onclick')) {
+          this.nextQuestion();
         }
-      });
-    }
+        return;
+      }
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        if (this.currentQuestionIndex < this.totalQuestions - 1) {
-          this.goToQuestion(this.currentQuestionIndex + 1);
-        } else {
-          this.openFinishConfirmation();
+      // 2. Previous Question Button
+      const prevBtn = e.target.closest('.prev-question-btn, #prevQuestionBtn');
+      if (prevBtn) {
+        e.preventDefault();
+        if (!prevBtn.getAttribute('onclick')) {
+          this.prevQuestion();
         }
-      });
-    }
+        return;
+      }
 
-    // Option Selection
-    document.querySelectorAll('.question-block').forEach(block => {
-      const qIndex = parseInt(block.getAttribute('data-question-index'), 10);
-      const options = block.querySelectorAll('.option-choice-card');
+      // 3. Navigation Palette Item Click
+      const paletteBtn = e.target.closest('.palette-item-btn');
+      if (paletteBtn) {
+        e.preventDefault();
+        const index = parseInt(paletteBtn.getAttribute('data-index'), 10);
+        if (!isNaN(index)) {
+          this.goToQuestion(index);
+        }
+        return;
+      }
 
-      options.forEach(opt => {
-        opt.addEventListener('click', () => {
-          const letter = opt.getAttribute('data-letter');
-          this.selectOption(qIndex, letter, opt, options);
-        });
-      });
+      // 4. Option Choice Card Click
+      const optionCard = e.target.closest('.option-choice-card');
+      if (optionCard) {
+        e.preventDefault();
+        const block = optionCard.closest('.question-block');
+        if (block) {
+          const qIndex = parseInt(block.getAttribute('data-question-index'), 10);
+          const letter = optionCard.getAttribute('data-letter');
+          const allOptions = block.querySelectorAll('.option-choice-card');
+          this.selectOption(qIndex, letter, optionCard, allOptions);
+        }
+        return;
+      }
 
-      // Clear button
-      const clearBtn = block.querySelector('.clear-selection-btn');
+      // 5. Clear / Leave Blank Button
+      const clearBtn = e.target.closest('.clear-selection-btn');
       if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-          this.clearSelection(qIndex, options);
-        });
+        e.preventDefault();
+        const block = clearBtn.closest('.question-block');
+        if (block) {
+          const qIndex = parseInt(block.getAttribute('data-question-index'), 10);
+          const allOptions = block.querySelectorAll('.option-choice-card');
+          this.clearSelection(qIndex, allOptions);
+        }
+        return;
       }
 
-      // Flag for review button
-      const flagBtn = block.querySelector('.flag-review-btn');
+      // 6. Flag for Review Button
+      const flagBtn = e.target.closest('.flag-review-btn');
       if (flagBtn) {
-        flagBtn.addEventListener('click', () => {
+        e.preventDefault();
+        const block = flagBtn.closest('.question-block');
+        if (block) {
+          const qIndex = parseInt(block.getAttribute('data-question-index'), 10);
           this.toggleFlag(qIndex, flagBtn);
-        });
+        }
+        return;
+      }
+
+      // 7. Finish Exam Top Header Button
+      const finishBtn = e.target.closest('#finishExamBtn');
+      if (finishBtn) {
+        e.preventDefault();
+        this.openFinishConfirmation();
+        return;
+      }
+
+      // 8. Confirm Final Submission Inside Modal
+      const confirmSubmitBtn = e.target.closest('#confirmSubmitExam');
+      if (confirmSubmitBtn) {
+        e.preventDefault();
+        this.submitExam();
+        return;
+      }
+
+      // 9. Modal Close Buttons
+      const modalCloseBtn = e.target.closest('[data-modal-close]');
+      if (modalCloseBtn) {
+        e.preventDefault();
+        this.closeFinishConfirmation();
+        return;
       }
     });
+  }
 
-    // Finish Exam Button
-    const finishBtn = document.getElementById('finishExamBtn');
-    if (finishBtn) {
-      finishBtn.addEventListener('click', () => {
-        this.openFinishConfirmation();
-      });
+  nextQuestion() {
+    if (this.currentQuestionIndex < this.totalQuestions - 1) {
+      this.goToQuestion(this.currentQuestionIndex + 1);
+    } else {
+      this.openFinishConfirmation();
     }
+  }
 
-    // Confirm submission
-    const confirmSubmitBtn = document.getElementById('confirmSubmitExam');
-    if (confirmSubmitBtn) {
-      confirmSubmitBtn.addEventListener('click', () => {
-        this.submitExam();
-      });
+  prevQuestion() {
+    if (this.currentQuestionIndex > 0) {
+      this.goToQuestion(this.currentQuestionIndex - 1);
     }
   }
 
@@ -135,8 +177,12 @@ class SimulacroEngine {
   selectOption(qIndex, letter, selectedElement, allOptions) {
     this.answers[qIndex] = letter;
 
-    allOptions.forEach(opt => opt.classList.remove('selected'));
-    selectedElement.classList.add('selected');
+    if (allOptions) {
+      allOptions.forEach(opt => opt.classList.remove('selected'));
+    }
+    if (selectedElement) {
+      selectedElement.classList.add('selected');
+    }
 
     const block = document.querySelector(`.question-block[data-question-index="${qIndex}"]`);
     if (block) {
@@ -150,7 +196,9 @@ class SimulacroEngine {
 
   clearSelection(qIndex, allOptions) {
     delete this.answers[qIndex];
-    allOptions.forEach(opt => opt.classList.remove('selected'));
+    if (allOptions) {
+      allOptions.forEach(opt => opt.classList.remove('selected'));
+    }
 
     const block = document.querySelector(`.question-block[data-question-index="${qIndex}"]`);
     if (block) {
@@ -171,30 +219,32 @@ class SimulacroEngine {
       if (hiddenRev) hiddenRev.value = this.flagged[qIndex] ? 'true' : 'false';
     }
 
-    if (this.flagged[qIndex]) {
-      flagBtn.classList.remove('btn-secondary');
-      flagBtn.style.backgroundColor = 'var(--warning-bg)';
-      flagBtn.style.borderColor = 'var(--warning-border)';
-      flagBtn.style.color = 'var(--warning-text)';
-      flagBtn.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-          <line x1="4" y1="22" x2="4" y2="15"></line>
-        </svg>
-        Marcada para Revisión
-      `;
-    } else {
-      flagBtn.classList.add('btn-secondary');
-      flagBtn.style.backgroundColor = '';
-      flagBtn.style.borderColor = '';
-      flagBtn.style.color = '';
-      flagBtn.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-          <line x1="4" y1="22" x2="4" y2="15"></line>
-        </svg>
-        Marcar para Revisión
-      `;
+    if (flagBtn) {
+      if (this.flagged[qIndex]) {
+        flagBtn.classList.remove('btn-secondary');
+        flagBtn.style.backgroundColor = 'var(--warning-bg)';
+        flagBtn.style.borderColor = 'var(--warning-border)';
+        flagBtn.style.color = 'var(--warning-text)';
+        flagBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+            <line x1="4" y1="22" x2="4" y2="15"></line>
+          </svg>
+          Marcada para Revisión
+        `;
+      } else {
+        flagBtn.classList.add('btn-secondary');
+        flagBtn.style.backgroundColor = '';
+        flagBtn.style.borderColor = '';
+        flagBtn.style.color = '';
+        flagBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+            <line x1="4" y1="22" x2="4" y2="15"></line>
+          </svg>
+          Marcar para Revisión
+        `;
+      }
     }
 
     this.updatePaletteButton(qIndex);
@@ -222,8 +272,13 @@ class SimulacroEngine {
 
   updateUI() {
     // Show current question block, hide others
-    document.querySelectorAll('.question-block').forEach((block, idx) => {
-      block.style.display = idx === this.currentQuestionIndex ? 'block' : 'none';
+    const blocks = document.querySelectorAll('.question-block');
+    blocks.forEach((block, idx) => {
+      if (idx === this.currentQuestionIndex) {
+        block.style.display = 'block';
+      } else {
+        block.style.display = 'none';
+      }
     });
 
     // Update Palette Buttons active state
@@ -231,23 +286,33 @@ class SimulacroEngine {
       this.updatePaletteButton(i);
     }
 
-    // Update Prev / Next buttons state
-    const prevBtn = document.getElementById('prevQuestionBtn');
-    const nextBtn = document.getElementById('nextQuestionBtn');
-    if (prevBtn) prevBtn.disabled = this.currentQuestionIndex === 0;
-    if (nextBtn) {
+    // Update Prev / Next buttons state across all question cards
+    document.querySelectorAll('.prev-question-btn').forEach(btn => {
+      btn.disabled = this.currentQuestionIndex === 0;
+      if (this.currentQuestionIndex === 0) {
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      }
+    });
+
+    document.querySelectorAll('.next-question-btn').forEach(btn => {
       if (this.currentQuestionIndex === this.totalQuestions - 1) {
-        nextBtn.innerHTML = `
+        btn.innerHTML = `
           Revisar y Entregar
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         `;
+        btn.className = 'btn btn-success next-question-btn';
       } else {
-        nextBtn.innerHTML = `
+        btn.innerHTML = `
           Siguiente Pregunta
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         `;
+        btn.className = 'btn btn-primary next-question-btn';
       }
-    }
+    });
 
     // Update Progress counter
     const currentNumEl = document.getElementById('currentQuestionNumber');
@@ -259,7 +324,7 @@ class SimulacroEngine {
   updateStats() {
     const answeredCount = Object.keys(this.answers).length;
     const flaggedCount = Object.values(this.flagged).filter(Boolean).length;
-    const emptyCount = this.totalQuestions - answeredCount;
+    const emptyCount = Math.max(0, this.totalQuestions - answeredCount);
 
     const answeredEl = document.getElementById('answeredCount');
     const emptyEl = document.getElementById('emptyCount');
@@ -270,7 +335,7 @@ class SimulacroEngine {
     if (emptyEl) emptyEl.textContent = emptyCount;
     if (flaggedEl) flaggedEl.textContent = flaggedCount;
 
-    if (progressBar) {
+    if (progressBar && this.totalQuestions > 0) {
       const pct = Math.round((answeredCount / this.totalQuestions) * 100);
       progressBar.style.width = `${pct}%`;
     }
@@ -278,7 +343,7 @@ class SimulacroEngine {
 
   openFinishConfirmation() {
     const answeredCount = Object.keys(this.answers).length;
-    const emptyCount = this.totalQuestions - answeredCount;
+    const emptyCount = Math.max(0, this.totalQuestions - answeredCount);
     const flaggedCount = Object.values(this.flagged).filter(Boolean).length;
 
     const summaryEl = document.getElementById('modalFinishSummary');
@@ -303,6 +368,24 @@ class SimulacroEngine {
 
     if (typeof openModal === 'function') {
       openModal('confirmFinishModal');
+    } else {
+      const modal = document.getElementById('confirmFinishModal');
+      if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+  }
+
+  closeFinishConfirmation() {
+    if (typeof closeModal === 'function') {
+      closeModal('confirmFinishModal');
+    } else {
+      const modal = document.getElementById('confirmFinishModal');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
     }
   }
 
@@ -311,8 +394,7 @@ class SimulacroEngine {
     if (form) {
       form.submit();
     } else {
-      const resultUrl = '/estudiante/simulacro/1/resultado/';
-      window.location.href = resultUrl;
+      console.warn('Formulario examForm no encontrado.');
     }
   }
 }

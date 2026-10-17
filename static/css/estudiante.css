@@ -1,6 +1,6 @@
 .student-page {
-  background: #f8f6ff;
-  color: #11172c;
+  background: var(--bg-page);
+  color: var(--text-primary);
 }
 
 .student-page .navbar {
@@ -9,183 +9,593 @@
 }
 
 .student-page .main-content {
-  background: #f8f6ff;
+  background: var(--bg-page);
 }
 
 .student-dashboard {
-  width: min(100% - 2rem, 920px);
+  width: min(100% - 2rem, 1280px);
   margin: 0 auto;
   padding: 1rem 0 2rem;
 }
 
 .student-welcome-card {
-  padding: 1.2rem;
-  border-radius: 16px;
-  color: white;
-  background: linear-gradient(125deg,#102d49,#0b3f4c);
-  box-shadow: 0 8px 20px rgba(16,37,61,.15);
+  padding: 1.5rem 1.8rem;
+  border-radius: var(--radius-lg);
+  color: #0b132b;
+  background: linear-gradient(110deg, #ecfdf5 0%, #eff6ff 65%, #f0fdf4 100%);
+  border: 1px solid #cbd5e1;
+  box-shadow: var(--shadow-sm);
 }
 
 .student-eyebrow {
-  color: #79efc1;
-  font-size: .7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--primary-700);
+  background: var(--primary-100);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 800;
 }
 
 .student-welcome-card h1 {
-  margin: .6rem 0 .15rem;
-  font-size: 1.65rem;
+  margin: 0.6rem 0 0.25rem;
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  font-weight: 800;
 }
 
 .student-welcome-card p {
   margin: 0;
-  color: rgba(255,255,255,.8);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
 }
 
 .student-welcome-card p strong {
-  margin-left: .35rem;
-  color: #102d49;
-  background: #dfe4ff;
+  margin-left: 0.35rem;
+  color: var(--primary-800);
+  background: var(--primary-100);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
 }
 
 .student-status-card {
-  display: none;
+  display: flex;
 }
 
 .student-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: .7rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 1.25rem 0;
 }
 
 .student-kpi {
-  min-height: 100px;
-  padding: .8rem;
-  border: 1px solid #eceaf7;
-  border-top: 4px solid #007b55;
-  border-radius: 13px;
-  background: white;
-  box-shadow: 0 4px 14px rgba(31,37,68,.05);
+  min-height: 120px;
+  padding: 1.1rem;
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--primary-600);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary);
 }
 
-.student-kpi.kpi-blue { border-top-color: #3d55a7; }
-.student-kpi.kpi-purple { border-top-color: #673ab7; }
-.student-kpi small, .student-kpi p { font-size: .65rem; }
-.student-kpi strong { display:block; margin:.25rem 0; font-size:1.45rem; }
-.student-kpi em { color:#007b55; background:#d8faea; }
+.student-kpi.kpi-green {
+  border-top-color: var(--success-solid);
+}
+
+.student-kpi.kpi-blue {
+  border-top-color: var(--primary-600);
+}
+
+.student-kpi.kpi-purple {
+  border-top-color: #7c3aed;
+}
+
+.student-kpi small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.student-kpi p {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 0.4rem;
+}
+
+.student-kpi strong {
+  display: block;
+  margin: 0.35rem 0;
+  font-size: 1.65rem;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+}
+
+.student-kpi em {
+  color: var(--success-text);
+  background: var(--success-bg);
+  font-style: normal;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
 
 .student-filterbar {
-  display:flex;
-  gap:.45rem;
-  align-items:center;
-  margin-bottom:.7rem;
-  padding:.45rem;
-  border-radius:10px;
-  background:white;
-  overflow:auto;
-}
-
-.student-filterbar strong, .student-filterbar span {
-  padding:.45rem .6rem;
-  border-radius:8px;
-  white-space:nowrap;
-  font-size:.7rem;
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 1.15rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
 }
 
 .student-filterbar strong {
-  color:white;
-  background:#102d49;
+  padding: 0.45rem 0.8rem;
+  border-radius: 6px;
+  color: #ffffff;
+  background: var(--primary-900);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .student-filterbar input {
-  min-width:170px;
-  margin-left:auto;
-  padding:.5rem;
-  border:0;
-  border-radius:8px;
-  background:#eef0ff;
+  min-width: 220px;
+  margin-left: auto;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  font-size: 0.78rem;
 }
 
 .student-exam-grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:.8rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.15rem;
 }
 
 .student-exam-card {
-  display:flex;
-  flex-direction:column;
-  padding:1rem;
-  border-top:4px solid #79efc1;
-  border-radius:14px;
-  background:white;
-  box-shadow:0 4px 14px rgba(31,37,68,.05);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  border-top: 4px solid var(--primary-600);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+}
+
+.student-exam-card.is-muted {
+  background: var(--bg-subtle);
+  border-top-color: var(--border-medium);
 }
 
 .student-exam-card header {
-  display:flex;
-  justify-content:space-between;
-  gap:.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.student-status, .student-type, .student-competencies span {
-  padding:.3rem .5rem;
-  border-radius:999px;
-  font-size:.65rem;
-  background:#d8faea;
+.student-status,
+.student-type,
+.student-competencies span {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
-.student-type { background:#dfe4ff; }
-.student-exam-card h2 { margin:.8rem 0 .3rem; font-size:1.25rem; }
-.student-exam-card > p { min-height:48px; color:#596075; font-size:.75rem; }
+.student-status.available {
+  color: var(--success-text);
+  background: var(--success-bg);
+}
+
+.student-status.scheduled {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+}
+
+.student-status.closed {
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+}
+
+.student-type {
+  color: #4338ca;
+  background: #e0e7ff;
+}
+
+.student-exam-card h2 {
+  margin: 0.9rem 0 0.35rem;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.student-exam-card>p {
+  min-height: 48px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
 
 .student-exam-facts {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:.4rem;
-  padding:.6rem;
-  border-radius:9px;
-  background:#eef0ff;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  margin: 0.75rem 0;
 }
 
-.student-exam-facts span { display:grid; grid-template-columns:18px 1fr; font-size:.7rem; }
-.student-exam-facts small { grid-column:2; color:#596075; }
-.student-competencies { display:flex; flex-wrap:wrap; gap:.3rem; margin:.6rem 0; }
-.student-competencies small { width:100%; font-size:.6rem; }
-.student-primary-action, .student-secondary-action {
-  width:100%;
-  margin-top:auto;
-  padding:.7rem;
-  border:0;
-  border-radius:9px;
-  color:white;
-  background:#007b55;
-  font-weight:800;
+.student-exam-facts span {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  font-size: 0.75rem;
+  color: var(--primary-700);
+  font-weight: 600;
 }
-.student-secondary-action { color:#102d49; background:#dfe4ff; }
+
+.student-exam-facts b {
+  color: var(--text-primary);
+}
+
+.student-exam-facts small {
+  grid-column: 2;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+}
+
+.student-competencies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.student-competencies small {
+  width: 100%;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.student-competencies span {
+  color: var(--primary-700);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-100);
+}
+
+.student-primary-action,
+.student-secondary-action {
+  width: 100%;
+  margin-top: auto;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 150ms var(--ease-smooth);
+}
+
+.student-primary-action {
+  color: #ffffff;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.student-primary-action:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.student-secondary-action {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-medium);
+}
+
+.student-secondary-action:hover {
+  background: var(--bg-subtle-hover);
+}
 
 .student-bottom-grid {
-  display:grid;
-  grid-template-columns:1.5fr 1fr;
-  gap:.8rem;
-  margin-top:.8rem;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.15rem;
+  margin-top: 1.25rem;
 }
 
-.student-upcoming-card, .student-progress-card {
-  padding:1rem;
-  border-radius:14px;
-  background:white;
-}
-
+.student-upcoming-card,
 .student-progress-card {
-  color:white;
-  background:#102d49;
+  padding: 1.35rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.student-upcoming-card {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.student-upcoming-card span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--success-text);
+  text-transform: uppercase;
+}
+
+.student-upcoming-card h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0.4rem 0;
+}
+
+.student-upcoming-card p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+/* Tarjeta Ruta de Aprendizaje Saber TyT */
+.student-progress-card {
+  background: linear-gradient(135deg, #0b1c33 0%, #102d49 60%, #0d384e 100%);
+  color: #ffffff;
+  border-color: #1e3a5f;
+}
+
+.student-progress-card small {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #79efc1;
+  display: block;
+}
+
+.student-progress-card h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0.45rem 0 0.35rem;
+}
+
+.student-progress-card p {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  margin: 0 0 0.85rem;
+}
+
+.student-progress-card strong {
+  display: block;
+  margin-top: auto;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(121, 239, 193, 0.16);
+  border: 1px solid rgba(121, 239, 193, 0.3);
+  color: #79efc1;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 @media (max-width: 700px) {
-  .student-dashboard { width:min(100% - 1rem,620px); }
-  .student-kpi-grid, .student-exam-grid, .student-bottom-grid { grid-template-columns:1fr; }
-  .student-welcome-card h1 { font-size:1.35rem; }
-  .student-filterbar input { min-width:130px; }
+  .student-dashboard {
+    width: min(100% - 1rem, 620px);
+  }
+
+  .student-kpi-grid,
+  .student-exam-grid,
+  .student-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-welcome-card h1 {
+    font-size: 1.35rem;
+  }
+
+  .student-filterbar input {
+    min-width: 130px;
+  }
+}
+
+/* ==========================================================================
+   ESTUDIANTE DARK THEME OVERRIDES
+   ========================================================================== */
+
+[data-theme="dark"] .student-page {
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-page .navbar {
+  background: linear-gradient(110deg, #07192f 0%, #0c2847 55%, #10345d 100%) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .student-page .main-content {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .student-welcome-card {
+  background: linear-gradient(125deg, #091726, #0e273f 70%, #07192b) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .student-welcome-card h1 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .student-welcome-card p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="dark"] .student-welcome-card p strong {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .student-kpi {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .student-kpi small,
+[data-theme="dark"] .student-kpi p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .student-kpi strong {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-kpi em {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.18);
+}
+
+[data-theme="dark"] .student-filterbar {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle);
+}
+
+[data-theme="dark"] .student-filterbar strong {
+  color: #ffffff;
+  background: var(--primary-600);
+}
+
+[data-theme="dark"] .student-filterbar input {
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-medium);
+}
+
+[data-theme="dark"] .student-filterbar input::placeholder {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .student-exam-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-top: 4px solid #10b981 !important;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .student-exam-card.is-muted {
+  background: var(--bg-subtle) !important;
+  border-top-color: var(--border-medium) !important;
+}
+
+[data-theme="dark"] .student-status.available {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.16);
+}
+
+[data-theme="dark"] .student-status.scheduled {
+  color: #fde047;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+[data-theme="dark"] .student-status.closed {
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+}
+
+[data-theme="dark"] .student-type {
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.18);
+}
+
+[data-theme="dark"] .student-exam-card h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-exam-card>p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .student-exam-facts {
+  background: var(--bg-subtle) !important;
+}
+
+[data-theme="dark"] .student-exam-facts span {
+  color: var(--primary-300);
+}
+
+[data-theme="dark"] .student-exam-facts b {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-exam-facts small {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .student-competencies span {
+  color: var(--primary-300);
+  background: rgba(37, 99, 235, 0.18);
+}
+
+[data-theme="dark"] .student-competencies small {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .student-primary-action {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .student-primary-action:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+[data-theme="dark"] .student-secondary-action {
+  color: var(--text-primary) !important;
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border-medium);
+}
+
+[data-theme="dark"] .student-secondary-action:hover {
+  background: var(--bg-subtle-hover) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .student-upcoming-card,
+[data-theme="dark"] .student-progress-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle);
+}
+
+[data-theme="dark"] .student-upcoming-card h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .student-upcoming-card p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .student-progress-card {
+  background: linear-gradient(135deg, #091726 0%, #0e273f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

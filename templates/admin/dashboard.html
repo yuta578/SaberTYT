@@ -2,9 +2,9 @@
 {% block title %}Panel de Control General - Administrador{% endblock %}
 {% block content %}
 <div class="admin-shell">
-  <!-- Cabecera Institucional M02 -->
+  <!-- Cabecera Institucional -->
   <section class="admin-hero">
-    <span class="admin-pill">● [M02: Panel General de Administración] • UNIPUTUMAYO 2024-II</span>
+    <span class="admin-pill">● Panel General de Administración • UNIPUTUMAYO 2024-II</span>
     <h1>Panel General de Administración</h1>
     <p>Bienvenido, {{ request.session.demo_profile.name|default:"Ing. Roberto Andrade" }}<br><small>({{ request.session.demo_profile.label|default:"Administrador" }})</small></p>
     <div class="admin-server"><span>●</span> Servidor Institucional UNIPUTUMAYO <b>En línea • 42ms • SSL Seguro</b></div>
@@ -42,7 +42,7 @@
       <small>Tasa de culminación favorable (94.2%)</small>
       <div style="margin-top: 1rem;">
         <a href="{% url 'admin_reportes' %}" style="color: var(--primary-600); font-size: 0.8rem; font-weight: 700;">
-          Ver Reporte M12 →
+          Ver Reporte General →
         </a>
       </div>
     </article>
@@ -56,57 +56,57 @@
   <section class="admin-actions">
     <a href="{% url 'admin_users' %}">
       <b>♙</b>
-      <strong>[M04] Directorio y CRUD de Usuarios</strong>
+      <strong>Directorio y Gestión de Usuarios</strong>
       <span>Crear, editar roles, activar o suspender</span>
       <em>Abrir directorio →</em>
     </a>
     <a href="{% url 'admin_permissions' %}">
       <b>⬡</b>
-      <strong>[M05] Matriz de Roles y Permisos</strong>
+      <strong>Matriz de Roles y Permisos</strong>
       <span>Auditoría de privilegios y control RBAC</span>
       <em>Ver matriz →</em>
     </a>
     <a href="{% url 'admin_settings' %}">
       <b>☷</b>
-      <strong>[M06] Configuración Institucional</strong>
+      <strong>Configuración Institucional</strong>
       <span>Parámetros globales, periodos y soporte</span>
       <em>Configurar →</em>
     </a>
     <a href="{% url 'admin_reportes' %}">
       <b>⌁</b>
-      <strong>[M12] Reporte Global de Resultados</strong>
+      <strong>Reporte Global de Resultados</strong>
       <span>Histórico, notas promedio y exportación</span>
       <em>Abrir analítica →</em>
     </a>
   </section>
 
-  <!-- Supervisión Curricular y Académica [M07, M08, M10] -->
+  <!-- Supervisión Curricular y Académica -->
   <div class="section-heading">
-    <h2>👁 Supervisión Curricular y Académica [M07, M08, M10]</h2>
+    <h2>👁 Supervisión Curricular y Académica</h2>
     <small>Supervisión directa de módulos docentes</small>
   </div>
   <section class="admin-actions" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     <a href="{% url 'docente_competencias' %}" style="border-left: 3px solid var(--cat-cuanti);">
       <b>▤</b>
-      <strong>[M07] Supervisión de Áreas y Competencias</strong>
+      <strong>Supervisión de Áreas y Competencias</strong>
       <span>Auditoría de los 5 módulos ICFES Saber TyT</span>
       <em>Inspeccionar competencias →</em>
     </a>
     <a href="{% url 'docente_preguntas' %}" style="border-left: 3px solid var(--cat-lectura);">
       <b>▣</b>
-      <strong>[M08] Supervisión de Banco de Ítems</strong>
+      <strong>Supervisión de Banco de Ítems</strong>
       <span>Control de reactivos Opción Múltiple y V/F</span>
       <em>Auditar banco central →</em>
     </a>
     <a href="{% url 'docente_cuestionarios' %}" style="border-left: 3px solid var(--cat-ingles);">
       <b>▥</b>
-      <strong>[M10] Supervisión de Cuestionarios y Ponderaciones</strong>
+      <strong>Supervisión de Cuestionarios y Ponderaciones</strong>
       <span>Programador, tiempos límite y pesos</span>
       <em>Monitorear pruebas →</em>
     </a>
     <a href="{% url 'profile' %}" style="border-left: 3px solid var(--primary-600);">
       <b>👤</b>
-      <strong>[M03] Mi Perfil & Seguridad de Administrador</strong>
+      <strong>Mi Perfil & Seguridad de Administrador</strong>
       <span>Privilegios root, credenciales y clave</span>
       <em>Gestionar credencial →</em>
     </a>
@@ -123,6 +123,6 @@
     <p class="alert">♧ <b>Auditoría de Seguridad</b><span>Hoy, 10:14 AM</span><br>Alerta preventiva registrada para el usuario suspendido <em>inactivo@itp.edu.co</em></p>
     <p>☁ <b>Copia de Respaldo</b><span>Hoy, 04:00 AM</span><br>Instantánea de base de datos e historial inmutable generada correctamente.</p>
   </section>
-  <a class="admin-audit" href="{% url 'admin_reportes' %}">▤ Ver registro completo de resultados institucionales [M12] →</a>
+  <a class="admin-audit" href="{% url 'admin_reportes' %}">▤ Ver registro completo de resultados institucionales →</a>
 </div>
 {% endblock %}
