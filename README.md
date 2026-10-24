@@ -6,6 +6,24 @@ El sistema cuenta con gestión de bancos de preguntas por competencias, creador 
 
 ---
 
+## Autenticación y seguridad
+
+La aplicación valida la identidad en el servidor. El portal web usa sesión
+segura y la API expone JWT HS256 con tokens de acceso de corta duración y
+tokens de renovación rotativos:
+
+- `POST /api/auth/login/` con `{ "email": "...", "password": "..." }`
+- `POST /api/auth/refresh/` con `{ "refresh": "..." }`
+- `POST /api/auth/logout/` con `Authorization: Bearer <access>` y el refresh opcional
+- `GET /api/auth/me/` con `Authorization: Bearer <access>`
+
+Las cuentas inactivas no pueden autenticarse. Al cerrar sesión o renovar se
+revocan los tokens correspondientes. Las rutas administrativas, docentes y de
+estudiantes verifican el permiso en Django; los intentos están asociados al
+usuario autenticado y no se aceptan identificadores enviados por el cliente.
+Los roles configurables y sus permisos se administran desde
+`/admin-panel/permisos/`.
+
 ## 🚀 Tecnologías Utilizadas
 
 - **Backend:** Python 3.10+ / Django 5.2 (Arquitectura MVT)

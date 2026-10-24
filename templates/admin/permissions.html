@@ -139,6 +139,40 @@
     </div>
   </div>
 
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-body">
+      <h2>Roles configurables</h2>
+      <p>Los roles predeterminados se conservan protegidos; los demás pueden editarse, activarse o desactivarse.</p>
+      <form method="post" style="display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+        {% csrf_token %}
+        <input class="form-control" name="name" placeholder="Nombre del rol" required>
+        <input class="form-control" name="code" placeholder="Código único (ej. docente-evaluador)" required>
+        <input class="form-control" name="description" placeholder="Descripción">
+        <label><input type="checkbox" name="active" checked> Rol activo</label>
+        <div style="grid-column:1/-1; display:flex; flex-wrap:wrap; gap:1rem;">
+          {% for permission in permissions %}
+            <label><input type="checkbox" name="permissions" value="{{ permission.codigo }}"> {{ permission.nombre }}</label>
+          {% endfor %}
+        </div>
+        <button class="btn btn-primary" type="submit">Guardar rol</button>
+      </form>
+      <div class="table-responsive-wrapper" style="margin-top:1.25rem;">
+        <table class="table-modern">
+          <thead><tr><th>Rol</th><th>Estado</th><th>Permisos</th></tr></thead>
+          <tbody>
+            {% for role in roles %}
+              <tr>
+                <td>{{ role.nombre }}{% if role.es_predeterminado %} <small>(predeterminado)</small>{% endif %}</td>
+                <td>{{ role.activo|yesno:"Activo,Inactivo" }}</td>
+                <td>{% for permission in role.permisos.all %}{{ permission.codigo }}{% if not forloop.last %}, {% endif %}{% empty %}Sin permisos{% endfor %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Tarjeta de Protocolo de Seguridad -->
   <div class="card" style="border-left: 4px solid var(--primary-600); background: var(--bg-surface);">
     <div class="card-body" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">

@@ -15,11 +15,14 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Count, Sum, Avg
+from django.db import transaction
 
 from .models import (
     Categoria, Pregunta, OpcionRespuesta, Cuestionario,
-    CuestionarioPregunta, Importacion, Intento, RespuestaIntento, Usuario
+    CuestionarioPregunta, Importacion, Intento, RespuestaIntento, Usuario,
+    Permiso, Rol,
 )
+from .auth import user_from_request
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -372,7 +375,35 @@ def admin_toggle_estado_usuario_view(request):
 
 def admin_permissions_view(request):
     """[M05: Matriz de Roles y Permisos RBAC]"""
-    return render(request, 'admin/permissions.html')
+    if request.method == 'POST':
+        role_id = request.POST.get('role_id')
+        name = request.POST.get('name', '').strip()
+        code = request.POST.get('code', '').strip().lower()
+        description = request.POST.get('description', '').strip()
+        active = request.POST.get('active', 'on') in {'on', '1', 'true', 'True'}
+        permission_codes = request.POST.getlist('permissions')
+        role = Rol.objects.filter(pk=role_id).first() if role_id else None
+        if role and role.es_predeterminado:
+            messages.error(request, "Los roles predeterminados no pueden editarse.")
+        elif not name or not code:
+            messages.error(request, "El nombre y código del rol son obligatorios.")
+        else:
+            role, _ = Rol.objects.update_or_create(
+                codigo=code,
+                defaults={
+                    'nombre': name,
+                    'descripcion': description,
+                    'activo': active,
+                },
+            )
+            role.permisos.set(Permiso.objects.filter(
+                codigo__in=permission_codes, activo=True
+            ))
+            messages.success(request, f"Rol '{role.nombre}' guardado correctamente.")
+    return render(request, 'admin/permissions.html', {
+        'roles': Rol.objects.prefetch_related('permisos').all(),
+        'permissions': Permiso.objects.filter(activo=True),
+    })
 
 
 def admin_settings_view(request):
@@ -1284,7 +1315,14 @@ def docente_intentos_view(request):
 # --------------------------------------------------------------------------
 def estudiante_catalogo_view(request):
     """[M02: Catálogo de Simulacros (Disponibles / Programados / Historial)]"""
-    cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas__pregunta').exclude(estado='Borrador').order_by('id')
+    ahora = timezone.now()
+    cuestionarios = Cuestionario.objects.prefetch_related(
+        'cuestionario_preguntas__pregunta'
+    ).filter(
+        estado='Disponible',
+        fecha_apertura__lte=ahora,
+        fecha_cierre__gte=ahora,
+    ).order_by('id')
     total_cuestionarios = cuestionarios.count()
 
     profile = request.session.get('demo_profile', {})
@@ -1317,6 +1355,12 @@ def estudiante_catalogo_view(request):
 def estudiante_sala_espera_view(request, pk):
     """[M11: Sala de Espera / Ficha Técnica de la Prueba]"""
     cuestionario = get_object_or_404(Cuestionario, pk=pk)
+    ahora = timezone.now()
+    if cuestionario.estado != 'Disponible' or not (
+        cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre
+    ):
+        messages.error(request, "El cuestionario no está disponible en este momento.")
+        return redirect('estudiante_catalogo')
     cp_list = CuestionarioPregunta.objects.filter(cuestionario=cuestionario).select_related('pregunta__categoria')
     profile = request.session.get('demo_profile', {
         'name': 'Alexandra Patricia López',
@@ -1344,21 +1388,30 @@ def estudiante_iniciar_view(request, pk):
     cuestionario = get_object_or_404(Cuestionario, pk=pk)
 
     if request.method == 'POST':
-        profile = request.session.get('demo_profile', {})
-        # Priorizar siempre la identidad autenticada institucionalmente para evitar adulteración
-        nombre_estudiante = profile.get('name') or request.POST.get('nombre_estudiante', 'Estudiante Saber TyT').strip()
-        codigo_estudiante = profile.get('code') or request.POST.get('codigo_estudiante', 'EST-202310023').strip()
-
-        prev_intentos = Intento.objects.filter(cuestionario=cuestionario, codigo_estudiante=codigo_estudiante).count()
-        num_intento = prev_intentos + 1
-
-        intento = Intento.objects.create(
-            cuestionario=cuestionario,
-            nombre_estudiante=nombre_estudiante,
-            codigo_estudiante=codigo_estudiante,
-            numero_intento=num_intento,
-            estado='En Progreso'
-        )
+        user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+        ahora = timezone.now()
+        if cuestionario.estado != 'Disponible' or not (
+            cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre
+        ):
+            messages.error(request, "El cuestionario no está disponible en este momento.")
+            return redirect('estudiante_catalogo')
+        if not user:
+            return redirect('login')
+        with transaction.atomic():
+            prev_intentos = Intento.objects.filter(
+                cuestionario=cuestionario, usuario=user
+            ).count()
+            if prev_intentos >= cuestionario.intentos_permitidos:
+                messages.error(request, "Has alcanzado el número máximo de intentos permitidos.")
+                return redirect('estudiante_sala_espera', pk=pk)
+            intento = Intento.objects.create(
+                cuestionario=cuestionario,
+                usuario=user,
+                nombre_estudiante=user.nombre_completo,
+                codigo_estudiante=user.codigo_institucional,
+                numero_intento=prev_intentos + 1,
+                estado='En Progreso'
+            )
 
         return redirect('estudiante_simulacro', intento_id=intento.id)
 
@@ -1367,7 +1420,13 @@ def estudiante_iniciar_view(request, pk):
 
 def estudiante_simulacro_view(request, intento_id):
     """[M11: Presentador de Intento en Vivo]"""
-    intento = get_object_or_404(Intento.objects.select_related('cuestionario'), pk=intento_id)
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    filtros = {'pk': intento_id}
+    if user and user.rol == 'estudiante':
+        filtros['usuario'] = user
+    intento = get_object_or_404(
+        Intento.objects.select_related('cuestionario'), **filtros
+    )
     cuestionario = intento.cuestionario
     cp_list = CuestionarioPregunta.objects.filter(cuestionario=cuestionario).select_related('pregunta__categoria').prefetch_related('pregunta__opciones').order_by('orden')
 
@@ -1380,12 +1439,23 @@ def estudiante_simulacro_view(request, intento_id):
 
 def estudiante_entregar_view(request, intento_id):
     """[M11: Entrega y Liquidación del Simulacro]"""
-    intento = get_object_or_404(Intento.objects.select_related('cuestionario'), pk=intento_id)
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    filtros = {'pk': intento_id, 'estado': 'En Progreso'}
+    if user and user.rol == 'estudiante':
+        filtros['usuario'] = user
+    intento = get_object_or_404(
+        Intento.objects.select_related('cuestionario'), **filtros
+    )
     cuestionario = intento.cuestionario
     cp_list = CuestionarioPregunta.objects.filter(cuestionario=cuestionario).select_related('pregunta')
 
     total_ponderado_cuestionario = Decimal('0.00')
     total_puntaje_obtenido = Decimal('0.00')
+
+    if timezone.now() > intento.fecha_inicio + timedelta(
+        minutes=cuestionario.tiempo_limite_minutos
+    ):
+        messages.warning(request, "El tiempo del intento había terminado; se calificarán las respuestas recibidas.")
 
     for cp in cp_list:
         pregunta = cp.pregunta
@@ -1440,7 +1510,13 @@ def estudiante_entregar_view(request, intento_id):
 
 def estudiante_resultado_view(request, intento_id):
     """[M12: Informe Evaluativo y Retroalimentación Detallada]"""
-    intento = get_object_or_404(Intento.objects.select_related('cuestionario'), pk=intento_id)
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    filtros = {'pk': intento_id, 'estado': 'Finalizado'}
+    if user and user.rol == 'estudiante':
+        filtros['usuario'] = user
+    intento = get_object_or_404(
+        Intento.objects.select_related('cuestionario'), **filtros
+    )
     respuestas = RespuestaIntento.objects.filter(intento=intento).select_related('pregunta__categoria', 'opcion_seleccionada').prefetch_related('pregunta__opciones')
 
     total_correctas = respuestas.filter(es_correcta=True).count()

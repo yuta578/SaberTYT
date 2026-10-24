@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
 
 class Categoria(models.Model):
     nombre = models.CharField(max_length=120, verbose_name="Nombre de Competencia / Categoría")
@@ -137,6 +138,10 @@ class Intento(models.Model):
     ]
 
     cuestionario = models.ForeignKey(Cuestionario, on_delete=models.RESTRICT, related_name='intentos')
+    usuario = models.ForeignKey(
+        'Usuario', on_delete=models.RESTRICT, related_name='intentos',
+        blank=True, null=True, verbose_name="Usuario propietario",
+    )
     nombre_estudiante = models.CharField(max_length=120, verbose_name="Nombre del Estudiante")
     codigo_estudiante = models.CharField(max_length=30, verbose_name="Código Institucional")
     numero_intento = models.IntegerField(default=1, verbose_name="Número de Intento")
@@ -184,6 +189,10 @@ class Usuario(models.Model):
     email = models.EmailField(unique=True, verbose_name="Correo Electrónico Institucional")
     password = models.CharField(max_length=255, verbose_name="Contraseña")
     rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='estudiante', verbose_name="Rol Institucional")
+    rol_personalizado = models.ForeignKey(
+        'Rol', on_delete=models.SET_NULL, related_name='usuarios',
+        blank=True, null=True, verbose_name="Rol configurable",
+    )
     telefono = models.CharField(max_length=25, blank=True, null=True, verbose_name="Teléfono / Celular")
     programa_academico = models.CharField(max_length=120, blank=True, null=True, default="Tecnología en Gestión Contable", verbose_name="Programa Académico")
     activo = models.BooleanField(default=True, verbose_name="Usuario Activo")
@@ -225,3 +234,66 @@ class Usuario(models.Model):
     def active(self):
         return self.activo
 
+    def has_permission(self, code):
+        """Evalúa permisos en el servidor, incluyendo roles configurables."""
+        if not self.activo:
+            return False
+        if self.rol == 'admin':
+            return True
+        if self.rol_personalizado_id:
+            return self.rol_personalizado.activo and self.rol_personalizado.permisos.filter(
+                codigo=code, activo=True
+            ).exists()
+        return code in {
+            'view_quiz', 'start_attempt', 'submit_attempt', 'view_own_results'
+        } if self.rol == 'estudiante' else code in {
+            'manage_questions', 'import_questions', 'manage_quizzes', 'view_results'
+        }
+
+
+class Permiso(models.Model):
+    codigo = models.CharField(max_length=80, unique=True)
+    nombre = models.CharField(max_length=150)
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'permisos'
+        ordering = ['codigo']
+
+    def __str__(self):
+        return self.nombre
+
+
+class Rol(models.Model):
+    nombre = models.CharField(max_length=80, unique=True)
+    codigo = models.SlugField(max_length=80, unique=True)
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    permisos = models.ManyToManyField(Permiso, blank=True, related_name='roles')
+    es_predeterminado = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'roles'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
+class TokenRevocado(models.Model):
+    jti = models.CharField(max_length=64, unique=True)
+    expira_en = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tokens_revocados'
+
+    @classmethod
+    def esta_revocado(cls, jti):
+        if not jti:
+            return True
+        cls.objects.filter(expira_en__lt=timezone.now()).delete()
+        return cls.objects.filter(jti=jti).exists()
