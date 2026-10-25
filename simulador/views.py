@@ -14,7 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum, Avg, Q
 from django.db import transaction
 
 from .models import (
@@ -1316,36 +1316,133 @@ def docente_intentos_view(request):
 def estudiante_catalogo_view(request):
     """[M02: Catálogo de Simulacros (Disponibles / Programados / Historial)]"""
     ahora = timezone.now()
-    cuestionarios = Cuestionario.objects.prefetch_related(
-        'cuestionario_preguntas__pregunta'
-    ).filter(
-        estado='Disponible',
-        fecha_apertura__lte=ahora,
-        fecha_cierre__gte=ahora,
-    ).order_by('id')
-    total_cuestionarios = cuestionarios.count()
-
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
     profile = request.session.get('demo_profile', {})
-    student_code = profile.get('code')
+    student_code = profile.get('code') or (user.codigo_institucional if user else None)
 
-    if student_code:
-        mis_intentos = Intento.objects.filter(codigo_estudiante=student_code, estado='Finalizado')
+    # 1. Obtener intentos finalizados del estudiante actual
+    if user:
+        mis_intentos = Intento.objects.filter(
+            Q(usuario=user) | Q(codigo_estudiante=user.codigo_institucional),
+            estado='Finalizado'
+        ).select_related('cuestionario').order_by('-fecha_fin')
+    elif student_code:
+        mis_intentos = Intento.objects.filter(
+            codigo_estudiante=student_code,
+            estado='Finalizado'
+        ).select_related('cuestionario').order_by('-fecha_fin')
     else:
-        mis_intentos = Intento.objects.filter(estado='Finalizado')
+        mis_intentos = Intento.objects.none()
 
     total_intentos = mis_intentos.count()
-    calificaciones = mis_intentos.filter(calificacion_final__isnull=False)
-    promedio_general = Decimal('0.0')
-    if calificaciones.exists():
-        avg_val = calificaciones.aggregate(promedio=Avg('calificacion_final'))['promedio']
-        if avg_val is not None:
-            promedio_general = round(Decimal(str(avg_val)), 2)
 
-    ultimo_intento = mis_intentos.select_related('cuestionario').order_by('-fecha_fin').first()
+    # 2. Mapear intentos finalizados por cuestionario
+    intentos_por_cuestionario = {}
+    for intento in mis_intentos:
+        cid = intento.cuestionario_id
+        if cid not in intentos_por_cuestionario:
+            intentos_por_cuestionario[cid] = []
+        intentos_por_cuestionario[cid].append(intento)
+
+    # 3. Consultar cuestionarios institucionales (excluyendo borradores)
+    cuestionarios_qs = Cuestionario.objects.prefetch_related(
+        'cuestionario_preguntas__pregunta__categoria'
+    ).exclude(estado='Borrador').order_by('id')
+
+    cuestionarios_list = []
+    total_disponibles = 0
+    total_programados = 0
+    total_cerrados = 0
+    notas_definitivas_para_promedio = []
+
+    for c in cuestionarios_qs:
+        intentos_del_c = intentos_por_cuestionario.get(c.id, [])
+        num_intentos = len(intentos_del_c)
+        ha_completado = num_intentos > 0
+        intentos_restantes = max(0, c.intentos_permitidos - num_intentos)
+        esta_cerrado_fecha = (c.estado == 'Cerrado') or bool(c.fecha_cierre and c.fecha_cierre < ahora)
+
+        # Determinar con cuál nota SE QUEDA el estudiante:
+        # 1. Si el estudiante eligió explícitamente quedarse con una nota (nota_confirmada == True)
+        intento_confirmado = next((i for i in intentos_del_c if i.nota_confirmada), None)
+        
+        # 2. Si no eligió pero se quedó sin intentos (num_intentos >= c.intentos_permitidos) o el examen cerró:
+        #    se queda con el último intento presentado (intentos_del_c[0])
+        # 3. Si aún tiene intentos disponibles y no ha confirmado: se toma provisionalmente su último intento
+        if intento_confirmado:
+            intento_definitivo = intento_confirmado
+            ha_confirmado_nota = True
+        elif ha_completado:
+            intento_definitivo = intentos_del_c[0]  # El más reciente
+            ha_confirmado_nota = (intentos_restantes == 0) or esta_cerrado_fecha
+        else:
+            intento_definitivo = None
+            ha_confirmado_nota = False
+
+        if intento_definitivo and intento_definitivo.calificacion_final is not None:
+            nota_con_la_que_se_queda = min(intento_definitivo.calificacion_final, Decimal('5.00'))
+            notas_definitivas_para_promedio.append(nota_con_la_que_se_queda)
+        else:
+            nota_con_la_que_se_queda = Decimal('0.00')
+
+        # Regla de estado en el catálogo para este estudiante:
+        # Pasa a "Historial y Cerrados" si ya lo presentó al menos una vez, o si está cerrado por fechas/docente
+        if ha_completado or esta_cerrado_fecha:
+            estado_filtro = 'Cerrado'
+            total_cerrados += 1
+        elif c.estado == 'Programado' or (c.fecha_apertura and c.fecha_apertura > ahora):
+            estado_filtro = 'Programado'
+            total_programados += 1
+        else:
+            # Cuestionario disponible y aún no presentado por este estudiante
+            estado_filtro = 'Disponible'
+            total_disponibles += 1
+
+        # Puede presentar nuevo intento si aún quedan oportunidades, no ha confirmado la nota y el cuestionario está vigente
+        puede_repetir = (
+            ha_completado and 
+            (not ha_confirmado_nota) and 
+            (intentos_restantes > 0) and 
+            (not esta_cerrado_fecha) and 
+            (c.estado == 'Disponible')
+        )
+
+        # Extraer lista de competencias únicas evaluadas
+        competencias = list(dict.fromkeys(
+            cp.pregunta.categoria.nombre 
+            for cp in c.cuestionario_preguntas.all() 
+            if cp.pregunta and cp.pregunta.categoria
+        ))
+
+        c.estado_filtro = estado_filtro
+        c.ha_completado = ha_completado
+        c.ha_confirmado_nota = ha_confirmado_nota
+        c.puede_repetir = puede_repetir
+        c.num_intentos = num_intentos
+        c.intentos_restantes = intentos_restantes
+        c.ultimo_intento = intento_definitivo
+        c.nota_definitiva = nota_con_la_que_se_queda
+        c.competencias_list = competencias
+        cuestionarios_list.append(c)
+
+    # 4. Cálculo del Promedio General:
+    # Solo toma la nota con la que se queda el estudiante en cada cuestionario evaluado
+    if notas_definitivas_para_promedio:
+        avg_val = sum(notas_definitivas_para_promedio) / Decimal(len(notas_definitivas_para_promedio))
+        promedio_general = round(min(avg_val, Decimal('5.00')), 2)
+    else:
+        promedio_general = Decimal('0.00')
+
+    total_catalogo = len(cuestionarios_list)
+    ultimo_intento = mis_intentos.first()
 
     return render(request, 'estudiante/catalogo.html', {
-        'cuestionarios': cuestionarios,
-        'total_cuestionarios': total_cuestionarios,
+        'cuestionarios': cuestionarios_list,
+        'total_cuestionarios': total_disponibles,
+        'total_disponibles': total_disponibles,
+        'total_programados': total_programados,
+        'total_cerrados': total_cerrados,
+        'total_catalogo': total_catalogo,
         'total_intentos': total_intentos,
         'promedio_general': promedio_general,
         'ultimo_intento': ultimo_intento,
@@ -1355,30 +1452,50 @@ def estudiante_catalogo_view(request):
 def estudiante_sala_espera_view(request, pk):
     """[M11: Sala de Espera / Ficha Técnica de la Prueba]"""
     cuestionario = get_object_or_404(Cuestionario, pk=pk)
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    profile = request.session.get('demo_profile', {})
+    
+    if user:
+        profile = {
+            'name': user.nombre_completo,
+            'email': user.email,
+            'code': user.codigo_institucional,
+        }
+        filtros_est = Q(usuario=user) | Q(codigo_estudiante=user.codigo_institucional)
+    else:
+        codigo = profile.get('code', 'EST-202310023')
+        filtros_est = Q(codigo_estudiante=codigo)
+
+    intentos_previos = Intento.objects.filter(
+        cuestionario=cuestionario
+    ).filter(filtros_est).count()
+
+    ha_confirmado_nota = Intento.objects.filter(
+        cuestionario=cuestionario,
+        nota_confirmada=True
+    ).filter(filtros_est).exists()
+
     ahora = timezone.now()
-    if cuestionario.estado != 'Disponible' or not (
-        cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre
-    ):
-        messages.error(request, "El cuestionario no está disponible en este momento.")
-        return redirect('estudiante_catalogo')
+    vigente = (cuestionario.estado == 'Disponible') and (cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre)
+    intentos_agotados = (intentos_previos >= cuestionario.intentos_permitidos) or ha_confirmado_nota
+
     cp_list = CuestionarioPregunta.objects.filter(cuestionario=cuestionario).select_related('pregunta__categoria')
-    profile = request.session.get('demo_profile', {
-        'name': 'Alexandra Patricia López',
-        'email': 'alexandra.lopez@itp.edu.co',
-        'code': 'EST-202310023'
-    })
+    categorias_evaluadas = list(set(cp.pregunta.categoria.nombre for cp in cp_list if cp.pregunta and cp.pregunta.categoria))
 
-    # Contar intentos previos
-    codigo = profile.get('code', 'EST-202310023')
-    intentos_previos = Intento.objects.filter(cuestionario=cuestionario, codigo_estudiante=codigo).count()
-
-    categorias_evaluadas = list(set(cp.pregunta.categoria.nombre for cp in cp_list))
+    ultimo_intento = Intento.objects.filter(
+        cuestionario=cuestionario,
+        estado='Finalizado'
+    ).filter(filtros_est).order_by('-fecha_fin').first()
 
     return render(request, 'estudiante/sala_espera.html', {
         'cuestionario': cuestionario,
         'cp_list': cp_list,
         'profile': profile,
         'intentos_previos': intentos_previos,
+        'intentos_agotados': intentos_agotados,
+        'ha_confirmado_nota': ha_confirmado_nota,
+        'vigente': vigente,
+        'ultimo_intento': ultimo_intento,
         'categorias_evaluadas': categorias_evaluadas,
     })
 
@@ -1389,21 +1506,34 @@ def estudiante_iniciar_view(request, pk):
 
     if request.method == 'POST':
         user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+        if not user:
+            return redirect('login')
+
         ahora = timezone.now()
+        # Validación 1: Vigencia del cuestionario
         if cuestionario.estado != 'Disponible' or not (
             cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre
         ):
-            messages.error(request, "El cuestionario no está disponible en este momento.")
+            messages.error(request, "Acción denegada: Este cuestionario se encuentra cerrado o fuera de la ventana de aplicación.")
             return redirect('estudiante_catalogo')
-        if not user:
-            return redirect('login')
+
+        filtros_est = Q(usuario=user) | Q(codigo_estudiante=user.codigo_institucional)
+
+        # Validación 2: Nota ya confirmada
+        if Intento.objects.filter(cuestionario=cuestionario, nota_confirmada=True).filter(filtros_est).exists():
+            messages.error(request, "Acción denegada: Ya has confirmado tu calificación definitiva para este cuestionario.")
+            return redirect('estudiante_sala_espera', pk=pk)
+
+        # Validación 3: Límite de intentos
         with transaction.atomic():
             prev_intentos = Intento.objects.filter(
-                cuestionario=cuestionario, usuario=user
-            ).count()
+                cuestionario=cuestionario
+            ).filter(filtros_est).count()
+
             if prev_intentos >= cuestionario.intentos_permitidos:
-                messages.error(request, "Has alcanzado el número máximo de intentos permitidos.")
+                messages.error(request, "Has alcanzado el número máximo de intentos permitidos para este examen.")
                 return redirect('estudiante_sala_espera', pk=pk)
+
             intento = Intento.objects.create(
                 cuestionario=cuestionario,
                 usuario=user,
@@ -1428,6 +1558,17 @@ def estudiante_simulacro_view(request, intento_id):
         Intento.objects.select_related('cuestionario'), **filtros
     )
     cuestionario = intento.cuestionario
+
+    # Validación 1: Si ya fue finalizado, redirigir de inmediato al informe de resultados
+    if intento.estado != 'En Progreso':
+        return redirect('estudiante_resultado', intento_id=intento.id)
+
+    # Validación 2: Si el cuestionario está cerrado o fuera de fecha, bloquear presentación
+    ahora = timezone.now()
+    if cuestionario.estado == 'Cerrado' or (cuestionario.fecha_cierre and cuestionario.fecha_cierre < ahora):
+        messages.error(request, "No es posible continuar: Este cuestionario se encuentra cerrado.")
+        return redirect('estudiante_catalogo')
+
     cp_list = CuestionarioPregunta.objects.filter(cuestionario=cuestionario).select_related('pregunta__categoria').prefetch_related('pregunta__opciones').order_by('orden')
 
     return render(request, 'estudiante/simulacro.html', {
@@ -1472,7 +1613,6 @@ def estudiante_entregar_view(request, intento_id):
             if opcion_elegida and opcion_elegida.es_correcta:
                 es_acierto = True
         else:
-            # Pregunta no contestada / omitida formalmente por el estudiante (0.00 pts)
             opcion_elegida = None
             es_acierto = False
 
@@ -1492,16 +1632,24 @@ def estudiante_entregar_view(request, intento_id):
             }
         )
 
-    # Fórmula de liquidación: Calificación = (Puntaje Obtenido / Total Ponderado) * Calificación Máxima
+    # Fórmula de liquidación estandarizada en escala 0.0 - 5.0 pts
+    tope_escala = min(cuestionario.calificacion_maxima, Decimal('5.00'))
     if total_ponderado_cuestionario > 0:
-        calif_final = (total_puntaje_obtenido / total_ponderado_cuestionario) * cuestionario.calificacion_maxima
+        calif_final = (total_puntaje_obtenido / total_ponderado_cuestionario) * tope_escala
     else:
         calif_final = Decimal('0.00')
 
+    calif_final = min(round(calif_final, 2), Decimal('5.00'))
+
     intento.fecha_fin = timezone.now()
-    intento.puntaje_obtenido = total_puntaje_obtenido
-    intento.calificacion_final = round(calif_final, 2)
+    intento.puntaje_obtenido = min(round(total_puntaje_obtenido, 2), tope_escala)
+    intento.calificacion_final = calif_final
     intento.estado = 'Finalizado'
+
+    # Si este intento agotó los intentos permitidos, se marca automáticamente como definitivo
+    if intento.numero_intento >= cuestionario.intentos_permitidos:
+        intento.nota_confirmada = True
+
     intento.save()
 
     messages.success(request, "Prueba entregada y calificada satisfactoriamente.")
@@ -1517,7 +1665,38 @@ def estudiante_resultado_view(request, intento_id):
     intento = get_object_or_404(
         Intento.objects.select_related('cuestionario'), **filtros
     )
-    respuestas = RespuestaIntento.objects.filter(intento=intento).select_related('pregunta__categoria', 'opcion_seleccionada').prefetch_related('pregunta__opciones')
+    cuestionario = intento.cuestionario
+    respuestas = RespuestaIntento.objects.filter(
+        intento=intento
+    ).select_related('pregunta__categoria', 'opcion_seleccionada').prefetch_related('pregunta__opciones')
+
+    ahora = timezone.now()
+    vigente = (cuestionario.estado == 'Disponible') and (cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre)
+
+    filtros_est = Q(usuario=user) if user else Q(codigo_estudiante=intento.codigo_estudiante)
+    intentos_realizados = Intento.objects.filter(
+        cuestionario=cuestionario
+    ).filter(filtros_est).count()
+
+    intentos_restantes = max(0, cuestionario.intentos_permitidos - intentos_realizados)
+
+    ha_confirmado_nota = intento.nota_confirmada or Intento.objects.filter(
+        cuestionario=cuestionario,
+        nota_confirmada=True
+    ).filter(filtros_est).exists()
+
+    # Protección de integridad académica:
+    # Solo mostrar retroalimentación detallada y respuestas correctas si:
+    # 1. El estudiante decidió quedarse con la nota (ha_confirmado_nota)
+    # 2. O se agotaron todos los intentos permitidos
+    # 3. O el cuestionario está cerrado
+    mostrar_retroalimentacion = (
+        ha_confirmado_nota or
+        intentos_restantes == 0 or
+        (not vigente)
+    )
+
+    puede_repetir = (intentos_restantes > 0) and vigente and (not ha_confirmado_nota)
 
     total_correctas = respuestas.filter(es_correcta=True).count()
     total_incorrectas = respuestas.filter(es_correcta=False).exclude(opcion_seleccionada__isnull=True).count()
@@ -1537,11 +1716,42 @@ def estudiante_resultado_view(request, intento_id):
     return render(request, 'estudiante/resultado.html', {
         'intento': intento,
         'respuestas': respuestas,
+        'cuestionario': cuestionario,
         'total_correctas': total_correctas,
         'total_incorrectas': total_incorrectas,
         'total_omitidas': total_omitidas,
         'desglose_competencias': desglose_competencias,
+        'mostrar_retroalimentacion': mostrar_retroalimentacion,
+        'puede_repetir': puede_repetir,
+        'intentos_restantes': intentos_restantes,
+        'ha_confirmado_nota': ha_confirmado_nota,
     })
+
+
+def estudiante_confirmar_nota_view(request, intento_id):
+    """Permite al estudiante quedarse con la nota obtenida, deshabilitando intentos restantes y desbloqueando la retroalimentación."""
+    if request.method != 'POST':
+        return redirect('estudiante_resultado', intento_id=intento_id)
+
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    filtros = {'pk': intento_id, 'estado': 'Finalizado'}
+    if user and user.rol == 'estudiante':
+        filtros['usuario'] = user
+    intento = get_object_or_404(Intento.objects.select_related('cuestionario'), **filtros)
+
+    filtros_est = Q(usuario=user) if user else Q(codigo_estudiante=intento.codigo_estudiante)
+    # Desmarcar otros intentos de este mismo cuestionario para que este intento sea el único con la nota elegida
+    Intento.objects.filter(cuestionario=intento.cuestionario).filter(filtros_est).exclude(pk=intento.pk).update(nota_confirmada=False)
+
+    intento.nota_confirmada = True
+    intento.save()
+
+    messages.success(
+        request, 
+        f"¡Calificación confirmada! Has aceptado {intento.calificacion_final} pts como tu nota definitiva. Se han cerrado los intentos restantes y se ha habilitado la retroalimentación pedagógica completa."
+    )
+    return redirect('estudiante_resultado', intento_id=intento.id)
+
 
 
 def modelo_datos_view(request):

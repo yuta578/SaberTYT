@@ -150,6 +150,7 @@ class Intento(models.Model):
     puntaje_obtenido = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Puntaje Obtenido")
     calificacion_final = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name="Calificación Final")
     estado = models.CharField(max_length=20, choices=ESTADO_INTENTO, default='En Progreso', verbose_name="Estado de la Sesión")
+    nota_confirmada = models.BooleanField(default=False, verbose_name="Nota confirmada por el estudiante")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

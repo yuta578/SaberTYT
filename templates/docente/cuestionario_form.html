@@ -81,12 +81,14 @@
 
         <div class="form-group">
           <label class="form-label">Calificación Máxima <span class="required">*</span></label>
-          <input type="number" step="0.1" min="1.0" max="500.0" name="calificacion_maxima" value="{{ cuestionario.calificacion_maxima|default:'5.00' }}" class="form-control" required>
+          <input type="number" step="0.01" min="1.0" max="5.0" name="calificacion_maxima" value="{{ cuestionario.calificacion_maxima|default:'5.00' }}" class="form-control" required>
+          <div class="form-text">Escala institucional oficial: 0.0 a 5.0 pts.</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Calificación Mínima Aprobatoria <span class="required">*</span></label>
-          <input type="number" step="0.1" min="0.0" max="500.0" name="calificacion_aprobacion" value="{{ cuestionario.calificacion_aprobacion|default:'3.00' }}" class="form-control" required>
+          <input type="number" step="0.01" min="0.0" max="5.0" name="calificacion_aprobacion" value="{{ cuestionario.calificacion_aprobacion|default:'3.00' }}" class="form-control" required>
+          <div class="form-text">Umbral estándar aprobatorio: 3.0 pts.</div>
         </div>
       </div>
 
