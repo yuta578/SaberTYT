@@ -1281,3 +1281,41 @@ aside:has(b:contains("Administrador")) b,
     grid-template-columns: 1fr;
   }
 }
+/* Filtros jerárquicos del módulo de consultas */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filters-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  color: var(--text-secondary);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.filters-grid select,
+.filters-grid input {
+  min-height: 2.45rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: .45rem;
+  padding: .45rem .6rem;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+.filter-actions {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.form-help {
+  margin: 1rem 0 0;
+  color: var(--text-secondary);
+  font-size: .82rem;
+}

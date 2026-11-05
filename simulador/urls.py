@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin-panel/configuracion/', permission_required('manage_settings')(views.admin_settings_view), name='admin_settings'),
     # M12: Histórico y Reporte Global de Resultados (Administrador)
     path('admin-panel/reportes/', permission_required('view_results')(views.admin_reportes_view), name='admin_reportes'),
+    path('admin-panel/reportes/exportar/<str:report_type>/', permission_required('view_results')(views.admin_exportar_reporte_view), name='admin_exportar_reporte'),
 
     # Módulo Docente
     # M02: Panel Académico Docente

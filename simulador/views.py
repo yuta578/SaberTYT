@@ -14,8 +14,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.contrib import messages
-from django.db.models import Count, Sum, Avg
+from django.db.models import Count, Sum, Avg, Min, Max, Q
 from django.db import transaction
+from django.core.paginator import Paginator
 
 from .models import (
     Categoria, Pregunta, OpcionRespuesta, Cuestionario,
@@ -413,42 +414,203 @@ def admin_settings_view(request):
     return render(request, 'admin/settings.html')
 
 
-def admin_reportes_view(request):
-    """[M12: Histórico y Reporte Global de Resultados - Administrador]"""
-    intentos = Intento.objects.select_related('cuestionario').all().order_by('-fecha_inicio')
-    total_intentos = intentos.count()
-    
-    calificaciones = intentos.filter(calificacion_final__isnull=False)
-    promedio_global = Decimal('0.00')
-    if calificaciones.exists():
-        promedio_global = round(calificaciones.aggregate(avg=Sum('calificacion_final'))['avg'] / calificaciones.count(), 2)
-        
-    total_aprobados = calificaciones.filter(calificacion_final__gte=3.0).count()
-    tasa_aprobacion = round((total_aprobados / calificaciones.count() * 100), 1) if calificaciones.exists() else 0.0
+def _report_filter_context(request):
+    """Construye filtros jerárquicos y un queryset único para pantalla y Excel."""
+    completed = Intento.objects.filter(
+        estado='Finalizado', calificacion_final__isnull=False
+    ).select_related('cuestionario', 'usuario').order_by('-fecha_fin', '-id')
+    anio = request.GET.get('anio', '').strip()
+    periodo = request.GET.get('periodo', '').strip()
+    curso = request.GET.get('curso', '').strip()
+    eje = request.GET.get('eje', '').strip()
+    estudiante = request.GET.get('estudiante', '').strip()
+    orden = request.GET.get('orden', 'fecha').strip()
 
-    cuestionarios_metricas = []
-    for c in Cuestionario.objects.all():
-        c_intentos = intentos.filter(cuestionario=c)
-        c_calif = c_intentos.filter(calificacion_final__isnull=False)
-        avg = round(c_calif.aggregate(s=Sum('calificacion_final'))['s'] / c_calif.count(), 2) if c_calif.exists() else 0.0
-        cuestionarios_metricas.append({
-            'cuestionario': c,
-            'total_intentos': c_intentos.count(),
-            'promedio': avg,
-            'aprobados': c_intentos.filter(calificacion_final__gte=c.calificacion_aprobacion).count()
+    cuestionarios = Cuestionario.objects.all()
+    if anio.isdigit():
+        cuestionarios = cuestionarios.filter(anio_academico=int(anio))
+    if periodo:
+        cuestionarios = cuestionarios.filter(periodo_academico=periodo)
+    if curso:
+        cuestionarios = cuestionarios.filter(curso_grupo=curso)
+    completed = completed.filter(cuestionario__in=cuestionarios)
+    if eje.isdigit():
+        completed = completed.filter(respuestas__pregunta__categoria_id=int(eje)).distinct()
+    if estudiante:
+        completed = completed.filter(
+            Q(nombre_estudiante__icontains=estudiante)
+            | Q(codigo_estudiante__icontains=estudiante)
+        )
+
+    sort_fields = {
+        'nombre': ('nombre_estudiante', 'fecha_fin'),
+        'calificacion': ('-calificacion_final', 'nombre_estudiante'),
+        'fecha': ('-fecha_fin', '-id'),
+    }
+    completed = completed.order_by(*sort_fields.get(orden, sort_fields['fecha']))
+
+    years = Cuestionario.objects.values_list('anio_academico', flat=True).distinct().order_by('-anio_academico')
+    periods = Cuestionario.objects.filter(
+        anio_academico=int(anio) if anio.isdigit() else 0
+    ).values_list('periodo_academico', flat=True).distinct().order_by('periodo_academico')
+    courses = Cuestionario.objects.filter(
+        anio_academico=int(anio) if anio.isdigit() else 0,
+        periodo_academico=periodo,
+    ).values_list('curso_grupo', flat=True).distinct().order_by('curso_grupo')
+    students = completed.values('nombre_estudiante', 'codigo_estudiante').distinct().order_by('nombre_estudiante')
+    return {
+        'intentos': completed,
+        'filters': {'anio': anio, 'periodo': periodo, 'curso': curso, 'eje': eje, 'estudiante': estudiante, 'orden': orden},
+        'years': years,
+        'periods': periods,
+        'courses': courses,
+        'categories': Categoria.objects.filter(activo=True).order_by('nombre'),
+        'students': students,
+    }
+
+
+def _report_rows(intentos):
+    return [{
+        'anio': i.cuestionario.anio_academico,
+        'periodo': i.cuestionario.periodo_academico,
+        'curso': i.cuestionario.curso_grupo,
+        'estudiante': i.nombre_estudiante,
+        'identificacion': i.codigo_estudiante,
+        'simulacro': i.cuestionario.nombre,
+        'fecha': i.fecha_fin,
+        'calificacion': i.calificacion_final,
+        'estado': 'Aprobado' if i.calificacion_final >= i.cuestionario.calificacion_aprobacion else 'No aprobado',
+    } for i in intentos]
+
+
+def _report_axis_rows(intentos):
+    responses = RespuestaIntento.objects.filter(
+        intento__in=intentos, opcion_seleccionada__isnull=False
+    ).select_related('intento__cuestionario', 'pregunta__categoria')
+    grouped = {}
+    for response in responses:
+        key = (
+            response.intento.cuestionario.anio_academico,
+            response.intento.cuestionario.periodo_academico,
+            response.intento.cuestionario.curso_grupo,
+            response.pregunta.categoria.nombre,
+        )
+        item = grouped.setdefault(key, {'registradas': 0, 'aciertos': 0})
+        item['registradas'] += 1
+        item['aciertos'] += int(response.es_correcta)
+    rows = []
+    for (anio, periodo, curso, eje), values in sorted(grouped.items()):
+        total = values['registradas']
+        rows.append({
+            'anio': anio, 'periodo': periodo, 'curso': curso, 'eje': eje,
+            'registradas': total, 'aciertos': values['aciertos'],
+            'errores': total - values['aciertos'],
+            'porcentaje': round(values['aciertos'] * 100 / total, 2) if total else 0,
         })
+    return rows
 
-    categorias = Categoria.objects.annotate(preguntas_count=Count('preguntas')).all()
 
-    return render(request, 'admin/reportes.html', {
-        'intentos': intentos,
-        'total_intentos': total_intentos,
-        'promedio_global': promedio_global,
-        'total_aprobados': total_aprobados,
-        'tasa_aprobacion': tasa_aprobacion,
-        'cuestionarios_metricas': cuestionarios_metricas,
-        'categorias': categorias,
+def _report_difficulty_rows(intentos):
+    responses = RespuestaIntento.objects.filter(
+        intento__in=intentos, opcion_seleccionada__isnull=False
+    ).values(
+        'pregunta_id', 'pregunta__enunciado', 'pregunta__categoria__nombre'
+    ).annotate(total=Count('id'), errores=Count('id', filter=Q(es_correcta=False)))
+    return [{
+        'pregunta': row['pregunta__enunciado'],
+        'eje': row['pregunta__categoria__nombre'],
+        'total': row['total'],
+        'errores': row['errores'],
+        'acierto': round((row['total'] - row['errores']) * 100 / row['total'], 2),
+    } for row in responses.order_by('-errores', 'pregunta__enunciado')]
+
+
+def _report_context(request):
+    data = _report_filter_context(request)
+    intentos = data['intentos']
+    aggregates = intentos.aggregate(
+        promedio=Avg('calificacion_final'), minimo=Min('calificacion_final'),
+        maximo=Max('calificacion_final'),
+    )
+    total = intentos.count()
+    aprobados = sum(
+        i.calificacion_final >= i.cuestionario.calificacion_aprobacion for i in intentos
+    )
+    all_rows = _report_rows(intentos)
+    page_number = request.GET.get('page', '1')
+    data.update({
+        'all_rows': all_rows,
+        'rows': Paginator(all_rows, 10).get_page(page_number),
+        'axis_rows': _report_axis_rows(intentos),
+        'difficulty_rows': _report_difficulty_rows(intentos),
+        'total_estudiantes': intentos.values('codigo_estudiante').distinct().count(),
+        'total_intentos': total,
+        'promedio': round(aggregates['promedio'], 2) if aggregates['promedio'] is not None else Decimal('0.00'),
+        'minimo': aggregates['minimo'] or Decimal('0.00'),
+        'maximo': aggregates['maximo'] or Decimal('0.00'),
+        'aprobados': aprobados,
+        'no_aprobados': total - aprobados,
+        'tasa_aprobacion': round(aprobados * 100 / total, 1) if total else 0,
+        'umbral_aprobacion': '3.00 sobre 5.00',
+        'period_summary': intentos.values(
+            'cuestionario__anio_academico', 'cuestionario__periodo_academico'
+        ).annotate(evaluaciones=Count('id'), promedio=Avg('calificacion_final')).order_by(
+            '-cuestionario__anio_academico', 'cuestionario__periodo_academico'
+        ),
+        'course_summary': intentos.values(
+            'cuestionario__curso_grupo'
+        ).annotate(estudiantes=Count('codigo_estudiante', distinct=True),
+                   promedio=Avg('calificacion_final'), minimo=Min('calificacion_final'),
+                   maximo=Max('calificacion_final')).order_by('cuestionario__curso_grupo'),
     })
+    return data
+
+
+def admin_reportes_view(request):
+    """[M12] Consultas, reportes y exportación sobre intentos históricos."""
+    return render(request, 'admin/reportes.html', _report_context(request))
+
+
+def admin_exportar_reporte_view(request, report_type):
+    """Exporta todos los registros filtrados, sin limitarse a la página visible."""
+    context = _report_context(request)
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    labels = context['filters']
+    ws.append(['Reporte', {'A': 'Consolidado general', 'B': 'Desempeño por eje temático', 'C': 'Historial individual'}.get(report_type, 'Reporte')])
+    ws.append(['Fecha de generación', timezone.localtime().strftime('%Y-%m-%d %H:%M')])
+    ws.append(['Filtros activos', ', '.join(f'{key}={value or "Todos"}' for key, value in labels.items() if key != 'orden')])
+    ws.append([])
+    if report_type == 'B':
+        headers = ['Año', 'Período', 'Curso / grupo', 'Eje temático', 'Respuestas registradas', 'Aciertos', 'Errores', '% aciertos']
+        rows = [[r['anio'], r['periodo'], r['curso'], r['eje'], r['registradas'], r['aciertos'], r['errores'], r['porcentaje']] for r in context['axis_rows']]
+    else:
+        headers = ['Año', 'Período', 'Curso / grupo', 'Estudiante', 'Identificación', 'Simulacro', 'Fecha', 'Calificación sobre 5,0', 'Estado']
+        rows = [[r['anio'], r['periodo'], r['curso'], r['estudiante'], r['identificacion'], r['simulacro'], r['fecha'].strftime('%Y-%m-%d %H:%M') if r['fecha'] else '', r['calificacion'], r['estado']] for r in context['all_rows']]
+    if report_type == 'C':
+        headers = ['Estudiante', 'Curso / grupo', 'Período', 'Simulacro', 'Fecha', 'Preguntas respondidas', 'Aciertos', 'Errores', 'Nota final']
+        rows = []
+        for item in context['intentos']:
+            responses = item.respuestas.filter(opcion_seleccionada__isnull=False)
+            correct = responses.filter(es_correcta=True).count()
+            rows.append([item.nombre_estudiante, item.cuestionario.curso_grupo, item.cuestionario.periodo_academico, item.cuestionario.nombre, item.fecha_fin.strftime('%Y-%m-%d %H:%M') if item.fecha_fin else '', responses.count(), correct, responses.count() - correct, item.calificacion_final])
+        rows.sort(key=lambda row: row[4])
+    ws.append(headers)
+    for row in rows:
+        ws.append(row)
+    for cell in ws[5]:
+        cell.font = openpyxl.styles.Font(bold=True, color='FFFFFF')
+        cell.fill = openpyxl.styles.PatternFill('solid', fgColor='1F4E78')
+    for row in ws.iter_rows(min_row=6):
+        for cell in row:
+            if isinstance(cell.value, Decimal):
+                cell.number_format = '0.00'
+    for column in ws.columns:
+        ws.column_dimensions[column[0].column_letter].width = min(max(len(str(cell.value or '')) for cell in column) + 2, 42)
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="reporte_{report_type.lower()}_{timezone.localtime():%Y%m%d_%H%M}.xlsx"'
+    wb.save(response)
+    return response
 
 
 # --------------------------------------------------------------------------
@@ -1167,6 +1329,9 @@ def docente_cuestionario_nuevo_view(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         descripcion = request.POST.get('descripcion')
+        anio_academico = int(request.POST.get('anio_academico', 2026))
+        periodo_academico = request.POST.get('periodo_academico', '2026-1').strip()
+        curso_grupo = request.POST.get('curso_grupo', 'General').strip()
         fecha_apertura = request.POST.get('fecha_apertura')
         fecha_cierre = request.POST.get('fecha_cierre')
         tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))
@@ -1181,6 +1346,9 @@ def docente_cuestionario_nuevo_view(request):
         cuestionario = Cuestionario.objects.create(
             nombre=nombre,
             descripcion=descripcion,
+            anio_academico=anio_academico,
+            periodo_academico=periodo_academico,
+            curso_grupo=curso_grupo,
             fecha_apertura=fecha_apertura,
             fecha_cierre=fecha_cierre,
             tiempo_limite_minutos=tiempo_limite_minutos,
@@ -1207,6 +1375,9 @@ def docente_cuestionario_editar_view(request, pk):
     if request.method == 'POST':
         cuestionario.nombre = request.POST.get('nombre')
         cuestionario.descripcion = request.POST.get('descripcion')
+        cuestionario.anio_academico = int(request.POST.get('anio_academico', 2026))
+        cuestionario.periodo_academico = request.POST.get('periodo_academico', '2026-1').strip()
+        cuestionario.curso_grupo = request.POST.get('curso_grupo', 'General').strip()
         cuestionario.fecha_apertura = request.POST.get('fecha_apertura')
         cuestionario.fecha_cierre = request.POST.get('fecha_cierre')
         cuestionario.tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))

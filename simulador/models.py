@@ -75,6 +75,15 @@ class Cuestionario(models.Model):
 
     nombre = models.CharField(max_length=150, verbose_name="Nombre de la Evaluación / Simulacro")
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción o Instrucciones")
+    anio_academico = models.PositiveIntegerField(
+        default=2026, verbose_name="Año académico",
+    )
+    periodo_academico = models.CharField(
+        max_length=20, default="2026-1", verbose_name="Período académico",
+    )
+    curso_grupo = models.CharField(
+        max_length=100, default="General", verbose_name="Curso / grupo",
+    )
     fecha_apertura = models.DateTimeField(verbose_name="Fecha y Hora de Apertura")
     fecha_cierre = models.DateTimeField(verbose_name="Fecha y Hora de Cierre")
     tiempo_limite_minutos = models.IntegerField(verbose_name="Tiempo Límite (Minutos)")

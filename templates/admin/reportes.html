@@ -1,162 +1,108 @@
 {% extends 'base.html' %}
-{% block title %}Reporte Global e Histórico de Resultados - Administrador{% endblock %}
+{% block title %}Consultas y reportes{% endblock %}
 
 {% block content %}
 <div class="admin-shell">
-  <!-- Cabecera -->
   <div class="admin-page-header">
     <div class="admin-page-title">
-      <h1>
-        <span class="title-glyph">⌁</span>
-        Reporte Global e Histórico de Resultados
-      </h1>
-      <span class="admin-count-badge">Consolidado Institucional Saber TyT</span>
-    </div>
-    <div style="display: flex; gap: 0.65rem;">
-      <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-sm">
-        ← Volver al Panel
-      </a>
-      <button type="button" class="admin-create" onclick="window.print()">
-        <span>⎙</span> Imprimir / Exportar Reporte
-      </button>
+      <h1>Consultas y reportes Saber TyT</h1>
+      <span class="admin-count-badge">Datos históricos de la base de datos</span>
     </div>
   </div>
 
-  <!-- Métricas Globales Consolidadas -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <form method="get" class="filters-grid" aria-label="Filtros jerárquicos">
+      <label>Año académico
+        <select name="anio" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          {% for value in years %}<option value="{{ value }}" {% if filters.anio == value|stringformat:"s" %}selected{% endif %}>{{ value }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Período académico
+        <select name="periodo" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          {% for value in periods %}<option value="{{ value }}" {% if filters.periodo == value %}selected{% endif %}>{{ value }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Curso / grupo
+        <select name="curso" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          {% for value in courses %}<option value="{{ value }}" {% if filters.curso == value %}selected{% endif %}>{{ value }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Eje temático
+        <select name="eje" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          {% for value in categories %}<option value="{{ value.id }}" {% if filters.eje == value.id|stringformat:"s" %}selected{% endif %}>{{ value.nombre }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Estudiante (nombre o identificación)
+        <input type="search" name="estudiante" value="{{ filters.estudiante }}" placeholder="Buscar estudiante">
+      </label>
+      <label>Ordenar por
+        <select name="orden">
+          <option value="fecha" {% if filters.orden == 'fecha' %}selected{% endif %}>Fecha</option>
+          <option value="nombre" {% if filters.orden == 'nombre' %}selected{% endif %}>Nombre</option>
+          <option value="calificacion" {% if filters.orden == 'calificacion' %}selected{% endif %}>Calificación mayor a menor</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">Consultar</button>
+        <a class="btn btn-secondary" href="{% url 'admin_reportes' %}">Limpiar filtros</a>
+      </div>
+    </form>
+    <p class="form-help">Solo se incluyen intentos <strong>Finalizados</strong> con calificación. Umbral de aprobación: <strong>{{ umbral_aprobacion }}</strong>.</p>
+  </div>
+
   <section class="admin-metrics">
-    <article>
-      <span>Calificación Promedio Institucional</span>
-      <strong>{{ promedio_global|default:"0.00" }}</strong>
-      <small>Sobre 5.00 pts máximos</small>
-      <b>● Promedio Ponderado</b>
-      <div class="admin-meter"></div>
-      <footer>
-        <i>Tasa Aprobación<br><strong>{{ tasa_aprobacion }}%</strong></i>
-        <i>Total Intentos<br><strong>{{ total_intentos }}</strong></i>
-        <i>Aprobados<br><strong>{{ total_aprobados }}</strong></i>
-      </footer>
-    </article>
-
-    <article>
-      <span>Total de Intentos Registrados</span>
-      <strong>{{ total_intentos }}</strong>
-      <small>Sesiones culminadas en el ciclo</small>
-      <b>✓ Registro Inmutable</b>
-    </article>
-
-    <article>
-      <span>Tasa Global de Aprobación</span>
-      <strong>{{ tasa_aprobacion }}%</strong>
-      <small>Umbral: >= 3.00 pts</small>
-      <b>↗ Nivel Institucional Favorable</b>
-    </article>
+    <article><span>Estudiantes distintos</span><strong>{{ total_estudiantes }}</strong><small>Personas evaluadas</small></article>
+    <article><span>Intentos finalizados</span><strong>{{ total_intentos }}</strong><small>Un estudiante puede tener varios</small></article>
+    <article><span>Promedio / mínimo / máximo</span><strong>{{ promedio|floatformat:2 }}</strong><small>{{ minimo|floatformat:2 }} / {{ maximo|floatformat:2 }} sobre 5,0</small></article>
+    <article><span>Aprobación</span><strong>{{ tasa_aprobacion }}%</strong><small>{{ aprobados }} aprobados · {{ no_aprobados }} no aprobados</small></article>
   </section>
 
-  <!-- Desglose por Cuestionarios Institucionales -->
-  <div class="section-heading">
-    <h2>▥ Rendimiento por Cuestionario a Cargo</h2>
-    <small>Monitoreo de Pruebas Activas</small>
-  </div>
-
-  <div class="card" style="margin-bottom: 2rem;">
-    <div class="table-responsive-wrapper">
-      <table class="table-modern">
-        <thead>
-          <tr>
-            <th>Evaluación / Simulacro</th>
-            <th>Intentos</th>
-            <th>Promedio General</th>
-            <th>Estudiantes Aprobados</th>
-            <th>Tasa Éxito</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for m in cuestionarios_metricas %}
-          <tr>
-            <td>
-              <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ m.cuestionario.nombre }}</strong>
-              <div style="font-size: 0.75rem; color: var(--text-tertiary);">
-                Límite: {{ m.cuestionario.tiempo_limite_minutos }} min • Máx: {{ m.cuestionario.calificacion_maxima }} pts
-              </div>
-            </td>
-            <td style="font-family: var(--font-mono); font-weight: 700;">{{ m.total_intentos }}</td>
-            <td style="font-family: var(--font-mono); font-weight: 800; color: var(--primary-600);">{{ m.promedio }} / {{ m.cuestionario.calificacion_maxima }}</td>
-            <td style="color: var(--success-text); font-weight: 700;">{{ m.aprobados }}</td>
-            <td>
-              {% if m.total_intentos > 0 %}
-                <span class="badge badge-success">{{ m.aprobados }} de {{ m.total_intentos }}</span>
-              {% else %}
-                <span class="badge badge-neutral">Sin intentos</span>
-              {% endif %}
-            </td>
-            <td>
-              <span class="badge {% if m.cuestionario.estado == 'Disponible' %}badge-primary{% elif m.cuestionario.estado == 'Programado' %}badge-info{% else %}badge-neutral{% endif %}">
-                {{ m.cuestionario.estado }}
-              </span>
-            </td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="6" style="text-align: center; color: var(--text-tertiary);">No hay cuestionarios registrados.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Tabla Histórica de Intentos y Sesiones Oficiales -->
-  <div class="section-heading">
-    <h2>ϟ Histórico de Intentos y Sesiones Individuales</h2>
-    <small>Auditoría Académica</small>
-  </div>
-
+  <div class="section-heading"><h2>Resultados filtrados</h2><small>{{ total_intentos }} registros</small></div>
   <div class="card">
     <div class="table-responsive-wrapper">
       <table class="table-modern">
-        <thead>
-          <tr>
-            <th>Estudiante</th>
-            <th>Código Institucional</th>
-            <th>Evaluación Presentada</th>
-            <th>Fecha y Hora</th>
-            <th>Puntaje Obtenido</th>
-            <th>Calificación</th>
-            <th>Resultado</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Estudiante</th><th>Año / período</th><th>Curso</th><th>Simulacro</th><th>Fecha</th><th>Nota / 5,0</th><th>Estado</th></tr></thead>
         <tbody>
-          {% for intento in intentos %}
-          <tr>
-            <td>
-              <strong style="color: var(--text-primary);">{{ intento.nombre_estudiante }}</strong>
-            </td>
-            <td>
-              <code style="font-family: var(--font-mono); font-weight: 700; color: var(--primary-600);">{{ intento.codigo_estudiante }}</code>
-            </td>
-            <td>{{ intento.cuestionario.nombre }}</td>
-            <td style="font-size: 0.8rem; color: var(--text-secondary);">
-              {{ intento.fecha_inicio|date:"d M Y, H:i" }}
-            </td>
-            <td style="font-family: var(--font-mono);">{{ intento.puntaje_obtenido|default:"0.00" }} pts</td>
-            <td style="font-family: var(--font-mono); font-weight: 800; font-size: 1rem; color: var(--text-primary);">
-              {{ intento.calificacion_final|default:"0.00" }} / {{ intento.cuestionario.calificacion_maxima }}
-            </td>
-            <td>
-              {% if intento.calificacion_final and intento.calificacion_final >= intento.cuestionario.calificacion_aprobacion %}
-                <span class="badge badge-success">● Aprobado</span>
-              {% elif intento.calificacion_final %}
-                <span class="badge badge-danger">● No Superado</span>
-              {% else %}
-                <span class="badge badge-neutral">● En Proceso</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-tertiary);">No se registran intentos culminados aún.</td></tr>
-          {% endfor %}
+          {% for row in rows %}
+          <tr><td>{{ row.estudiante }}<br><small>{{ row.identificacion }}</small></td><td>{{ row.anio }} / {{ row.periodo }}</td><td>{{ row.curso }}</td><td>{{ row.simulacro }}</td><td>{{ row.fecha|date:"d/m/Y H:i" }}</td><td>{{ row.calificacion|floatformat:2 }}</td><td>{{ row.estado }}</td></tr>
+          {% empty %}<tr><td colspan="7">Sin resultados para los filtros seleccionados.</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
+    {% if rows.paginator.num_pages > 1 %}
+    <nav aria-label="Paginación de resultados" style="display:flex;gap:.5rem;justify-content:center;padding:1rem;">
+      {% if rows.has_previous %}<a class="btn btn-secondary btn-sm" href="?{{ request.GET.urlencode }}&page={{ rows.previous_page_number }}">Anterior</a>{% endif %}
+      <span style="padding:.5rem 1rem;">Página {{ rows.number }} de {{ rows.paginator.num_pages }}</span>
+      {% if rows.has_next %}<a class="btn btn-secondary btn-sm" href="?{{ request.GET.urlencode }}&page={{ rows.next_page_number }}">Siguiente</a>{% endif %}
+    </nav>
+    {% endif %}
+  </div>
+
+  <div class="section-heading"><h2>Las siete consultas obligatorias</h2></div>
+  <div class="card">
+    <h3>1. Consolidado general</h3>
+    <p>Estudiantes: <strong>{{ total_estudiantes }}</strong> · Intentos terminados: <strong>{{ total_intentos }}</strong> · Aprobados: <strong>{{ aprobados }}</strong> · No aprobados: <strong>{{ no_aprobados }}</strong></p>
+    <h3>2. Resultados por año y período</h3>
+    <table class="table-modern"><thead><tr><th>Año</th><th>Período</th><th>Evaluaciones</th><th>Promedio</th></tr></thead><tbody>{% for row in period_summary %}<tr><td>{{ row.cuestionario__anio_academico }}</td><td>{{ row.cuestionario__periodo_academico }}</td><td>{{ row.evaluaciones }}</td><td>{{ row.promedio|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4">Sin resultados.</td></tr>{% endfor %}</tbody></table>
+    <h3>3. Resultados por curso / grupo</h3>
+    <table class="table-modern"><thead><tr><th>Curso</th><th>Estudiantes</th><th>Promedio</th><th>Mínima</th><th>Máxima</th></tr></thead><tbody>{% for row in course_summary %}<tr><td>{{ row.cuestionario__curso_grupo }}</td><td>{{ row.estudiantes }}</td><td>{{ row.promedio|floatformat:2 }}</td><td>{{ row.minimo|floatformat:2 }}</td><td>{{ row.maximo|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5">Sin resultados.</td></tr>{% endfor %}</tbody></table>
+    <h3>4. Desempeño por eje temático</h3>
+    <table class="table-modern"><thead><tr><th>Eje</th><th>Registradas</th><th>Aciertos</th><th>Errores</th><th>% aciertos</th></tr></thead><tbody>{% for row in axis_rows %}<tr><td>{{ row.eje }}</td><td>{{ row.registradas }}</td><td>{{ row.aciertos }}</td><td>{{ row.errores }}</td><td>{{ row.porcentaje|floatformat:2 }}%</td></tr>{% empty %}<tr><td colspan="5">Sin respuestas contestadas.</td></tr>{% endfor %}</tbody></table>
+    <h3>5 y 6. Calificaciones e historial individual</h3>
+    <p>La tabla principal contiene estudiante, curso, simulacro, fecha, nota sobre 5,0 y estado. Selecciona un estudiante para aislar su historial cronológico.</p>
+    <h3>7. Preguntas de mayor dificultad</h3>
+    <table class="table-modern"><thead><tr><th>Pregunta</th><th>Eje</th><th>Respuestas</th><th>Errores</th><th>% acierto</th></tr></thead><tbody>{% for row in difficulty_rows %}<tr><td>{{ row.pregunta|truncatechars:80 }}</td><td>{{ row.eje }}</td><td>{{ row.total }}</td><td>{{ row.errores }}</td><td>{{ row.acierto|floatformat:2 }}%</td></tr>{% empty %}<tr><td colspan="5">Sin respuestas contestadas.</td></tr>{% endfor %}</tbody></table>
+  </div>
+
+  <div class="section-heading"><h2>Exportaciones completas</h2><small>No se limita a la paginación visible</small></div>
+  <div class="card" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a class="btn btn-primary" href="{% url 'admin_exportar_reporte' 'A' %}?{{ request.GET.urlencode }}">Reporte A · Consolidado .xlsx</a>
+    <a class="btn btn-primary" href="{% url 'admin_exportar_reporte' 'B' %}?{{ request.GET.urlencode }}">Reporte B · Ejes .xlsx</a>
+    <a class="btn btn-primary" href="{% url 'admin_exportar_reporte' 'C' %}?{{ request.GET.urlencode }}">Reporte C · Historial .xlsx</a>
   </div>
 </div>
 {% endblock %}
