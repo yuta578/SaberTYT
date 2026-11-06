@@ -26,7 +26,7 @@
     <article class="student-kpi kpi-green">
       <span>☑</span>
       <small>Cuestionarios Disponibles</small>
-      <strong>{{ total_cuestionarios }}</strong>
+      <strong>{{ total_disponibles }}</strong>
       <em>Listos para presentar hoy</em>
       <p>◷ Ciclo vigente: 2024-II</p>
     </article>
@@ -41,25 +41,33 @@
       <span>⌁</span>
       <small>Calificación Promedio</small>
       <strong>{{ promedio_general|floatformat:1 }}<i> / 5.0 pts</i></strong>
-      <em>Rango: Nivel Favorable</em>
+      <em>
+        {% if total_intentos == 0 %}
+          Sin intentos aún
+        {% elif promedio_general >= 3.0 %}
+          Rango: Nivel Favorable
+        {% else %}
+          Rango: Requiere Refuerzo
+        {% endif %}
+      </em>
       <p>Desempeño acumulado en simulacros</p>
     </article>
   </section>
 
   <!-- Barra de Filtros: Disponibles / Programados / Historial -->
   <div class="student-filterbar">
-    <strong>Catálogo <b>{{ total_cuestionarios }}</b></strong>
+    <strong>Catálogo <b>{{ total_catalogo }}</b></strong>
     <span class="tab-pill active" onclick="filtrarExamenes('todos', this)">
-      ◈ Todos
+      ◈ Todos ({{ total_catalogo }})
     </span>
     <span class="tab-pill" onclick="filtrarExamenes('Disponible', this)">
-      ◉ Disponibles
+      ◉ Disponibles ({{ total_disponibles }})
     </span>
     <span class="tab-pill" onclick="filtrarExamenes('Programado', this)">
-      ◷ Programados
+      ◷ Programados ({{ total_programados }})
     </span>
     <span class="tab-pill" onclick="filtrarExamenes('Cerrado', this)">
-      ✓ Historial y Cerrados
+      ✓ Historial y Cerrados ({{ total_cerrados }})
     </span>
     <input type="search" id="busquedaInput" placeholder="⌕ Buscar por nombre o competencia..." oninput="buscarExamenes(this.value)">
   </div>
@@ -67,14 +75,22 @@
   <!-- Grilla de Exámenes -->
   <section class="student-exam-grid" id="examGrid">
     {% for c in cuestionarios %}
-    <article class="student-exam-card {% if c.estado != 'Disponible' %}is-muted{% endif %}" data-estado="{{ c.estado }}" data-nombre="{{ c.nombre|lower }}">
+    <article class="student-exam-card {% if c.estado_filtro == 'Cerrado' %}is-muted{% endif %}" data-estado="{{ c.estado_filtro }}" data-nombre="{{ c.nombre|lower }}">
       <header>
-        {% if c.estado == 'Disponible' %}
+        {% if c.ha_confirmado_nota %}
+          <span class="student-status" style="background: rgba(16, 185, 129, 0.18); color: #059669; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.35);">
+            ✓ Nota Definitiva • {{ c.ultimo_intento.calificacion_final|default:"0.00" }}/{{ c.calificacion_maxima }} pts
+          </span>
+        {% elif c.ha_completado %}
+          <span class="student-status" style="background: rgba(59, 130, 246, 0.15); color: #1d4ed8; font-weight: 800; border: 1px solid rgba(59, 130, 246, 0.35);">
+            ● Intento #{{ c.num_intentos }} • {{ c.ultimo_intento.calificacion_final|default:"0.00" }}/{{ c.calificacion_maxima }} pts
+          </span>
+        {% elif c.estado_filtro == 'Disponible' %}
           <span class="student-status available">● Disponible ahora</span>
-        {% elif c.estado == 'Programado' %}
+        {% elif c.estado_filtro == 'Programado' %}
           <span class="student-status scheduled">◷ Programado</span>
         {% else %}
-          <span class="student-status closed">✓ Cerrado / Calificado</span>
+          <span class="student-status closed">✓ Cerrado</span>
         {% endif %}
         <span class="student-type">Módulo Institucional</span>
       </header>
@@ -85,18 +101,33 @@
       <div class="student-exam-facts">
         <span>▣ <b>{{ c.cuestionario_preguntas.count }}</b><small>Preguntas</small></span>
         <span>⌛ <b>{{ c.tiempo_limite_minutos }} min</b><small>Duración</small></span>
-        <span>▣ <b>{{ c.intentos_permitidos }}</b><small>Intentos</small></span>
+        <span>▣ <b>{% if c.ha_completado %}{{ c.num_intentos }}/{{ c.intentos_permitidos }}{% else %}{{ c.intentos_permitidos }}{% endif %}</b><small>{% if c.ha_completado %}Intentos Usados{% else %}Intentos Permitidos{% endif %}</small></span>
         <span>◷ <b>{{ c.fecha_cierre|date:"d M" }}</b><small>Cierre</small></span>
       </div>
 
       <div class="student-competencies">
         <small>COMPETENCIAS EVALUADAS:</small>
-        <span>Razonamiento Cuantitativo</span>
-        <span>Lectura Crítica</span>
-        <span>Inglés</span>
+        {% for comp in c.competencias_list %}
+          <span>{{ comp }}</span>
+        {% empty %}
+          <span>Razonamiento Cuantitativo</span>
+          <span>Lectura Crítica</span>
+          <span>Inglés</span>
+        {% endfor %}
       </div>
 
-      {% if c.estado == 'Disponible' %}
+      {% if c.ha_completado %}
+        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.45rem;">
+          <a href="{% url 'estudiante_resultado' c.ultimo_intento.id %}" class="student-primary-action" style="display: block; text-decoration: none; text-align: center; background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+            Ver Informe de Resultados ({{ c.ultimo_intento.calificacion_final|default:"0.00" }} pts) →
+          </a>
+          {% if c.puede_repetir %}
+            <a href="{% url 'estudiante_sala_espera' c.id %}" class="student-secondary-action" style="display: block; text-decoration: none; text-align: center; font-size: 0.72rem; padding: 0.45rem;">
+              Presentar Nuevo Intento ({{ c.intentos_restantes }} restante{{ c.intentos_restantes|pluralize }})
+            </a>
+          {% endif %}
+        </div>
+      {% elif c.estado_filtro == 'Disponible' %}
         <a href="{% url 'estudiante_sala_espera' c.id %}" class="student-primary-action" style="display: block; text-decoration: none; text-align: center;">
           Ficha Técnica & Iniciar Prueba →
         </a>
@@ -107,8 +138,11 @@
       {% endif %}
     </article>
     {% empty %}
-      <div class="student-empty-state">No hay cuestionarios publicados en este momento.</div>
+      <div class="student-empty-state">No hay cuestionarios registrados en este momento.</div>
     {% endfor %}
+    <div id="filterEmptyState" class="student-empty-state" style="display: none; grid-column: 1 / -1; text-align: center; padding: 2.5rem; background: var(--bg-surface); border-radius: 9px; color: var(--text-secondary);">
+      No hay cuestionarios que coincidan con este filtro.
+    </div>
   </section>
 
   <!-- Historial y Avance -->
@@ -139,28 +173,45 @@
 </div>
 
 <script>
+  let filtroActivo = 'todos';
+
   function filtrarExamenes(estado, tabElement) {
+    filtroActivo = estado;
     document.querySelectorAll('.tab-pill').forEach(el => el.classList.remove('active'));
     tabElement.classList.add('active');
 
-    const cards = document.querySelectorAll('.student-exam-card');
-    cards.forEach(card => {
-      if (estado === 'todos') {
-        card.style.display = '';
-      } else {
-        card.style.display = card.getAttribute('data-estado') === estado ? '' : 'none';
-      }
-    });
+    aplicarFiltros();
   }
 
   function buscarExamenes(termino) {
-    const term = termino.toLowerCase().trim();
+    aplicarFiltros(termino);
+  }
+
+  function aplicarFiltros(terminoBusqueda) {
+    const term = (terminoBusqueda !== undefined ? terminoBusqueda : (document.getElementById('busquedaInput')?.value || '')).toLowerCase().trim();
     const cards = document.querySelectorAll('.student-exam-card');
+    let visibles = 0;
+
     cards.forEach(card => {
+      const cardEstado = card.getAttribute('data-estado');
       const nombre = card.getAttribute('data-nombre') || '';
       const text = card.textContent.toLowerCase();
-      card.style.display = (nombre.includes(term) || text.includes(term)) ? '' : 'none';
+
+      const coincideEstado = (filtroActivo === 'todos') || (cardEstado === filtroActivo);
+      const coincideBusqueda = !term || nombre.includes(term) || text.includes(term);
+
+      if (coincideEstado && coincideBusqueda) {
+        card.style.display = '';
+        visibles++;
+      } else {
+        card.style.display = 'none';
+      }
     });
+
+    const emptyState = document.getElementById('filterEmptyState');
+    if (emptyState) {
+      emptyState.style.display = visibles === 0 ? 'block' : 'none';
+    }
   }
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Resultados y Retroalimentación - {{ intento.cuestionario.nombre }}{% endblock %}
+{% block title %}Resultados y Retroalimentación - {{ cuestionario.nombre }}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -22,17 +22,17 @@
       Informe Evaluativo y Resultados del Simulacro
     </h1>
     <p style="opacity: 0.8; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
-      {{ intento.cuestionario.nombre }} • <strong style="color: #ffffff;">{{ intento.nombre_estudiante }}</strong> (<code style="font-family: var(--font-mono); opacity: 0.9;">{{ intento.codigo_estudiante }}</code>)
+      {{ cuestionario.nombre }} • <strong style="color: #ffffff;">{{ intento.nombre_estudiante }}</strong> (<code style="font-family: var(--font-mono); opacity: 0.9;">{{ intento.codigo_estudiante }}</code>)
     </p>
 
     <!-- Score Circle -->
     <div class="score-circle-display">
       <span class="score-digit-primary">{{ intento.calificacion_final|default:"0.00" }}</span>
-      <span class="score-digit-secondary">de {{ intento.cuestionario.calificacion_maxima }} pts</span>
+      <span class="score-digit-secondary">de {{ cuestionario.calificacion_maxima|default:"5.00" }} pts</span>
     </div>
 
     <div>
-      {% if intento.calificacion_final >= intento.cuestionario.calificacion_aprobacion %}
+      {% if intento.calificacion_final >= cuestionario.calificacion_aprobacion %}
         <span class="badge badge-success" style="font-size: 0.95rem; padding: 0.45rem 1.35rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
           Examen Aprobado
@@ -46,9 +46,56 @@
     </div>
 
     <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 1rem; font-family: var(--font-mono);">
-      Umbral de aprobación: {{ intento.cuestionario.calificacion_aprobacion }} pts • Intento registrado #{{ intento.numero_intento }}
+      Umbral de aprobación: {{ cuestionario.calificacion_aprobacion|default:"3.00" }} pts • Intento registrado #{{ intento.numero_intento }} de {{ cuestionario.intentos_permitidos }}
     </div>
   </div>
+
+  <!-- Panel de Decisión: Quedarse con la nota o repetir -->
+  {% if puede_repetir %}
+  <div style="background: var(--bg-surface); border: 2px solid var(--primary-500); border-radius: var(--radius-md); padding: 1.5rem 1.75rem; margin-bottom: 2.25rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 280px;">
+        <span class="badge badge-warning" style="margin-bottom: 0.5rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+          ⏳ Tienes {{ intentos_restantes }} intento{{ intentos_restantes|pluralize }} adicional{{ intentos_restantes|pluralize:"es" }} disponible{{ intentos_restantes|pluralize }}
+        </span>
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">
+          ¿Deseas intentar mejorar tu calificación o quedarte con esta nota?
+        </h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.55;">
+          El <strong>desglose por pregunta está temporalmente oculto</strong> para evitar dar pistas en tus siguientes intentos. Puedes presentar un nuevo intento ahora para mejorar tu puntaje, o si estás conforme con tu nota (<strong>{{ intento.calificacion_final }} pts</strong>), confirmar para cerrar tus intentos y desbloquear de inmediato la revisión completa, claves correctas y justificaciones pedagógicas.
+        </p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{% url 'estudiante_sala_espera' cuestionario.id %}" class="btn btn-primary btn-lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Presentar Nuevo Intento
+        </a>
+        <button type="button" class="btn btn-success btn-lg" data-modal-target="modalConfirmarNota" style="box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Quedarme con esta Nota
+        </button>
+      </div>
+    </div>
+  </div>
+  {% else %}
+    {% if ha_confirmado_nota %}
+    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: var(--radius-md); padding: 1rem 1.5rem; margin-bottom: 2.25rem; display: flex; align-items: center; gap: 0.85rem; color: #047857;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <div>
+        <strong style="display: block; font-size: 0.95rem;">Nota definitiva confirmada ({{ intento.calificacion_final }} pts)</strong>
+        <span style="font-size: 0.82rem; opacity: 0.9;">Has decidido quedarte con esta nota. Los intentos adicionales han sido inhabilitados y la retroalimentación oficial con claves correctas está completamente desbloqueada.</span>
+      </div>
+    </div>
+    {% elif intentos_restantes == 0 %}
+    <div style="background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.5rem; margin-bottom: 2.25rem; display: flex; align-items: center; gap: 0.85rem; color: var(--text-primary);">
+      <span style="font-size: 1.25rem;">🔒</span>
+      <div>
+        <strong style="display: block; font-size: 0.95rem;">Límite de intentos alcanzado ({{ intento.numero_intento }}/{{ cuestionario.intentos_permitidos }})</strong>
+        <span style="font-size: 0.82rem; color: var(--text-secondary);">Esta es tu calificación final registrada. La retroalimentación pedagógica y respuestas correctas están habilitadas para tu estudio.</span>
+      </div>
+    </div>
+    {% endif %}
+  {% endif %}
 
   <!-- Stats Grid -->
   <div class="stats-grid">
@@ -93,24 +140,25 @@
     </div>
   </div>
 
+  {% if mostrar_retroalimentacion %}
   <!-- Formula Callout Box -->
   <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem 1.45rem; margin-bottom: 2.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem; box-shadow: var(--shadow-xs);">
     <div>
-      <strong style="color: var(--primary-600); font-size: 0.88rem; display: block; margin-bottom: 2px;">Fórmula de Liquidación Aplicada:</strong>
-      <p style="font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-mono);">
-        Calificación Final = (Sumatoria de Puntaje Asignado / Puntaje Total) × Calificación Máxima
+      <strong style="color: var(--primary-600); font-size: 0.88rem; display: block; margin-bottom: 2px;">Fórmula Institucional Aplicada:</strong>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-mono); margin: 0;">
+        Calificación Final = (Sumatoria de Puntaje Asignado / Puntaje Total) × {{ cuestionario.calificacion_maxima|default:"5.00" }} pts
       </p>
     </div>
-    <span class="badge badge-primary">Resultado Inmutable</span>
+    <span class="badge badge-primary">Resultado Institucional Oficial</span>
   </div>
 
   <!-- Question by Question Detailed Feedback -->
   <div style="margin-bottom: 2.5rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-      <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">
-        Revisión y Retroalimentación Pedagógica
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+        Revisión y Desglose por Pregunta
       </h2>
-      <span class="badge badge-info">Revisión Oficial Habilitada</span>
+      <span class="badge badge-success">✓ Retroalimentación Oficial Habilitada</span>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -123,19 +171,19 @@
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="badge badge-primary">Pregunta {{ forloop.counter }}</span>
               <span class="badge badge-info">{{ r.pregunta.categoria.nombre }}</span>
-              <span class="badge badge-neutral" style="font-family: var(--font-mono);">Puntos: {{ r.puntaje_asignado }} pts</span>
+              <span class="badge badge-neutral" style="font-family: var(--font-mono);">Valor: {{ r.puntaje_asignado }} pts</span>
             </div>
 
             <div>
               {% if r.es_correcta %}
                 <span class="badge badge-success">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Respuesta Correcta (+{{ r.puntaje_asignado }} pts)
+                  Acierto (+{{ r.puntaje_asignado }} pts)
                 </span>
               {% elif r.opcion_seleccionada %}
                 <span class="badge badge-danger">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  Respuesta Incorrecta (0.00 pts)
+                  Incorrecta (0.00 pts)
                 </span>
               {% else %}
                 <span class="badge badge-warning">Omitida / En Blanco (0.00 pts)</span>
@@ -185,7 +233,7 @@
             {% endfor %}
           </div>
 
-          <!-- Retroalimentación Docente -->
+          <!-- Retroalimentación Docente / Justificación Pedagógica -->
           {% if r.pregunta.retroalimentacion %}
           <div style="background: var(--bg-subtle); border-radius: var(--radius-sm); padding: 0.95rem 1.15rem; border: 1px solid var(--border-subtle);">
             <strong style="color: var(--primary-600); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.35rem; margin-bottom: 3px;">
@@ -202,12 +250,13 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
 
   <!-- Bottom CTA Actions -->
   <div style="display: flex; justify-content: center; gap: 0.85rem; margin-bottom: 3.5rem; flex-wrap: wrap;">
     <a href="{% url 'estudiante_catalogo' %}" class="btn btn-primary btn-lg">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
-      Presentar Otra Evaluación
+      Volver al Catálogo de Evaluaciones
     </a>
     <a href="{% url 'home' %}" class="btn btn-secondary btn-lg">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
@@ -215,4 +264,136 @@
     </a>
   </div>
 </div>
+
+<!-- Modal: Ficha de Confirmación Institucional de Calificación Definitiva -->
+{% if puede_repetir %}
+<div class="modal-backdrop" id="modalConfirmarNota" style="z-index: 9999;">
+  <div class="modal-dialog" style="max-width: 520px; border-radius: 18px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5); animation: modalPop 0.24s cubic-bezier(0.16, 1, 0.3, 1);">
+    
+    <!-- Modal Header -->
+    <div style="background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%); padding: 1.4rem 1.65rem; color: #ffffff; position: relative;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.25); flex-shrink: 0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+          </div>
+          <div>
+            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; color: #a7f3d0; display: block; margin-bottom: 2px;">
+              Ficha de Decisión y Aviso Institucional
+            </span>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.25;">
+              Confirmar Calificación Definitiva
+            </h3>
+          </div>
+        </div>
+        <button type="button" data-modal-close style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: background 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body" style="padding: 1.65rem; background: var(--bg-surface);">
+      
+      <!-- Highlighted Grade Card -->
+      <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%); border: 1.5px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 1.15rem 1.35rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.35rem;">
+        <div>
+          <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 0.05em; display: block; margin-bottom: 2px;">
+            Intento #{{ intento.numero_intento }} de {{ cuestionario.intentos_permitidos }}
+          </span>
+          <strong style="font-size: 0.98rem; color: var(--text-primary); display: block; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ cuestionario.nombre }}">
+            {{ cuestionario.nombre }}
+          </strong>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 1.9rem; font-weight: 900; color: #059669; font-family: var(--font-display); line-height: 1; display: block;">
+            {{ intento.calificacion_final }}
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: var(--font-mono);">
+            de {{ cuestionario.calificacion_maxima|default:"5.00" }} pts
+          </span>
+        </div>
+      </div>
+
+      <!-- Action items checklist -->
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.35rem;">
+        
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem; background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.18); border-radius: 10px; padding: 0.75rem 0.95rem;">
+          <div style="width: 22px; height: 22px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; margin-top: 1px;">
+            ✕
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-primary); line-height: 1.45;">
+            <strong>Inhabilitación de Intentos:</strong> Se cerrarán los <strong>{{ intentos_restantes }} intento{{ intentos_restantes|pluralize }} adicional{{ intentos_restantes|pluralize:"es" }}</strong> restantes de este simulacro. Ya no podrás presentar una nueva prueba para subir nota.
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 0.75rem 0.95rem;">
+          <div style="width: 22px; height: 22px; border-radius: 50%; background: rgba(16, 185, 129, 0.18); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; margin-top: 1px;">
+            ✓
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-primary); line-height: 1.45;">
+            <strong>Nota Definitiva y Promedio:</strong> Esta nota (<strong>{{ intento.calificacion_final }} pts</strong>) se registrará formalmente en tu historial y será la que compute en tu <strong>promedio general acumulado</strong>.
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 0.75rem; background: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.18); border-radius: 10px; padding: 0.75rem 0.95rem;">
+          <div style="width: 22px; height: 22px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 1px;">
+            🔓
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-primary); line-height: 1.45;">
+            <strong>Desbloqueo de Respuestas:</strong> Podrás ver inmediatamente el desglose pregunta por pregunta, las <strong>claves correctas</strong> y las explicaciones pedagógicas de los docentes.
+          </div>
+        </div>
+
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--text-tertiary); text-align: center; background: var(--bg-subtle); padding: 0.5rem 0.75rem; border-radius: 8px;">
+        ⚠️ Esta acción es definitiva y no puede ser revertida después de confirmar.
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="modal-footer" style="padding: 1.15rem 1.65rem; background: var(--bg-subtle); display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;">
+      <button type="button" class="btn btn-secondary" data-modal-close style="min-width: 100px;">
+        Cancelar
+      </button>
+      <form method="POST" action="{% url 'estudiante_confirmar_nota' intento.id %}" style="margin: 0;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success btn-lg" style="box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Sí, Quedarme con {{ intento.calificacion_final }} pts
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  @keyframes modalPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.94) translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+</style>
+
+<script>
+  // Asegura enlace del modal en caso de carga asíncrona o eventos tardíos
+  document.addEventListener('DOMContentLoaded', function() {
+    const triggerBtn = document.querySelector('[data-modal-target="modalConfirmarNota"]');
+    const modalEl = document.getElementById('modalConfirmarNota');
+    if (triggerBtn && modalEl) {
+      triggerBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        modalEl.classList.add('active');
+      });
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}

@@ -94,6 +94,30 @@
         </ul>
       </div>
 
+      <!-- Avisos de Estado del Cuestionario -->
+      {% if ha_confirmado_nota %}
+      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: var(--radius-sm); padding: 1rem 1.25rem; color: #065f46; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem;">🔒</span>
+        <div>
+          <strong>Calificación definitiva confirmada:</strong> Ya has aceptado tu nota final ({{ ultimo_intento.calificacion_final|default:"0.00" }} pts) para esta prueba. No se admiten intentos adicionales.
+        </div>
+      </div>
+      {% elif intentos_agotados %}
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 1rem 1.25rem; color: #92400e; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem;">⚠️</span>
+        <div>
+          <strong>Límite de intentos completado:</strong> Has realizado {{ intentos_previos }} de {{ cuestionario.intentos_permitidos }} intentos permitidos. No es posible iniciar un nuevo intento.
+        </div>
+      </div>
+      {% elif not vigente %}
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 1rem 1.25rem; color: #991b1b; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem;">ℹ️</span>
+        <div>
+          <strong>Cuestionario cerrado:</strong> Esta prueba se encuentra cerrada o fuera del rango de fechas de aplicación.
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Formulario de Verificación de Identidad e Inicio -->
       <form method="POST" action="{% url 'estudiante_iniciar' cuestionario.id %}" style="border-top: 1px solid var(--border-subtle); padding-top: 1.5rem;">
         {% csrf_token %}
@@ -140,9 +164,25 @@
           <a href="{% url 'estudiante_catalogo' %}" class="btn btn-secondary">
             Cancelar y Volver
           </a>
-          <button type="submit" class="btn btn-success btn-lg">
-            Confirmar y Comenzar Prueba en Vivo <span>→</span>
-          </button>
+          {% if intentos_agotados %}
+            {% if ultimo_intento %}
+              <a href="{% url 'estudiante_resultado' ultimo_intento.id %}" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                Ver Mi Resultado Anterior ({{ ultimo_intento.calificacion_final }} pts) →
+              </a>
+            {% else %}
+              <button type="button" class="btn btn-secondary btn-lg" disabled style="opacity: 0.6; cursor: not-allowed;">
+                Intentos Agotados ({{ intentos_previos }}/{{ cuestionario.intentos_permitidos }})
+              </button>
+            {% endif %}
+          {% elif not vigente %}
+            <button type="button" class="btn btn-secondary btn-lg" disabled style="opacity: 0.6; cursor: not-allowed;">
+              Cuestionario No Disponible
+            </button>
+          {% else %}
+            <button type="submit" class="btn btn-success btn-lg">
+              Confirmar y Comenzar Prueba en Vivo <span>→</span>
+            </button>
+          {% endif %}
         </div>
       </form>
     </div>
