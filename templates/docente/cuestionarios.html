@@ -49,6 +49,9 @@
           <tr>
             <td>
               <strong style="font-size: 0.9rem; color: var(--text-primary);">{{ c.nombre }}</strong>
+              <div style="font-size: 0.75rem; color: var(--primary-600); font-weight: 600;">
+                {{ c.asignatura }}
+              </div>
               <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">
                 {{ c.descripcion|truncatechars:60 }}
               </div>
@@ -96,6 +99,9 @@
             </td>
             <td style="text-align: right; white-space: nowrap;">
               <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                <a href="{% url 'docente_importaciones' %}?cuestionario_id={{ c.id }}" class="btn btn-sm btn-secondary" title="Cargar e importar preguntas directamente a este cuestionario">
+                  Importar
+                </a>
                 <a href="{% url 'docente_cuestionario_preguntas' c.id %}" class="btn btn-sm btn-secondary">
                   Ítems
                 </a>

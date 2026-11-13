@@ -13,6 +13,7 @@ from pathlib import Path
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.contrib import messages
 from django.db.models import Count, Sum, Avg, Min, Max, Q
 from django.db import transaction
@@ -942,21 +943,31 @@ def _extraer_filas_de_archivo(archivo):
 
 def docente_importaciones_view(request):
     """
-    [M09: Asistente de Carga Excel en 3 Fases]
-    - Paso 1: Selección de Archivo & Plantilla
-    - Paso 2: Validación & Reporte de Inconsistencias
-    - Paso 3: Confirmación & Envío al Banco
+    [M09: Asistente de Carga Excel en 3 Fases con Detección de Duplicados y Vinculación a Cuestionario]
+    - Paso 1: Selección de Archivo & Plantilla & Cuestionario Destino (Opcional)
+    - Paso 2: Validación, Detección de Duplicados & Reporte de Inconsistencias
+    - Paso 3: Confirmación, Envío al Banco & Vinculación Directa al Cuestionario
     """
     paso_actual = 1
     reporte_validacion = None
+
+    cuestionario_id = request.GET.get('cuestionario_id') or request.POST.get('cuestionario_id')
+    cuestionario_seleccionado = None
+    if cuestionario_id:
+        try:
+            cuestionario_seleccionado = Cuestionario.objects.get(id=int(cuestionario_id))
+        except (ValueError, Cuestionario.DoesNotExist):
+            cuestionario_seleccionado = None
 
     # Procesar archivo subido (Fase 1 -> Fase 2)
     if request.method == 'POST' and request.POST.get('accion') == 'validar' and request.FILES.get('archivo_excel'):
         archivo = request.FILES['archivo_excel']
         nombre_archivo = archivo.name
+        cid_target = request.POST.get('cuestionario_id')
         
         filas_validas = []
         inconsistencias = []
+        enunciados_en_archivo = set()
 
         try:
             filas_extraidas = _extraer_filas_de_archivo(archivo)
@@ -1003,6 +1014,16 @@ def docente_importaciones_view(request):
 
                 if not enunciado:
                     errores_fila.append("Enunciado o pregunta vacía")
+                else:
+                    # Fase B - Item 7: Detección estricta de registros duplicados
+                    enunciado_norm = enunciado.lower().strip()
+                    if enunciado_norm in enunciados_en_archivo:
+                        errores_fila.append("Registro duplicado: Esta pregunta aparece repetida dentro del archivo Excel.")
+                    else:
+                        enunciados_en_archivo.add(enunciado_norm)
+                        if Pregunta.objects.filter(enunciado__iexact=enunciado).exists():
+                            errores_fila.append("Registro duplicado: Ya existe una pregunta idéntica en el Banco de Ítems institucional.")
+
                 if not opc_a or not opc_b:
                     errores_fila.append("Alternativas mínimas A y B ausentes")
                 if tipo == 'MULTIPLE' and (not opc_c or not opc_d):
@@ -1036,11 +1057,17 @@ def docente_importaciones_view(request):
                 else:
                     inconsistencias.append(fila_obj)
 
+            target_cuest_obj = None
+            if cid_target:
+                target_cuest_obj = Cuestionario.objects.filter(id=cid_target).first()
+
             # Guardar en sesión para Paso 3
             request.session['staging_importacion'] = {
                 'nombre_archivo': nombre_archivo,
                 'filas_validas': filas_validas,
                 'inconsistencias': inconsistencias,
+                'cuestionario_id': target_cuest_obj.id if target_cuest_obj else None,
+                'cuestionario_nombre': target_cuest_obj.nombre if target_cuest_obj else None,
             }
             paso_actual = 2
             messages.info(request, f"Validación de archivo completada: {len(filas_validas)} reactivos válidos, {len(inconsistencias)} observaciones.")
@@ -1048,14 +1075,19 @@ def docente_importaciones_view(request):
         except Exception as e:
             messages.error(request, f"Error al procesar el archivo: {str(e)}")
 
-    # Confirmación final de envío al banco (Fase 3)
+    # Confirmación final de envío al banco y vinculación (Fase 3)
     elif request.method == 'POST' and request.POST.get('accion') == 'confirmar':
         staging = request.session.pop('staging_importacion', None)
         if staging and staging.get('filas_validas'):
             filas = staging['filas_validas']
-            total_insertadas = 0
+            target_cid = staging.get('cuestionario_id')
+            cuestionario_dest = Cuestionario.objects.filter(id=target_cid).first() if target_cid else None
+            max_orden = CuestionarioPregunta.objects.filter(cuestionario=cuestionario_dest).count() if cuestionario_dest else 0
 
-            for f in filas:
+            total_insertadas = 0
+            total_vinculadas = 0
+
+            for idx, f in enumerate(filas, 1):
                 try:
                     cat = Categoria.objects.get(id=f['categoria_id'])
                     preg = Pregunta.objects.create(
@@ -1075,10 +1107,25 @@ def docente_importaciones_view(request):
                         if f.get('opcion_d'):
                             OpcionRespuesta.objects.create(pregunta=preg, letra='D', texto=f['opcion_d'], es_correcta=(f['clave'] == 'D'))
                     total_insertadas += 1
+
+                    # Fase B - Item 8: Vincular al cuestionario correcto
+                    if cuestionario_dest:
+                        CuestionarioPregunta.objects.get_or_create(
+                            cuestionario=cuestionario_dest,
+                            pregunta=preg,
+                            defaults={
+                                'orden': max_orden + idx,
+                                'puntaje_ponderado': preg.puntaje_base
+                            }
+                        )
+                        total_vinculadas += 1
                 except Exception:
                     continue
 
             log_texto = f"Carga masiva confirmada: {total_insertadas} preguntas añadidas formalmente al banco de ítems institucional."
+            if cuestionario_dest:
+                log_texto += f" Se vincularon {total_vinculadas} reactivos al cuestionario '{cuestionario_dest.nombre}'."
+
             Importacion.objects.create(
                 nombre_archivo=staging['nombre_archivo'],
                 total_filas=len(filas) + len(staging.get('inconsistencias', [])),
@@ -1086,6 +1133,11 @@ def docente_importaciones_view(request):
                 total_errores=len(staging.get('inconsistencias', [])),
                 detalle_log=log_texto
             )
+
+            if cuestionario_dest:
+                messages.success(request, f"¡Éxito! Se han importado {total_insertadas} preguntas y quedaron vinculadas formalmente al cuestionario '{cuestionario_dest.nombre}'.")
+                return redirect('docente_cuestionario_preguntas', pk=cuestionario_dest.id)
+
             messages.success(request, f"¡Éxito! Se han incorporado {total_insertadas} preguntas verificadas al Banco de Ítems Saber TyT.")
             return redirect('docente_importaciones')
 
@@ -1095,11 +1147,14 @@ def docente_importaciones_view(request):
         reporte_validacion = staging_data
 
     importaciones = Importacion.objects.all().order_by('-fecha_carga')
+    cuestionarios_disponibles = Cuestionario.objects.all().order_by('-id')
 
     return render(request, 'docente/importaciones.html', {
         'importaciones': importaciones,
         'paso_actual': paso_actual,
         'reporte_validacion': reporte_validacion,
+        'cuestionarios_disponibles': cuestionarios_disponibles,
+        'cuestionario_seleccionado': cuestionario_seleccionado,
     })
 
 
@@ -1318,33 +1373,115 @@ def descargar_plantilla_excel_view(request):
 
 def docente_cuestionarios_view(request):
     """[M10: Programador de Cuestionarios]"""
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
     cuestionarios = Cuestionario.objects.prefetch_related('cuestionario_preguntas').all().order_by('-id')
+    # Si es docente, mostrar preferentemente sus evaluaciones o las institucionales generales
+    if user and user.rol == 'docente':
+        cuestionarios = cuestionarios.filter(Q(docente=user) | Q(docente__isnull=True))
+
     return render(request, 'docente/cuestionarios.html', {
         'cuestionarios': cuestionarios,
     })
 
 
 def docente_cuestionario_nuevo_view(request):
-    """[M10: Nuevo Cuestionario]"""
+    """[M10: Nuevo Cuestionario con Validación Estricta de Parámetros]"""
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
+    asignaturas_choices = Cuestionario.ASIGNATURAS_SABER_TYT
+
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        descripcion = request.POST.get('descripcion')
+        nombre = request.POST.get('nombre', '').strip()
+        asignatura = request.POST.get('asignatura', '').strip() or 'Competencias Genéricas (Simulacro Integral)'
+        clave_acceso = request.POST.get('clave_acceso', '').strip() or None
+        descripcion = request.POST.get('descripcion', '').strip()
         anio_academico = int(request.POST.get('anio_academico', 2026))
         periodo_academico = request.POST.get('periodo_academico', '2026-1').strip()
         curso_grupo = request.POST.get('curso_grupo', 'General').strip()
         fecha_apertura = request.POST.get('fecha_apertura')
         fecha_cierre = request.POST.get('fecha_cierre')
-        tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))
-        intentos_permitidos = int(request.POST.get('intentos_permitidos', 1))
-        calificacion_maxima = Decimal(request.POST.get('calificacion_maxima', '5.00'))
-        calificacion_aprobacion = Decimal(request.POST.get('calificacion_aprobacion', '3.00'))
-        estado = request.POST.get('estado', 'Disponible')
+
+        try:
+            tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))
+        except (ValueError, TypeError):
+            tiempo_limite_minutos = 0
+
+        try:
+            intentos_permitidos = int(request.POST.get('intentos_permitidos', 1))
+        except (ValueError, TypeError):
+            intentos_permitidos = 0
+
+        try:
+            calificacion_maxima = Decimal(request.POST.get('calificacion_maxima', '5.00'))
+        except Exception:
+            calificacion_maxima = Decimal('5.00')
+
+        try:
+            calificacion_aprobacion = Decimal(request.POST.get('calificacion_aprobacion', '3.00'))
+        except Exception:
+            calificacion_aprobacion = Decimal('3.00')
+
+        estado = request.POST.get('estado', 'Borrador')
         mezclar_preguntas = request.POST.get('mezclar_preguntas') == 'on'
         mezclar_respuestas = request.POST.get('mezclar_respuestas') == 'on'
         permitir_revision = request.POST.get('permitir_revision') == 'on'
 
+        # Validaciones de Parámetros Obligatorias (Fase A - Item 4)
+        errores = []
+        if not nombre:
+            errores.append("El título o nombre del cuestionario es obligatorio.")
+
+        if fecha_apertura and fecha_cierre:
+            dt_apertura = parse_datetime(fecha_apertura) if isinstance(fecha_apertura, str) else fecha_apertura
+            dt_cierre = parse_datetime(fecha_cierre) if isinstance(fecha_cierre, str) else fecha_cierre
+            if dt_apertura and dt_cierre and dt_cierre <= dt_apertura:
+                errores.append("Error de validación temporal: La fecha de cierre no puede ser anterior ni igual a la de apertura.")
+        else:
+            errores.append("Debe especificar las fechas y horas válidas de apertura y cierre.")
+
+        if tiempo_limite_minutos <= 0:
+            errores.append("Error de validación de duración: El tiempo límite debe ser una duración positiva (mayor a 0 minutos).")
+
+        if intentos_permitidos <= 0:
+            errores.append("Error de validación de intentos: El número máximo de intentos debe ser como mínimo 1.")
+
+        if calificacion_aprobacion > calificacion_maxima:
+            errores.append("La calificación mínima aprobatoria no puede ser superior a la calificación máxima.")
+
+        # Impedir publicar directamente en Disponible sin reactivos
+        if estado == 'Disponible':
+            errores.append("Un cuestionario nuevo no puede crearse directamente en estado 'Disponible'. Debe crearse en 'Borrador' y luego vincular preguntas válidas.")
+
+        if errores:
+            for err in errores:
+                messages.error(request, err)
+            return render(request, 'docente/cuestionario_form.html', {
+                'cuestionario': {
+                    'nombre': nombre,
+                    'asignatura': asignatura,
+                    'descripcion': descripcion,
+                    'clave_acceso': clave_acceso,
+                    'anio_academico': anio_academico,
+                    'periodo_academico': periodo_academico,
+                    'curso_grupo': curso_grupo,
+                    'fecha_apertura': fecha_apertura,
+                    'fecha_cierre': fecha_cierre,
+                    'tiempo_limite_minutos': tiempo_limite_minutos,
+                    'intentos_permitidos': intentos_permitidos,
+                    'calificacion_maxima': calificacion_maxima,
+                    'calificacion_aprobacion': calificacion_aprobacion,
+                    'estado': estado,
+                    'mezclar_preguntas': mezclar_preguntas,
+                    'mezclar_respuestas': mezclar_respuestas,
+                    'permitir_revision': permitir_revision,
+                },
+                'asignaturas_choices': asignaturas_choices,
+            })
+
         cuestionario = Cuestionario.objects.create(
             nombre=nombre,
+            asignatura=asignatura,
+            docente=user if (user and user.rol == 'docente') else None,
+            clave_acceso=clave_acceso,
             descripcion=descripcion,
             anio_academico=anio_academico,
             periodo_academico=periodo_academico,
@@ -1360,40 +1497,120 @@ def docente_cuestionario_nuevo_view(request):
             mezclar_respuestas=mezclar_respuestas,
             permitir_revision=permitir_revision
         )
-        messages.success(request, f"Cuestionario '{nombre}' estructurado. Asigna ahora los reactivos pedagógicos.")
+        messages.success(request, f"Cuestionario '{nombre}' estructurado en estado Borrador. Asigna ahora los reactivos pedagógicos.")
         return redirect('docente_cuestionario_preguntas', pk=cuestionario.id)
 
     return render(request, 'docente/cuestionario_form.html', {
         'cuestionario': None,
+        'asignaturas_choices': asignaturas_choices,
     })
 
 
 def docente_cuestionario_editar_view(request, pk):
-    """[M10: Editar Cuestionario]"""
+    """[M10: Editar Cuestionario con Validación de Parámetros y Habilitación]"""
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
     cuestionario = get_object_or_404(Cuestionario, pk=pk)
+    asignaturas_choices = Cuestionario.ASIGNATURAS_SABER_TYT
+
+    # Restricción de propiedad: solo docente asignado o administradores
+    if user and user.rol == 'docente' and cuestionario.docente and cuestionario.docente != user:
+        messages.error(request, "Acceso restringido: Solo el docente responsable puede modificar esta evaluación.")
+        return redirect('docente_cuestionarios')
 
     if request.method == 'POST':
-        cuestionario.nombre = request.POST.get('nombre')
-        cuestionario.descripcion = request.POST.get('descripcion')
-        cuestionario.anio_academico = int(request.POST.get('anio_academico', 2026))
-        cuestionario.periodo_academico = request.POST.get('periodo_academico', '2026-1').strip()
-        cuestionario.curso_grupo = request.POST.get('curso_grupo', 'General').strip()
-        cuestionario.fecha_apertura = request.POST.get('fecha_apertura')
-        cuestionario.fecha_cierre = request.POST.get('fecha_cierre')
-        cuestionario.tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))
-        cuestionario.intentos_permitidos = int(request.POST.get('intentos_permitidos', 1))
-        cuestionario.calificacion_maxima = Decimal(request.POST.get('calificacion_maxima', '5.00'))
-        cuestionario.calificacion_aprobacion = Decimal(request.POST.get('calificacion_aprobacion', '3.00'))
-        cuestionario.estado = request.POST.get('estado', 'Disponible')
-        cuestionario.mezclar_preguntas = request.POST.get('mezclar_preguntas') == 'on'
-        cuestionario.mezclar_respuestas = request.POST.get('mezclar_respuestas') == 'on'
-        cuestionario.permitir_revision = request.POST.get('permitir_revision') == 'on'
+        nombre = request.POST.get('nombre', '').strip()
+        asignatura = request.POST.get('asignatura', '').strip() or cuestionario.asignatura
+        clave_acceso = request.POST.get('clave_acceso', '').strip() or None
+        descripcion = request.POST.get('descripcion', '').strip()
+        anio_academico = int(request.POST.get('anio_academico', 2026))
+        periodo_academico = request.POST.get('periodo_academico', '2026-1').strip()
+        curso_grupo = request.POST.get('curso_grupo', 'General').strip()
+        fecha_apertura = request.POST.get('fecha_apertura')
+        fecha_cierre = request.POST.get('fecha_cierre')
+
+        try:
+            tiempo_limite_minutos = int(request.POST.get('tiempo_limite_minutos', 45))
+        except (ValueError, TypeError):
+            tiempo_limite_minutos = 0
+
+        try:
+            intentos_permitidos = int(request.POST.get('intentos_permitidos', 1))
+        except (ValueError, TypeError):
+            intentos_permitidos = 0
+
+        try:
+            calificacion_maxima = Decimal(request.POST.get('calificacion_maxima', '5.00'))
+        except Exception:
+            calificacion_maxima = Decimal('5.00')
+
+        try:
+            calificacion_aprobacion = Decimal(request.POST.get('calificacion_aprobacion', '3.00'))
+        except Exception:
+            calificacion_aprobacion = Decimal('3.00')
+
+        estado = request.POST.get('estado', 'Borrador')
+        mezclar_preguntas = request.POST.get('mezclar_preguntas') == 'on'
+        mezclar_respuestas = request.POST.get('mezclar_respuestas') == 'on'
+        permitir_revision = request.POST.get('permitir_revision') == 'on'
+
+        # Validaciones de Parámetros Obligatorias (Fase A - Item 4 & Fase C - Item 9)
+        errores = []
+        if not nombre:
+            errores.append("El título o nombre del cuestionario es obligatorio.")
+
+        if fecha_apertura and fecha_cierre:
+            dt_apertura = parse_datetime(fecha_apertura) if isinstance(fecha_apertura, str) else fecha_apertura
+            dt_cierre = parse_datetime(fecha_cierre) if isinstance(fecha_cierre, str) else fecha_cierre
+            if dt_apertura and dt_cierre and dt_cierre <= dt_apertura:
+                errores.append("Error de validación temporal: La fecha de cierre no puede ser anterior ni igual a la fecha de apertura.")
+        else:
+            errores.append("Debe especificar las fechas y horas válidas de apertura y cierre.")
+
+        if tiempo_limite_minutos <= 0:
+            errores.append("Error de validación de duración: El tiempo límite debe ser una duración positiva (mayor a 0 minutos).")
+
+        if intentos_permitidos <= 0:
+            errores.append("Error de validación de intentos: El número de intentos permitidos debe ser como mínimo 1.")
+
+        # Fase C - Item 9: Validar que el cuestionario tenga preguntas válidas antes de activar en Disponible
+        total_preguntas = cuestionario.cuestionario_preguntas.count()
+        if estado == 'Disponible' and total_preguntas == 0:
+            errores.append("Acción bloqueada: No se puede activar el cuestionario en estado 'Disponible' porque no contiene preguntas válidas vinculadas. Debe vincular preguntas antes de habilitarlo.")
+
+        if errores:
+            for err in errores:
+                messages.error(request, err)
+            return render(request, 'docente/cuestionario_form.html', {
+                'cuestionario': cuestionario,
+                'asignaturas_choices': asignaturas_choices,
+            })
+
+        cuestionario.nombre = nombre
+        cuestionario.asignatura = asignatura
+        cuestionario.clave_acceso = clave_acceso
+        cuestionario.descripcion = descripcion
+        cuestionario.anio_academico = anio_academico
+        cuestionario.periodo_academico = periodo_academico
+        cuestionario.curso_grupo = curso_grupo
+        cuestionario.fecha_apertura = fecha_apertura
+        cuestionario.fecha_cierre = fecha_cierre
+        cuestionario.tiempo_limite_minutos = tiempo_limite_minutos
+        cuestionario.intentos_permitidos = intentos_permitidos
+        cuestionario.calificacion_maxima = calificacion_maxima
+        cuestionario.calificacion_aprobacion = calificacion_aprobacion
+        cuestionario.estado = estado
+        cuestionario.mezclar_preguntas = mezclar_preguntas
+        cuestionario.mezclar_respuestas = mezclar_respuestas
+        cuestionario.permitir_revision = permitir_revision
+        if not cuestionario.docente and user and user.rol == 'docente':
+            cuestionario.docente = user
         cuestionario.save()
-        messages.success(request, f"Cuestionario '{cuestionario.nombre}' actualizado.")
+        messages.success(request, f"Cuestionario '{cuestionario.nombre}' actualizado correctamente.")
         return redirect('docente_cuestionarios')
 
     return render(request, 'docente/cuestionario_form.html', {
         'cuestionario': cuestionario,
+        'asignaturas_choices': asignaturas_choices,
     })
 
 
@@ -1447,28 +1664,121 @@ def docente_cuestionario_desvincular_pregunta_view(request, pk, cp_id):
 
 
 def docente_intentos_view(request):
-    """[M12: Métricas y Resultados por Cuestionario a Cargo]"""
+    """[M12: Métricas, Estadísticas por Pregunta y Desempeño por Temática - Rol Docente]"""
+    user = getattr(request, 'authenticated_user', None) or user_from_request(request)
     cuestionarios = Cuestionario.objects.all().order_by('nombre')
+    
+    # Fase D - Item 19: Solo el docente autorizado ve la información de sus evaluaciones
+    if user and user.rol == 'docente':
+        cuestionarios = cuestionarios.filter(Q(docente=user) | Q(docente__isnull=True))
+
     cuestionario_id = request.GET.get('cuestionario_id', '')
-
     intentos = Intento.objects.select_related('cuestionario').all().order_by('-fecha_inicio')
-    cuestionario_obj = None
+    
+    if user and user.rol == 'docente':
+        intentos = intentos.filter(Q(cuestionario__docente=user) | Q(cuestionario__docente__isnull=True))
 
+    cuestionario_obj = None
     if cuestionario_id:
         try:
             cuestionario_obj = Cuestionario.objects.get(id=int(cuestionario_id))
             intentos = intentos.filter(cuestionario=cuestionario_obj)
         except (ValueError, Cuestionario.DoesNotExist):
-            pass
+            cuestionario_obj = None
 
+    # Fase D - Item 16: Resumen estadístico
     total_intentos = intentos.count()
-    calificaciones = intentos.filter(calificacion_final__isnull=False)
+    total_participantes = intentos.values('codigo_estudiante').distinct().count()
+
+    calificaciones = intentos.filter(estado='Finalizado', calificacion_final__isnull=False)
     promedio_nota = Decimal('0.00')
     if calificaciones.exists():
-        promedio_nota = round(calificaciones.aggregate(avg=Sum('calificacion_final'))['avg'] / calificaciones.count(), 2)
+        promedio_nota = round(calificaciones.aggregate(avg=Avg('calificacion_final'))['avg'] or Decimal('0.00'), 2)
 
-    total_aprobados = calificaciones.filter(calificacion_final__gte=3.00).count()
-    tasa_aprobacion = round((total_aprobados / calificaciones.count() * 100), 1) if calificaciones.exists() else 0.0
+    umbral_aprobacion = cuestionario_obj.calificacion_aprobacion if cuestionario_obj else Decimal('3.00')
+    aprobados_count = calificaciones.filter(calificacion_final__gte=umbral_aprobacion).count()
+    reprobados_count = calificaciones.filter(calificacion_final__lt=umbral_aprobacion).count()
+    tasa_aprobacion = round((aprobados_count / calificaciones.count() * 100), 1) if calificaciones.exists() else 0.0
+
+    # Distribución de resultados por rangos pedagógicos
+    total_calif = calificaciones.count()
+    count_bajo = calificaciones.filter(calificacion_final__lt=3.00).count()
+    count_medio = calificaciones.filter(calificacion_final__gte=3.00, calificacion_final__lt=4.00).count()
+    count_alto = calificaciones.filter(calificacion_final__gte=4.00).count()
+
+    distribucion_notas = {
+        'bajo_count': count_bajo,
+        'bajo_pct': round(count_bajo * 100 / total_calif, 1) if total_calif > 0 else 0.0,
+        'medio_count': count_medio,
+        'medio_pct': round(count_medio * 100 / total_calif, 1) if total_calif > 0 else 0.0,
+        'alto_count': count_alto,
+        'alto_pct': round(count_alto * 100 / total_calif, 1) if total_calif > 0 else 0.0,
+    }
+
+    # Fase D - Item 17: Identificar preguntas con mayor proporción de respuestas incorrectas y aciertos por pregunta
+    respuestas_qs = RespuestaIntento.objects.filter(
+        intento__in=calificaciones,
+        opcion_seleccionada__isnull=False
+    ).select_related('pregunta__categoria')
+
+    preguntas_stats = []
+    if respuestas_qs.exists():
+        preguntas_data = respuestas_qs.values(
+            'pregunta_id', 'pregunta__enunciado', 'pregunta__categoria__nombre'
+        ).annotate(
+            total=Count('id'),
+            aciertos=Count('id', filter=Q(es_correcta=True)),
+            errores=Count('id', filter=Q(es_correcta=False))
+        ).order_by('-errores', 'pregunta__enunciado')
+
+        for p in preguntas_data:
+            tot = p['total']
+            pct_acierto = round((p['aciertos'] * 100 / tot), 1) if tot > 0 else 0.0
+            pct_error = round((p['errores'] * 100 / tot), 1) if tot > 0 else 0.0
+            preguntas_stats.append({
+                'pregunta_id': p['pregunta_id'],
+                'enunciado': p['pregunta__enunciado'],
+                'categoria': p['pregunta__categoria__nombre'],
+                'total': tot,
+                'aciertos': p['aciertos'],
+                'errores': p['errores'],
+                'pct_acierto': pct_acierto,
+                'pct_error': pct_error,
+                'es_critica': pct_error >= 50.0
+            })
+
+    # Fase D - Item 18: Analizar desempeño por temática/eje (mayor porcentaje de aciertos y mayor dificultad)
+    ejes_dict = {}
+    for r in respuestas_qs:
+        cat_nombre = r.pregunta.categoria.nombre
+        if cat_nombre not in ejes_dict:
+            ejes_dict[cat_nombre] = {'total': 0, 'aciertos': 0, 'errores': 0}
+        ejes_dict[cat_nombre]['total'] += 1
+        if r.es_correcta:
+            ejes_dict[cat_nombre]['aciertos'] += 1
+        else:
+            ejes_dict[cat_nombre]['errores'] += 1
+
+    ejes_stats = []
+    eje_mayor_acierto = None
+    eje_mayor_dificultad = None
+
+    for cat, val in ejes_dict.items():
+        tot = val['total']
+        pct = round((val['aciertos'] * 100 / tot), 1) if tot > 0 else 0.0
+        ejes_stats.append({
+            'tematica': cat,
+            'total': tot,
+            'aciertos': val['aciertos'],
+            'errores': val['errores'],
+            'pct_acierto': pct,
+            'pct_error': round((val['errores'] * 100 / tot), 1) if tot > 0 else 0.0,
+        })
+
+    if ejes_stats:
+        ejes_stats.sort(key=lambda x: x['pct_acierto'], reverse=True)
+        eje_mayor_acierto = ejes_stats[0]
+        eje_mayor_dificultad = ejes_stats[-1]
 
     return render(request, 'docente/intentos.html', {
         'intentos': intentos,
@@ -1476,8 +1786,16 @@ def docente_intentos_view(request):
         'cuestionario_seleccionado': cuestionario_obj,
         'selected_cuestionario_id': cuestionario_id,
         'total_intentos': total_intentos,
+        'total_participantes': total_participantes,
+        'aprobados_count': aprobados_count,
+        'reprobados_count': reprobados_count,
         'promedio_nota': promedio_nota,
         'tasa_aprobacion': tasa_aprobacion,
+        'distribucion_notas': distribucion_notas,
+        'preguntas_stats': preguntas_stats,
+        'ejes_stats': ejes_stats,
+        'eje_mayor_acierto': eje_mayor_acierto,
+        'eje_mayor_dificultad': eje_mayor_dificultad,
     })
 
 
@@ -1690,7 +2008,14 @@ def estudiante_iniciar_view(request, pk):
 
         filtros_est = Q(usuario=user) | Q(codigo_estudiante=user.codigo_institucional)
 
-        # Validación 2: Nota ya confirmada
+        # Validación 2: Contraseña de acceso (Fase C - Item 11)
+        if cuestionario.clave_acceso:
+            clave_enviada = request.POST.get('clave_acceso', '').strip()
+            if clave_enviada != cuestionario.clave_acceso.strip():
+                messages.error(request, "Contraseña de acceso incorrecta para iniciar esta evaluación.")
+                return redirect('estudiante_sala_espera', pk=pk)
+
+        # Validación 3: Nota ya confirmada
         if Intento.objects.filter(cuestionario=cuestionario, nota_confirmada=True).filter(filtros_est).exists():
             messages.error(request, "Acción denegada: Ya has confirmado tu calificación definitiva para este cuestionario.")
             return redirect('estudiante_sala_espera', pk=pk)
@@ -1828,15 +2153,28 @@ def estudiante_entregar_view(request, intento_id):
 
 
 def estudiante_resultado_view(request, intento_id):
-    """[M12: Informe Evaluativo y Retroalimentación Detallada]"""
+    """[M12: Informe Evaluativo y Retroalimentación Detallada]
+    Permite visualizar el examen resuelto tanto al estudiante autor del intento (sus propios resultados)
+    como al docente a cargo del cuestionario (o administradores) con fines de evaluación y auditoría pedagógica.
+    """
     user = getattr(request, 'authenticated_user', None) or user_from_request(request)
     filtros = {'pk': intento_id, 'estado': 'Finalizado'}
     if user and user.rol == 'estudiante':
         filtros['usuario'] = user
     intento = get_object_or_404(
-        Intento.objects.select_related('cuestionario'), **filtros
+        Intento.objects.select_related('cuestionario', 'cuestionario__docente', 'usuario'), **filtros
     )
     cuestionario = intento.cuestionario
+
+    # Restricción por rol docente (Fase D - Item 19):
+    # Un docente solo puede ver el examen resuelto de cuestionarios a su cargo (o generales institucionales)
+    if user and user.rol == 'docente':
+        if cuestionario.docente_id is not None and cuestionario.docente_id != user.id:
+            return JsonResponse(
+                {'detail': 'No tienes permiso para ver el examen de un cuestionario a cargo de otro docente.'},
+                status=403
+            )
+
     respuestas = RespuestaIntento.objects.filter(
         intento=intento
     ).select_related('pregunta__categoria', 'opcion_seleccionada').prefetch_related('pregunta__opciones')
@@ -1844,30 +2182,42 @@ def estudiante_resultado_view(request, intento_id):
     ahora = timezone.now()
     vigente = (cuestionario.estado == 'Disponible') and (cuestionario.fecha_apertura <= ahora <= cuestionario.fecha_cierre)
 
-    filtros_est = Q(usuario=user) if user else Q(codigo_estudiante=intento.codigo_estudiante)
+    estudiante_obj = intento.usuario
+    filtros_est = Q(usuario=estudiante_obj) if estudiante_obj else Q(codigo_estudiante=intento.codigo_estudiante)
     intentos_realizados = Intento.objects.filter(
         cuestionario=cuestionario
     ).filter(filtros_est).count()
 
     intentos_restantes = max(0, cuestionario.intentos_permitidos - intentos_realizados)
 
-    ha_confirmado_nota = intento.nota_confirmada or Intento.objects.filter(
+    ha_confirmado_nota_est = intento.nota_confirmada or Intento.objects.filter(
         cuestionario=cuestionario,
         nota_confirmada=True
     ).filter(filtros_est).exists()
 
-    # Protección de integridad académica:
-    # Solo mostrar retroalimentación detallada y respuestas correctas si:
-    # 1. El estudiante decidió quedarse con la nota (ha_confirmado_nota)
-    # 2. O se agotaron todos los intentos permitidos
-    # 3. O el cuestionario está cerrado
-    mostrar_retroalimentacion = (
-        ha_confirmado_nota or
-        intentos_restantes == 0 or
-        (not vigente)
-    )
+    es_docente_o_admin = bool(user and user.rol in ('docente', 'admin'))
 
-    puede_repetir = (intentos_restantes > 0) and vigente and (not ha_confirmado_nota)
+    if es_docente_o_admin:
+        # El docente evaluador y el administrador siempre tienen acceso a la retroalimentación
+        # completa, claves y justificaciones pedagógicas del examen presentado
+        mostrar_retroalimentacion = True
+        puede_repetir = False
+        ha_confirmado_nota = ha_confirmado_nota_est
+    else:
+        ha_confirmado_nota = ha_confirmado_nota_est
+        # Protección de integridad académica y política de publicación (Fase C - Item 13):
+        # Solo mostrar retroalimentación detallada y respuestas correctas si la configuración lo permite Y:
+        # 1. El estudiante decidió quedarse con la nota (ha_confirmado_nota)
+        # 2. O se agotaron todos los intentos permitidos
+        # 3. O el cuestionario está cerrado
+        mostrar_retroalimentacion = (
+            bool(cuestionario.permitir_revision) and (
+                ha_confirmado_nota or
+                intentos_restantes == 0 or
+                (not vigente)
+            )
+        )
+        puede_repetir = (intentos_restantes > 0) and vigente and (not ha_confirmado_nota)
 
     total_correctas = respuestas.filter(es_correcta=True).count()
     total_incorrectas = respuestas.filter(es_correcta=False).exclude(opcion_seleccionada__isnull=True).count()
@@ -1896,6 +2246,8 @@ def estudiante_resultado_view(request, intento_id):
         'puede_repetir': puede_repetir,
         'intentos_restantes': intentos_restantes,
         'ha_confirmado_nota': ha_confirmado_nota,
+        'es_docente_o_admin': es_docente_o_admin,
+        'user': user,
     })
 
 

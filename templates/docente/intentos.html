@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Métricas y Resultados por Cuestionario a Cargo - Módulo Docente{% endblock %}
+{% block title %}Métricas, Resultados y Análisis Pedagógico - Módulo Docente{% endblock %}
 
 {% block content %}
 <div class="container-wide">
@@ -9,11 +9,11 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
       Métricas y Resultados por Cuestionario
     </div>
-    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
-      Métricas Pedagógicas y Resultados por Cuestionario
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">
+      Análisis de Resultados y Métricas Pedagógicas
     </h1>
-    <p style="font-size: 0.88rem; color: var(--text-secondary);">
-      Diagnóstico y auditoría de sesiones evaluadas en los simulacros bajo responsabilidad del docente evaluador.
+    <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
+      Diagnóstico y auditoría de sesiones evaluadas: participantes, aprobación/reprobación, desempeño por temáticas y preguntas con mayor índice de error.
     </p>
   </div>
 
@@ -26,10 +26,10 @@
             Filtrar por Cuestionario a Cargo:
           </label>
           <select name="cuestionario_id" class="form-select" onchange="this.form.submit()">
-            <option value="">-- Todos los Cuestionarios Institucionales ({{ cuestionarios.count }}) --</option>
+            <option value="">-- Todos los Cuestionarios Autorizados ({{ cuestionarios.count }}) --</option>
             {% for c in cuestionarios %}
               <option value="{{ c.id }}" {% if selected_cuestionario_id == c.id|stringformat:"i" %}selected{% endif %}>
-                {{ c.nombre }} ({{ c.cuestionario_preguntas.count }} ítems • {{ c.intentos.count }} intentos)
+                {{ c.nombre }} ({{ c.asignatura }} • {{ c.cuestionario_preguntas.count }} ítems • {{ c.intentos.count }} intentos)
               </option>
             {% endfor %}
           </select>
@@ -45,17 +45,17 @@
     </div>
   </div>
 
-  <!-- KPI Cards del Cuestionario Filtrado -->
-  <div class="stats-grid" style="margin-bottom: 1.75rem;">
+  <!-- KPI Cards del Cuestionario Filtrado (Fase D - Item 16) -->
+  <div class="stats-grid" style="margin-bottom: 1.75rem; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
     <div class="stat-card-modern">
       <div class="stat-icon-wrapper indigo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
       </div>
       <div class="stat-meta-content">
-        <span class="stat-meta-title">Intentos Presentados</span>
-        <span class="stat-meta-value">{{ total_intentos }}</span>
+        <span class="stat-meta-title">Estudiantes Participantes</span>
+        <span class="stat-meta-value">{{ total_participantes }}</span>
         <small style="font-size: 0.72rem; color: var(--text-tertiary);">
-          {% if cuestionario_seleccionado %}{{ cuestionario_seleccionado.nombre|truncatechars:28 }}{% else %}Consolidado institucional{% endif %}
+          {{ total_intentos }} intentos registrados
         </small>
       </div>
     </div>
@@ -67,7 +67,7 @@
       <div class="stat-meta-content">
         <span class="stat-meta-title">Calificación Promedio</span>
         <span class="stat-meta-value" style="color: var(--primary-600);">{{ promedio_nota }}</span>
-        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Escala 0.00 a 5.00 pts</small>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Escala institucional de 0.00 a 5.00</small>
       </div>
     </div>
 
@@ -76,33 +76,248 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
       </div>
       <div class="stat-meta-content">
-        <span class="stat-meta-title">Tasa de Aprobación</span>
-        <span class="stat-meta-value" style="color: var(--success-solid);">{{ tasa_aprobacion }}%</span>
-        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Umbral mínimo: 3.00 pts</small>
+        <span class="stat-meta-title">Aprobados</span>
+        <span class="stat-meta-value" style="color: var(--success-solid);">{{ aprobados_count }}</span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Tasa de éxito: {{ tasa_aprobacion }}%</small>
       </div>
     </div>
 
     <div class="stat-card-modern">
       <div class="stat-icon-wrapper amber">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </div>
       <div class="stat-meta-content">
-        <span class="stat-meta-title">Cuestionario</span>
-        <span class="stat-meta-value" style="font-size: 1.15rem; color: var(--text-primary);">
-          {% if cuestionario_seleccionado %}{{ cuestionario_seleccionado.cuestionario_preguntas.count }} ítems{% else %}{{ cuestionarios.count }} pruebas{% endif %}
-        </span>
-        <small style="font-size: 0.72rem; color: var(--text-tertiary);">
-          {% if cuestionario_seleccionado %}Límite: {{ cuestionario_seleccionado.tiempo_limite_minutos }} min{% else %}Banco general{% endif %}
-        </small>
+        <span class="stat-meta-title">Reprobados</span>
+        <span class="stat-meta-value" style="color: var(--danger-solid);">{{ reprobados_count }}</span>
+        <small style="font-size: 0.72rem; color: var(--text-tertiary);">Umbral mínimo: {% if cuestionario_seleccionado %}{{ cuestionario_seleccionado.calificacion_aprobacion }}{% else %}3.00{% endif %} pts</small>
       </div>
     </div>
   </div>
 
-  <!-- Intentos Table Card -->
+  <!-- Resumen de Distribución de Calificaciones (Fase D - Item 16) -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">
+        📊 Distribución de Resultados por Niveles de Desempeño
+      </strong>
+      <span class="badge badge-primary">Total Evaluados: {{ total_intentos }}</span>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+        <!-- Nivel Bajo / Reprobado -->
+        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <strong style="color: var(--danger-solid); font-size: 0.88rem;">Nivel Bajo (< 3.00 pts)</strong>
+            <span class="badge badge-danger">{{ distribucion_notas.bajo_count }} intentos</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 0.65rem;">Estudiantes en condición reprobatoria</p>
+          <div style="background: var(--border-subtle); height: 8px; border-radius: var(--radius-full); overflow: hidden;">
+            <div style="background: var(--danger-solid); height: 100%; width: {{ distribucion_notas.bajo_pct }}%;"></div>
+          </div>
+          <div style="text-align: right; font-size: 0.75rem; font-weight: 700; color: var(--danger-solid); margin-top: 0.25rem;">
+            {{ distribucion_notas.bajo_pct }}%
+          </div>
+        </div>
+
+        <!-- Nivel Medio / Aprobado Básico -->
+        <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <strong style="color: var(--primary-600); font-size: 0.88rem;">Nivel Básico (3.00 - 3.99 pts)</strong>
+            <span class="badge badge-info">{{ distribucion_notas.medio_count }} intentos</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 0.65rem;">Aprobación estándar con competencias básicas</p>
+          <div style="background: var(--border-subtle); height: 8px; border-radius: var(--radius-full); overflow: hidden;">
+            <div style="background: var(--primary-600); height: 100%; width: {{ distribucion_notas.medio_pct }}%;"></div>
+          </div>
+          <div style="text-align: right; font-size: 0.75rem; font-weight: 700; color: var(--primary-600); margin-top: 0.25rem;">
+            {{ distribucion_notas.medio_pct }}%
+          </div>
+        </div>
+
+        <!-- Nivel Alto / Superior -->
+        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <strong style="color: var(--success-solid); font-size: 0.88rem;">Nivel Superior (4.00 - 5.00 pts)</strong>
+            <span class="badge badge-success">{{ distribucion_notas.alto_count }} intentos</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 0.65rem;">Dominio sobresaliente de las competencias</p>
+          <div style="background: var(--border-subtle); height: 8px; border-radius: var(--radius-full); overflow: hidden;">
+            <div style="background: var(--success-solid); height: 100%; width: {{ distribucion_notas.alto_pct }}%;"></div>
+          </div>
+          <div style="text-align: right; font-size: 0.75rem; font-weight: 700; color: var(--success-solid); margin-top: 0.25rem;">
+            {{ distribucion_notas.alto_pct }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis de Desempeño por Eje o Temática (Fase D - Item 18) -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+      <strong style="font-size: 0.95rem; color: var(--text-primary);">
+        🎯 Análisis de Desempeño por Eje Temático y Competencia
+      </strong>
+      <span class="badge badge-secondary">{{ ejes_stats|length }} Módulos Evaluados</span>
+    </div>
+    <div class="card-body">
+      <!-- Callouts de Mayor Acierto y Mayor Dificultad -->
+      {% if eje_mayor_acierto and eje_mayor_dificultad %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 1rem; display: flex; align-items: center; gap: 0.85rem;">
+          <span style="font-size: 1.8rem;">🏆</span>
+          <div>
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #047857; letter-spacing: 0.05em; display: block;">
+              Mayor Porcentaje de Aciertos (Mejor Desempeño)
+            </span>
+            <strong style="font-size: 1.05rem; color: var(--text-primary);">{{ eje_mayor_acierto.tematica }}</strong>
+            <div style="font-size: 0.82rem; color: #059669; font-weight: 700;">
+              {{ eje_mayor_acierto.pct_acierto }}% de respuestas correctas ({{ eje_mayor_acierto.aciertos }}/{{ eje_mayor_acierto.total }})
+            </div>
+          </div>
+        </div>
+
+        <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 1rem; display: flex; align-items: center; gap: 0.85rem;">
+          <span style="font-size: 1.8rem;">⚠️</span>
+          <div>
+            <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 800; color: #b91c1c; letter-spacing: 0.05em; display: block;">
+              Eje con Mayor Dificultad Pedagógica
+            </span>
+            <strong style="font-size: 1.05rem; color: var(--text-primary);">{{ eje_mayor_dificultad.tematica }}</strong>
+            <div style="font-size: 0.82rem; color: #dc2626; font-weight: 700;">
+              {{ eje_mayor_dificultad.pct_error }}% de tasa de error ({{ eje_mayor_dificultad.errores }}/{{ eje_mayor_dificultad.total }})
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Tabla de Ejes -->
+      <div class="table-responsive-wrapper">
+        <table class="table-modern">
+          <thead>
+            <tr>
+              <th>Eje o Temática</th>
+              <th style="text-align: center;">Respuestas Evaluadas</th>
+              <th style="text-align: center;">Aciertos</th>
+              <th style="text-align: center;">Errores</th>
+              <th>Porcentaje de Acierto</th>
+              <th style="text-align: right;">Diagnóstico</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for eje in ejes_stats %}
+            <tr>
+              <td>
+                <strong style="color: var(--text-primary);">{{ eje.tematica }}</strong>
+              </td>
+              <td style="text-align: center; font-weight: 600; font-family: var(--font-mono);">{{ eje.total }}</td>
+              <td style="text-align: center; color: var(--success-solid); font-weight: 700; font-family: var(--font-mono);">{{ eje.aciertos }}</td>
+              <td style="text-align: center; color: var(--danger-solid); font-weight: 700; font-family: var(--font-mono);">{{ eje.errores }}</td>
+              <td style="min-width: 170px;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                  <div style="flex: 1; background: var(--border-subtle); height: 7px; border-radius: var(--radius-full); overflow: hidden;">
+                    <div style="background: {% if eje.pct_acierto >= 70 %}var(--success-solid){% elif eje.pct_acierto >= 50 %}var(--primary-600){% else %}var(--danger-solid){% endif %}; height: 100%; width: {{ eje.pct_acierto }}%;"></div>
+                  </div>
+                  <span style="font-size: 0.82rem; font-weight: 800; font-family: var(--font-mono);">{{ eje.pct_acierto }}%</span>
+                </div>
+              </td>
+              <td style="text-align: right;">
+                {% if eje.pct_acierto >= 70 %}
+                  <span class="badge badge-success">Óptimo</span>
+                {% elif eje.pct_acierto >= 50 %}
+                  <span class="badge badge-primary">Aceptable</span>
+                {% else %}
+                  <span class="badge badge-danger">Reforzar</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-tertiary);">
+                No hay datos suficientes para calcular métricas por temática.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis por Pregunta: Mayor Proporción de Errores (Fase D - Item 17) -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+      <div>
+        <strong style="font-size: 0.95rem; color: var(--text-primary);">
+          🔍 Auditoría por Pregunta e Índice de Dificultad
+        </strong>
+        <span style="font-size: 0.78rem; color: var(--text-tertiary); margin-left: 0.35rem;">
+          Ordenado de mayor a menor número de respuestas incorrectas
+        </span>
+      </div>
+      <span class="badge badge-neutral">{{ preguntas_stats|length }} Reactivos Analizados</span>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th style="width: 55px;">ID</th>
+            <th>Pregunta / Enunciado</th>
+            <th>Temática / Competencia</th>
+            <th style="text-align: center;">Evaluadas</th>
+            <th style="text-align: center;">Aciertos</th>
+            <th style="text-align: center;">Errores</th>
+            <th>Proporción de Error</th>
+            <th style="text-align: right;">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in preguntas_stats %}
+          <tr {% if p.es_critica %}style="background: rgba(239, 68, 68, 0.02);"{% endif %}>
+            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-tertiary); font-size: 0.78rem;">#{{ p.pregunta_id }}</td>
+            <td>
+              <strong style="color: var(--text-primary); font-size: 0.88rem;">{{ p.enunciado }}</strong>
+            </td>
+            <td><span class="badge badge-info">{{ p.categoria }}</span></td>
+            <td style="text-align: center; font-weight: 600; font-family: var(--font-mono);">{{ p.total }}</td>
+            <td style="text-align: center; color: var(--success-solid); font-weight: 700; font-family: var(--font-mono);">{{ p.aciertos }}</td>
+            <td style="text-align: center; color: var(--danger-solid); font-weight: 700; font-family: var(--font-mono);">{{ p.errores }}</td>
+            <td style="min-width: 140px;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="flex: 1; background: var(--border-subtle); height: 7px; border-radius: var(--radius-full); overflow: hidden;">
+                  <div style="background: {% if p.pct_error >= 50 %}var(--danger-solid){% elif p.pct_error >= 30 %}var(--warning-solid){% else %}var(--success-solid){% endif %}; height: 100%; width: {{ p.pct_error }}%;"></div>
+                </div>
+                <span style="font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono); color: {% if p.pct_error >= 50 %}var(--danger-solid){% else %}var(--text-secondary){% endif %};">
+                  {{ p.pct_error }}%
+                </span>
+              </div>
+            </td>
+            <td style="text-align: right;">
+              {% if p.es_critica %}
+                <span class="badge badge-danger">Alta Dificultad</span>
+              {% else %}
+                <span class="badge badge-success">Normal</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 1.5rem; color: var(--text-tertiary);">
+              No hay respuestas registradas para calcular estadísticas de preguntas.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Intentos Table Card (Fase D - Item 15) -->
   <div class="card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
       <strong style="font-size: 0.95rem; color: var(--text-primary);">
-        Listado de Estudiantes y Calificaciones Liquidadas
+        📋 Listado Detallado de Estudiantes y Calificaciones Liquidadas
       </strong>
       <span class="badge badge-primary">{{ intentos.count }} Intentos Registrados</span>
     </div>
@@ -172,7 +387,7 @@
               {% endif %}
             </td>
             <td style="text-align: right;">
-              <a href="{% url 'estudiante_resultado' it.id %}" class="btn btn-sm btn-secondary" title="Ver examen y retroalimentación pedagógica">
+              <a href="{% url 'docente_intento_detalle' it.id %}" class="btn btn-sm btn-secondary" title="Ver examen y retroalimentación pedagógica">
                 Ver Examen →
               </a>
             </td>

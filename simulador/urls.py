@@ -64,7 +64,8 @@ urlpatterns = [
     path('estudiante/simulacro/<int:intento_id>/', permission_required('start_attempt')(views.estudiante_simulacro_view), name='estudiante_simulacro'),
     path('estudiante/simulacro/<int:intento_id>/entregar/', permission_required('submit_attempt')(views.estudiante_entregar_view), name='estudiante_entregar'),
     # M12: Informe Evaluativo y Retroalimentación Detallada
-    path('estudiante/simulacro/<int:intento_id>/resultado/', permission_required('view_own_results')(views.estudiante_resultado_view), name='estudiante_resultado'),
+    path('estudiante/simulacro/<int:intento_id>/resultado/', permission_required('view_own_results', 'view_results')(views.estudiante_resultado_view), name='estudiante_resultado'),
+    path('docente/intentos/<int:intento_id>/', permission_required('view_results')(views.estudiante_resultado_view), name='docente_intento_detalle'),
     path('estudiante/simulacro/<int:intento_id>/confirmar-nota/', permission_required('submit_attempt')(views.estudiante_confirmar_nota_view), name='estudiante_confirmar_nota'),
 
     # Arquitectura y Modelo de Datos

@@ -6,20 +6,35 @@
 <div class="container">
   <!-- Top Breadcrumb -->
   <div style="margin-bottom: 1.25rem;">
+    {% if es_docente_o_admin %}
+    <a href="{% url 'docente_intentos' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Volver al Panel de Métricas e Intentos
+    </a>
+    {% else %}
     <a href="{% url 'estudiante_catalogo' %}" class="btn btn-sm btn-ghost" style="padding-left: 0;">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
       Volver al Catálogo de Evaluaciones
     </a>
+    {% endif %}
   </div>
 
   <!-- Hero Score Certificate Panel -->
   <div class="results-hero-panel">
     <div class="hero-pill-badge" style="background: rgba(255,255,255,0.1); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
+      {% if es_docente_o_admin %}
+      <span>● Modo Auditoría Docente • Examen Resuelto</span>
+      {% else %}
       <span>● Informe Evaluativo y Retroalimentación Detallada</span>
+      {% endif %}
     </div>
 
     <h1 style="font-size: 2rem; font-weight: 900; margin: 0.35rem 0 0.2rem; color: #ffffff;">
+      {% if es_docente_o_admin %}
+      Revisión Pedagógica del Examen Resuelto
+      {% else %}
       Informe Evaluativo y Resultados del Simulacro
+      {% endif %}
     </h1>
     <p style="opacity: 0.8; font-size: 0.9rem; max-width: 600px; margin: 0 auto;">
       {{ cuestionario.nombre }} • <strong style="color: #ffffff;">{{ intento.nombre_estudiante }}</strong> (<code style="font-family: var(--font-mono); opacity: 0.9;">{{ intento.codigo_estudiante }}</code>)
@@ -50,8 +65,30 @@
     </div>
   </div>
 
-  <!-- Panel de Decisión: Quedarse con la nota o repetir -->
-  {% if puede_repetir %}
+  <!-- Panel de Decisión: Quedarse con la nota o repetir / Vista Docente Evaluador -->
+  {% if es_docente_o_admin %}
+  <div style="background: var(--bg-surface); border: 2px solid var(--primary-500); border-radius: var(--radius-md); padding: 1.25rem 1.75rem; margin-bottom: 2.25rem; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <span style="font-size: 2rem;">👨‍🏫</span>
+      <div>
+        <div class="badge badge-info" style="margin-bottom: 0.25rem; font-size: 0.75rem;">
+          Vista de Auditoría Pedagógica Docente
+        </div>
+        <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem;">
+          Examen Resuelto del Estudiante: {{ intento.nombre_estudiante }}
+        </h3>
+        <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">
+          Código: <code style="font-family: var(--font-mono);">{{ intento.codigo_estudiante }}</code> • Cuestionario: <strong>{{ cuestionario.nombre }}</strong> • Intento #{{ intento.numero_intento }} de {{ cuestionario.intentos_permitidos }} • Entregado: {{ intento.fecha_fin|date:"d/m/Y H:i"|default:"Finalizado" }}
+        </p>
+      </div>
+    </div>
+    <div>
+      <a href="{% url 'docente_intentos' %}" class="btn btn-secondary btn-sm">
+        ← Volver al Listado de Intentos
+      </a>
+    </div>
+  </div>
+  {% elif puede_repetir %}
   <div style="background: var(--bg-surface); border: 2px solid var(--primary-500); border-radius: var(--radius-md); padding: 1.5rem 1.75rem; margin-bottom: 2.25rem; box-shadow: var(--shadow-sm);">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 280px;">
@@ -227,7 +264,14 @@
                 <span class="badge badge-success" style="font-size: 0.68rem;">Clave Correcta</span>
               {% endif %}
               {% if r.opcion_seleccionada_id == opc.id and not opc.es_correcta %}
-                <span class="badge badge-danger" style="font-size: 0.68rem;">Tu Elección</span>
+                <span class="badge badge-danger" style="font-size: 0.68rem;">
+                  {% if es_docente_o_admin %}Respuesta del Estudiante (Incorrecta){% else %}Tu Elección (Incorrecta){% endif %}
+                </span>
+              {% endif %}
+              {% if r.opcion_seleccionada_id == opc.id and opc.es_correcta %}
+                <span class="badge badge-primary" style="font-size: 0.68rem;">
+                  {% if es_docente_o_admin %}Respuesta del Estudiante (Acierto){% else %}Tu Elección (Acierto){% endif %}
+                </span>
               {% endif %}
             </div>
             {% endfor %}
@@ -249,6 +293,16 @@
       </div>
       {% endfor %}
     </div>
+  </div>
+  {% elif not cuestionario.permitir_revision %}
+  <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.75rem; text-align: center; margin-bottom: 2.5rem; box-shadow: var(--shadow-xs);">
+    <span style="font-size: 1.75rem; display: block; margin-bottom: 0.5rem;">🔒</span>
+    <strong style="color: var(--text-primary); font-size: 1rem; display: block; margin-bottom: 0.35rem;">
+      Publicación de Respuestas y Retroalimentación Deshabilitada
+    </strong>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; max-width: 620px; margin: 0 auto; line-height: 1.5;">
+      La configuración pedagógica definida por el docente para esta evaluación no permite la publicación ni revisión pública de las respuestas correctas tras la entrega final.
+    </p>
   </div>
   {% endif %}
 

@@ -73,8 +73,30 @@ class Cuestionario(models.Model):
         ('Cerrado', 'Cerrado'),
     ]
 
+    ASIGNATURAS_SABER_TYT = [
+        ('Lectura Crítica', 'Lectura Crítica'),
+        ('Razonamiento Cuantitativo', 'Razonamiento Cuantitativo'),
+        ('Competencias Ciudadanas', 'Competencias Ciudadanas'),
+        ('Comunicación Escrita', 'Comunicación Escrita'),
+        ('Inglés', 'Inglés'),
+        ('Competencias Genéricas (Simulacro Integral)', 'Competencias Genéricas (Simulacro Integral)'),
+    ]
+
     nombre = models.CharField(max_length=150, verbose_name="Nombre de la Evaluación / Simulacro")
+    asignatura = models.CharField(
+        max_length=150,
+        choices=ASIGNATURAS_SABER_TYT,
+        default="Competencias Genéricas (Simulacro Integral)",
+        verbose_name="Asignatura o Módulo Saber TyT"
+    )
     descripcion = models.TextField(blank=True, null=True, verbose_name="Descripción o Instrucciones")
+    docente = models.ForeignKey(
+        'Usuario', on_delete=models.SET_NULL, blank=True, null=True,
+        related_name='cuestionarios_creados', verbose_name="Docente Responsable"
+    )
+    clave_acceso = models.CharField(
+        max_length=50, blank=True, null=True, verbose_name="Contraseña de Acceso (Opcional)"
+    )
     anio_academico = models.PositiveIntegerField(
         default=2026, verbose_name="Año académico",
     )
@@ -93,7 +115,7 @@ class Cuestionario(models.Model):
     mezclar_preguntas = models.BooleanField(default=False, verbose_name="Mezclar Preguntas Aleatoriamente")
     mezclar_respuestas = models.BooleanField(default=False, verbose_name="Mezclar Respuestas Aleatoriamente")
     permitir_revision = models.BooleanField(default=True, verbose_name="Permitir Ver Retroalimentación tras Entrega")
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='Disponible', verbose_name="Estado")
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='Borrador', verbose_name="Estado")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

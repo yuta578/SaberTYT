@@ -58,6 +58,19 @@
         {% csrf_token %}
         <input type="hidden" name="accion" value="validar">
 
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-weight: 700;">Vincular Directamente a una Evaluación / Cuestionario (Opcional):</label>
+          <select name="cuestionario_id" class="form-select">
+            <option value="">-- Solo Banco General de Preguntas (Sin vincular a cuestionario) --</option>
+            {% for c in cuestionarios_disponibles %}
+              <option value="{{ c.id }}" {% if cuestionario_seleccionado and cuestionario_seleccionado.id == c.id %}selected{% endif %}>
+                {{ c.nombre }} ({{ c.asignatura }} • Grupo: {{ c.curso_grupo }})
+              </option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Si seleccionas un cuestionario, las preguntas válidas se vincularán automáticamente al completar la importación.</div>
+        </div>
+
         <div id="excelDropzone" style="
           border: 2px dashed var(--border-medium);
           border-radius: var(--radius-md);
@@ -146,7 +159,16 @@
           Archivo: {{ reporte_validacion.nombre_archivo }}
         </span>
       </div>
-      <div style="display: flex; gap: 0.65rem;">
+      <div style="display: flex; gap: 0.65rem; align-items: center;">
+        {% if reporte_validacion.cuestionario_nombre %}
+        <span class="badge badge-info" style="font-weight: 700;">
+          🎯 Destino: Vinculación directa a "{{ reporte_validacion.cuestionario_nombre }}"
+        </span>
+        {% else %}
+        <span class="badge badge-neutral">
+          Destino: Banco General Institucional
+        </span>
+        {% endif %}
         <span class="badge badge-success">
           ✓ {{ reporte_validacion.filas_validas|length }} Filas Válidas
         </span>
@@ -181,7 +203,11 @@
             {% csrf_token %}
             <input type="hidden" name="accion" value="confirmar">
             <button type="submit" class="btn btn-success btn-lg">
-              Paso 3: Confirmar y Enviar {{ reporte_validacion.filas_validas|length }} Ítems al Banco →
+              {% if reporte_validacion.cuestionario_nombre %}
+                Paso 3: Confirmar, Importar y Vincular {{ reporte_validacion.filas_validas|length }} Ítems a la Evaluación →
+              {% else %}
+                Paso 3: Confirmar y Enviar {{ reporte_validacion.filas_validas|length }} Ítems al Banco →
+              {% endif %}
             </button>
           </form>
         </div>

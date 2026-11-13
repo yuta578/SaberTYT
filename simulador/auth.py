@@ -85,7 +85,7 @@ def api_login_required(view):
     return wrapped
 
 
-def permission_required(permission):
+def permission_required(*permissions):
     def decorator(view):
         @wraps(view)
         def wrapped(request, *args, **kwargs):
@@ -94,7 +94,8 @@ def permission_required(permission):
                 if request.path.startswith('/api/'):
                     return JsonResponse({'detail': 'Autenticación requerida.'}, status=401)
                 return redirect(f'/login/?next={request.path}')
-            if not user.has_permission(permission):
+            has_perm = any(user.has_permission(p) for p in permissions) if permissions else True
+            if not has_perm:
                 if request.path.startswith('/api/'):
                     return JsonResponse({'detail': 'No tienes permiso para esta acción.'}, status=403)
                 return JsonResponse({'detail': 'No tienes permiso para esta acción.'}, status=403)

@@ -25,9 +25,31 @@
         1. Información Básica del Examen
       </h3>
 
-      <div class="form-group">
-        <label class="form-label">Nombre del Cuestionario / Simulacro <span class="required">*</span></label>
-        <input type="text" name="nombre" value="{{ cuestionario.nombre|default:'' }}" class="form-control" placeholder="Ej: Simulacro General Saber TyT 2026 - Módulo Genéricas" required>
+      <div class="form-row">
+        <div class="form-group" style="flex: 2;">
+          <label class="form-label">Nombre del Cuestionario / Simulacro <span class="required">*</span></label>
+          <input type="text" name="nombre" value="{{ cuestionario.nombre|default:'' }}" class="form-control" placeholder="Ej: Simulacro General Saber TyT 2026 - Módulo Genéricas" required>
+        </div>
+        <div class="form-group" style="flex: 1.2;">
+          <label class="form-label">Asignatura / Módulo Saber TyT <span class="required">*</span></label>
+          <select name="asignatura" class="form-select" required>
+            {% if asignaturas_choices %}
+              {% for val, label in asignaturas_choices %}
+                <option value="{{ val }}" {% if cuestionario.asignatura == val %}selected{% elif not cuestionario.asignatura and forloop.last %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            {% else %}
+              <option value="Lectura Crítica" {% if cuestionario.asignatura == 'Lectura Crítica' %}selected{% endif %}>Lectura Crítica</option>
+              <option value="Razonamiento Cuantitativo" {% if cuestionario.asignatura == 'Razonamiento Cuantitativo' %}selected{% endif %}>Razonamiento Cuantitativo</option>
+              <option value="Competencias Ciudadanas" {% if cuestionario.asignatura == 'Competencias Ciudadanas' %}selected{% endif %}>Competencias Ciudadanas</option>
+              <option value="Comunicación Escrita" {% if cuestionario.asignatura == 'Comunicación Escrita' %}selected{% endif %}>Comunicación Escrita</option>
+              <option value="Inglés" {% if cuestionario.asignatura == 'Inglés' %}selected{% endif %}>Inglés</option>
+              <option value="Competencias Genéricas (Simulacro Integral)" {% if not cuestionario.asignatura or cuestionario.asignatura == 'Competencias Genéricas (Simulacro Integral)' or cuestionario.asignatura == 'Competencias Genéricas Saber TyT' %}selected{% endif %}>Competencias Genéricas (Simulacro Integral)</option>
+            {% endif %}
+          </select>
+          <div class="form-text">Módulos oficiales estandarizados del ICFES para pruebas Saber TyT en Colombia.</div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -72,10 +94,10 @@
         <div class="form-group">
           <label class="form-label">Estado de la Publicación <span class="required">*</span></label>
           <select name="estado" class="form-select" required>
-            <option value="Disponible" {% if cuestionario.estado == 'Disponible' %}selected{% endif %}>Disponible (Visible para presentar)</option>
-            <option value="Programado" {% if cuestionario.estado == 'Programado' %}selected{% endif %}>Programado (Abre en fecha futura)</option>
-            <option value="Borrador" {% if cuestionario.estado == 'Borrador' %}selected{% endif %}>Borrador (En edición docente)</option>
-            <option value="Cerrado" {% if cuestionario.estado == 'Cerrado' %}selected{% endif %}>Cerrado (Finalizado)</option>
+            <option value="Borrador" {% if not cuestionario or cuestionario.estado == 'Borrador' %}selected{% endif %}>Borrador (En edición docente)</option>
+            <option value="Disponible" {% if cuestionario and cuestionario.estado == 'Disponible' %}selected{% endif %}>Disponible (Visible para presentar)</option>
+            <option value="Programado" {% if cuestionario and cuestionario.estado == 'Programado' %}selected{% endif %}>Programado (Abre en fecha futura)</option>
+            <option value="Cerrado" {% if cuestionario and cuestionario.estado == 'Cerrado' %}selected{% endif %}>Cerrado (Finalizado)</option>
           </select>
         </div>
       </div>
@@ -95,6 +117,12 @@
         <div class="form-group">
           <label class="form-label">Intentos Permitidos <span class="required">*</span></label>
           <input type="number" min="1" max="10" name="intentos_permitidos" value="{{ cuestionario.intentos_permitidos|default:'1' }}" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contraseña de Acceso (Opcional)</label>
+          <input type="text" name="clave_acceso" value="{{ cuestionario.clave_acceso|default:'' }}" class="form-control" placeholder="Ej: TyT2026">
+          <div class="form-text">Si se define, el estudiante deberá ingresarla para iniciar.</div>
         </div>
 
         <div class="form-group">
