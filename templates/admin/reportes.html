@@ -81,8 +81,7 @@
     </nav>
     {% endif %}
   </div>
-
-  <div class="section-heading"><h2>Las siete consultas obligatorias</h2></div>
+  <br>
   <div class="card">
     <h3>1. Consolidado general</h3>
     <p>Estudiantes: <strong>{{ total_estudiantes }}</strong> · Intentos terminados: <strong>{{ total_intentos }}</strong> · Aprobados: <strong>{{ aprobados }}</strong> · No aprobados: <strong>{{ no_aprobados }}</strong></p>
@@ -92,9 +91,7 @@
     <table class="table-modern"><thead><tr><th>Curso</th><th>Estudiantes</th><th>Promedio</th><th>Mínima</th><th>Máxima</th></tr></thead><tbody>{% for row in course_summary %}<tr><td>{{ row.cuestionario__curso_grupo }}</td><td>{{ row.estudiantes }}</td><td>{{ row.promedio|floatformat:2 }}</td><td>{{ row.minimo|floatformat:2 }}</td><td>{{ row.maximo|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5">Sin resultados.</td></tr>{% endfor %}</tbody></table>
     <h3>4. Desempeño por eje temático</h3>
     <table class="table-modern"><thead><tr><th>Eje</th><th>Registradas</th><th>Aciertos</th><th>Errores</th><th>% aciertos</th></tr></thead><tbody>{% for row in axis_rows %}<tr><td>{{ row.eje }}</td><td>{{ row.registradas }}</td><td>{{ row.aciertos }}</td><td>{{ row.errores }}</td><td>{{ row.porcentaje|floatformat:2 }}%</td></tr>{% empty %}<tr><td colspan="5">Sin respuestas contestadas.</td></tr>{% endfor %}</tbody></table>
-    <h3>5 y 6. Calificaciones e historial individual</h3>
-    <p>La tabla principal contiene estudiante, curso, simulacro, fecha, nota sobre 5,0 y estado. Selecciona un estudiante para aislar su historial cronológico.</p>
-    <h3>7. Preguntas de mayor dificultad</h3>
+    <h3>5. Preguntas de mayor dificultad</h3>
     <table class="table-modern"><thead><tr><th>Pregunta</th><th>Eje</th><th>Respuestas</th><th>Errores</th><th>% acierto</th></tr></thead><tbody>{% for row in difficulty_rows %}<tr><td>{{ row.pregunta|truncatechars:80 }}</td><td>{{ row.eje }}</td><td>{{ row.total }}</td><td>{{ row.errores }}</td><td>{{ row.acierto|floatformat:2 }}%</td></tr>{% empty %}<tr><td colspan="5">Sin respuestas contestadas.</td></tr>{% endfor %}</tbody></table>
   </div>
 

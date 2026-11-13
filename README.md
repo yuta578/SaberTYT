@@ -126,8 +126,18 @@ python simulador/seed_data.py
 > **Salida esperada:**
 > ```text
 > Iniciando sembrado de datos pedagógicos para Simulador Saber TyT...
-> Datos sembrados exitosamente!
+> ¡Datos pedagógicos, estudiantes e intentos de demostración sembrados exitosamente!
 > ```
+
+El sembrado también crea cinco estudiantes de demostración (`EST-202310023`,
+`EST-20269988`, `EST-202220412`, `EST-202410117` y `EST-202410118`), con la
+contraseña `demo1234`. Cada estudiante tiene un intento finalizado en los tres
+cuestionarios de ejemplo, más dos cuestionarios de demostración para `Sexto B`
+(`2027-2`) y `Séptimo A` (`2028-1`), con todas las respuestas correctas y
+calificación `5.00`. También se crea el grupo `Sexto C` para el periodo
+`2026-2`, con sus intentos finalizados y calificación `5.00`.
+Además, se crea el grupo `Sexto D` para `2026-1`, con resultados variados
+entre `2.00` y `5.00` según las respuestas correctas de cada estudiante.
 
 ---
 

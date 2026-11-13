@@ -15,7 +15,7 @@ from decimal import Decimal
 
 from simulador.models import (
     Categoria, Pregunta, OpcionRespuesta, Cuestionario,
-    CuestionarioPregunta, Importacion, Intento, RespuestaIntento
+    CuestionarioPregunta, Importacion, Intento, RespuestaIntento, Usuario
 )
 
 def run_seed():
@@ -387,6 +387,86 @@ def run_seed():
     c3.fecha_cierre = now + timedelta(days=20)
     c3.save()
 
+    c4, _ = Cuestionario.objects.get_or_create(
+        nombre="Simulacro General Saber TyT 2027 - Sexto B",
+        defaults={
+            "descripcion": "Evaluación de competencias genéricas para el curso Sexto B.",
+            "anio_academico": 2027,
+            "periodo_academico": "2027-2",
+            "curso_grupo": "Sexto B",
+            "fecha_apertura": now - timedelta(days=10),
+            "fecha_cierre": now + timedelta(days=30),
+            "tiempo_limite_minutos": 45,
+            "intentos_permitidos": 2,
+            "calificacion_maxima": Decimal("5.00"),
+            "calificacion_aprobacion": Decimal("3.00"),
+            "mezclar_preguntas": True,
+            "mezclar_respuestas": True,
+            "permitir_revision": True,
+            "estado": "Disponible",
+        },
+    )
+
+    c5, _ = Cuestionario.objects.get_or_create(
+        nombre="Evaluación Diagnóstica Saber TyT 2028 - Séptimo A",
+        defaults={
+            "descripcion": "Evaluación diagnóstica para el curso Séptimo A.",
+            "anio_academico": 2028,
+            "periodo_academico": "2028-1",
+            "curso_grupo": "Séptimo A",
+            "fecha_apertura": now - timedelta(days=5),
+            "fecha_cierre": now + timedelta(days=45),
+            "tiempo_limite_minutos": 30,
+            "intentos_permitidos": 2,
+            "calificacion_maxima": Decimal("5.00"),
+            "calificacion_aprobacion": Decimal("3.50"),
+            "mezclar_preguntas": False,
+            "mezclar_respuestas": False,
+            "permitir_revision": True,
+            "estado": "Disponible",
+        },
+    )
+
+    c6, _ = Cuestionario.objects.get_or_create(
+        nombre="Simulacro de Recuperación Saber TyT 2026 - Sexto C",
+        defaults={
+            "descripcion": "Evaluación de recuperación para el grupo Sexto C.",
+            "anio_academico": 2026,
+            "periodo_academico": "2026-2",
+            "curso_grupo": "Sexto C",
+            "fecha_apertura": now - timedelta(days=3),
+            "fecha_cierre": now + timedelta(days=25),
+            "tiempo_limite_minutos": 45,
+            "intentos_permitidos": 2,
+            "calificacion_maxima": Decimal("5.00"),
+            "calificacion_aprobacion": Decimal("3.00"),
+            "mezclar_preguntas": True,
+            "mezclar_respuestas": True,
+            "permitir_revision": True,
+            "estado": "Disponible",
+        },
+    )
+
+    c7, _ = Cuestionario.objects.get_or_create(
+        nombre="Evaluación de Desempeño Saber TyT 2026 - Sexto D",
+        defaults={
+            "descripcion": "Evaluación con resultados variados para el grupo Sexto D.",
+            "anio_academico": 2026,
+            "periodo_academico": "2026-1",
+            "curso_grupo": "Sexto D",
+            "fecha_apertura": now - timedelta(days=20),
+            "fecha_cierre": now + timedelta(days=10),
+            "tiempo_limite_minutos": 45,
+            "intentos_permitidos": 2,
+            "calificacion_maxima": Decimal("5.00"),
+            "calificacion_aprobacion": Decimal("3.00"),
+            "mezclar_preguntas": False,
+            "mezclar_respuestas": False,
+            "permitir_revision": True,
+            "estado": "Disponible",
+        },
+    )
+
     # 4. Asignación de Preguntas a Cuestionarios
     # Cuestionario 1: Genéricas (p1 a p5)
     for i, p in enumerate([p1, p2, p3, p4, p5], 1):
@@ -410,6 +490,28 @@ def run_seed():
             cuestionario=c3,
             pregunta=p,
             defaults={"orden": i, "puntaje_ponderado": Decimal("20.00")}
+        )
+
+    for cuestionario in (c4, c5):
+        for i, pregunta in enumerate([p1, p2, p3, p4, p5], 1):
+            CuestionarioPregunta.objects.get_or_create(
+                cuestionario=cuestionario,
+                pregunta=pregunta,
+                defaults={"orden": i, "puntaje_ponderado": Decimal("1.00")},
+            )
+
+    for i, pregunta in enumerate([p6, p7, p8, p9, p10], 1):
+        CuestionarioPregunta.objects.get_or_create(
+            cuestionario=c6,
+            pregunta=pregunta,
+            defaults={"orden": i, "puntaje_ponderado": Decimal("1.00")},
+        )
+
+    for i, pregunta in enumerate([p1, p2, p3, p4, p5], 1):
+        CuestionarioPregunta.objects.get_or_create(
+            cuestionario=c7,
+            pregunta=pregunta,
+            defaults={"orden": i, "puntaje_ponderado": Decimal("1.00")},
         )
 
     # 5. Importaciones de Ejemplo
@@ -483,7 +585,122 @@ def run_seed():
     from django.core.management import call_command
     call_command('seed_usuarios')
 
-    print("¡Datos pedagógicos y usuarios de prueba sembrados exitosamente!")
+    # 7. Intentos completos de estudiantes de demostración.
+    estudiantes_demo = Usuario.objects.filter(
+        codigo_institucional__in=[
+            "EST-202310023",
+            "EST-20269988",
+            "EST-202220412",
+            "EST-202410117",
+            "EST-202410118",
+        ],
+        rol="estudiante",
+        activo=True,
+    )
+    cuestionarios_demo = [
+        (c1, [p1, p2, p3, p4, p5]),
+        (c2, [p6, p7, p8, p9, p10]),
+        (c3, [p11, p12, p13, p14, p15]),
+        (c4, [p1, p2, p3, p4, p5]),
+        (c5, [p1, p2, p3, p4, p5]),
+        (c6, [p6, p7, p8, p9, p10]),
+    ]
+
+    for estudiante in estudiantes_demo:
+        for cuestionario, preguntas in cuestionarios_demo:
+            intento, _ = Intento.objects.get_or_create(
+                cuestionario=cuestionario,
+                usuario=estudiante,
+                codigo_estudiante=estudiante.codigo_institucional,
+                numero_intento=1,
+                defaults={
+                    "nombre_estudiante": estudiante.nombre_completo,
+                    "fecha_fin": now - timedelta(hours=1),
+                    "puntaje_obtenido": Decimal("5.00"),
+                    "calificacion_final": Decimal("5.00"),
+                    "estado": "Finalizado",
+                    "nota_confirmada": True,
+                },
+            )
+            intento.nombre_estudiante = estudiante.nombre_completo
+            intento.fecha_fin = intento.fecha_fin or now - timedelta(hours=1)
+            intento.puntaje_obtenido = Decimal("5.00")
+            intento.calificacion_final = Decimal("5.00")
+            intento.estado = "Finalizado"
+            intento.nota_confirmada = True
+            intento.save(update_fields=[
+                "nombre_estudiante", "fecha_fin", "puntaje_obtenido",
+                "calificacion_final", "estado", "nota_confirmada",
+            ])
+
+            for pregunta in preguntas:
+                opcion_correcta = pregunta.opciones.filter(es_correcta=True).first()
+                RespuestaIntento.objects.update_or_create(
+                    intento=intento,
+                    pregunta=pregunta,
+                    defaults={
+                        "opcion_seleccionada": opcion_correcta,
+                        "es_correcta": True,
+                        "puntaje_asignado": Decimal("1.00"),
+                        "marcada_revision": False,
+                    },
+                )
+
+    # Resultados variados para el grupo Sexto D (2026-1).
+    notas_sexto_d = {
+        "EST-202310023": 2,
+        "EST-20269988": 3,
+        "EST-202220412": 4,
+        "EST-202410117": 5,
+        "EST-202410118": 3,
+    }
+    preguntas_sexto_d = [p1, p2, p3, p4, p5]
+    for estudiante in estudiantes_demo:
+        aciertos = notas_sexto_d[estudiante.codigo_institucional]
+        intento, _ = Intento.objects.get_or_create(
+            cuestionario=c7,
+            usuario=estudiante,
+            codigo_estudiante=estudiante.codigo_institucional,
+            numero_intento=1,
+            defaults={
+                "nombre_estudiante": estudiante.nombre_completo,
+                "fecha_fin": now - timedelta(hours=2),
+                "puntaje_obtenido": Decimal(aciertos),
+                "calificacion_final": Decimal(aciertos),
+                "estado": "Finalizado",
+                "nota_confirmada": True,
+            },
+        )
+        intento.nombre_estudiante = estudiante.nombre_completo
+        intento.fecha_fin = intento.fecha_fin or now - timedelta(hours=2)
+        intento.puntaje_obtenido = Decimal(aciertos)
+        intento.calificacion_final = Decimal(aciertos)
+        intento.estado = "Finalizado"
+        intento.nota_confirmada = True
+        intento.save(update_fields=[
+            "nombre_estudiante", "fecha_fin", "puntaje_obtenido",
+            "calificacion_final", "estado", "nota_confirmada",
+        ])
+
+        for indice, pregunta in enumerate(preguntas_sexto_d):
+            es_correcta = indice < aciertos
+            opcion = (
+                pregunta.opciones.filter(es_correcta=True).first()
+                if es_correcta
+                else pregunta.opciones.filter(es_correcta=False).first()
+            )
+            RespuestaIntento.objects.update_or_create(
+                intento=intento,
+                pregunta=pregunta,
+                defaults={
+                    "opcion_seleccionada": opcion,
+                    "es_correcta": es_correcta,
+                    "puntaje_asignado": Decimal("1.00") if es_correcta else Decimal("0.00"),
+                    "marcada_revision": False,
+                },
+            )
+
+    print("¡Datos pedagógicos, estudiantes e intentos de demostración sembrados exitosamente!")
 
 if __name__ == '__main__':
     run_seed()

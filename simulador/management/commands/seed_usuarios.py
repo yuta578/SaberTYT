@@ -53,6 +53,26 @@ INITIAL_USERS = [
         'programa_academico': 'Tecnología en Gestión Contable',
         'activo': True,
     },
+    {
+        'nombre_completo': 'Mariana Torres Rojas',
+        'codigo_institucional': 'EST-202410117',
+        'email': 'mariana.torres@itp.edu.co',
+        'password': 'demo1234',
+        'rol': 'estudiante',
+        'telefono': '3156678811',
+        'programa_academico': 'Tecnología en Gestión Contable',
+        'activo': True,
+    },
+    {
+        'nombre_completo': 'Andrés Felipe Castro',
+        'codigo_institucional': 'EST-202410118',
+        'email': 'andres.castro@itp.edu.co',
+        'password': 'demo1234',
+        'rol': 'estudiante',
+        'telefono': '3174452299',
+        'programa_academico': 'Tecnología en Gestión Contable',
+        'activo': True,
+    },
 ]
 
 class Command(BaseCommand):
